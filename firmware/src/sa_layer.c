@@ -724,6 +724,131 @@ void sa_pat_label(const sa_code *c, char *out, int max)
     if (c->own) cat(out, " EDIT", max);
 }
 
+/* ---- the gates ---------------------------------------------------------------------------------------------------- */
+static const struct { const char *name; uint16_t mask; } GATE[SA_GATES] = {
+    {"OFF", 0},
+    {"16THS", 0xFFFF},
+    {"8THS", 0x5555},
+    {"OFFBEATS", 0x4444},
+    {"PULSE 4", 0x1111},
+    {"TRANCE A", 0x6D6D},                          /* (bit i: the sixteenth i) 0 2 3 5 6 8 10 11 13 14 */
+    {"TRANCE B", 0x5B5B},                          /* 0 1 3 4 6 8 9 11 12 14 */
+    {"DOTTED", 0x9249},                            /* 0 3 6 9 12 15 */
+    {"SYNCO", 0x9999},                             /* 0 3 4 7 8 11 12 15 */
+    {"BREATH", 0x7777},                            /* three on, one off */
+    {"STUTTER", 0x0F0F},
+    {"HALVES", 0x00FF},
+    {"SPARSE", 0x0441},                            /* 0 6 10 */
+};
+const char *sa_gate_name(int p) { return GATE[clampi(p, 0, SA_GATES - 1)].name; }
+uint16_t sa_gate_mask(const sa_gate *gt) { return gt->own ? gt->mask : GATE[gt->pat % SA_GATES].mask; }
+bool sa_gate_on(const sa_gate *gt) { return gt->own || (gt->pat > 0 && gt->pat < SA_GATES); }
+void sa_gate_label(const sa_gate *gt, char *out, int max)
+{
+    if (gt->own && gt->pat == 0) { cpy(out, "MY GATE", max); return; }
+    cpy(out, sa_gate_name(gt->pat), max);
+    if (gt->own) cat(out, " EDIT", max);
+}
+void sa_gate_step(sa_groove *g, int l, int st)
+{
+    if (l < 0 || l >= SA_LAYERS || st < 0 || st > 15) return;
+    sa_gate *gt = &g->ed_gate[l];
+    if (!gt->own) {
+        gt->mask = GATE[gt->pat % SA_GATES].mask;
+        gt->own = 1;
+    }
+    gt->mask ^= (uint16_t)(1u << st);
+}
+void sa_gate_pick(sa_groove *g, int l, int d)
+{
+    if (l < 0 || l >= SA_LAYERS) return;
+    sa_gate *gt = &g->ed_gate[l];
+    gt->pat = (uint8_t)(((gt->pat + d) % SA_GATES + SA_GATES) % SA_GATES);
+    gt->own = 0;
+}
+static void gate_default(sa_gate *gt)
+{
+    memset(gt, 0, sizeof *gt);
+    gt->depth = 100;
+    gt->width = 50;
+    gt->smooth = 25;
+}
+
+/* each synth part's gate, a block at a time: open on the steps of its layer's gate for WIDTH of the step (an off
+ * sixteenth late by FEEL, as the notes), down by DEPTH between them, the edges faded by SMOOTH */
+static void gate_block(sa_groove *g, int frames)
+{
+    float target[SA_SYNTHS] = {1.0f, 1.0f, 1.0f}, fade[SA_SYNTHS] = {1.0f, 1.0f, 1.0f};
+    float tf = g->sr * 60.0f / (float)clampi(g->s.bpm, 60, 200) / 24.0f;
+    float pos = (float)(g->tick < 0 ? 0 : g->tick) + 1.0f - (tf > 0.0f ? g->wait / tf : 0.0f);   /* ticks into the bar */
+    if (pos < 0.0f) pos = 0.0f;
+    int st = (int)(pos / (float)SA_TPS) % 16;
+    float f = (pos - (float)(st * SA_TPS)) / (float)SA_TPS;   /* 0..1 through the sixteenth */
+    if (st % 2 && g->s.feel) {                     /* (an off sixteenth: late, as the swung notes) */
+        float sw = (float)g->s.feel / 100.0f * 0.66f;
+        f = f < sw ? -1.0f : (f - sw) / (1.0f - sw);
+    }
+    for (int l = 0; l < SA_LAYERS; ++l) {
+        const sa_code *c = &g->s.code[l];
+        const sa_gate *gt = &g->s.gate[l];
+        if (c->type != SA_T_SYNTH || c->part >= SA_SYNTHS || !g->playing || !sa_gate_on(gt)) continue;
+        bool open = ((sa_gate_mask(gt) >> st) & 1u) && f >= 0.0f && f < (float)clampi(gt->width, 10, 100) / 100.0f;
+        target[c->part] = open ? 1.0f : 1.0f - (float)gt->depth / 100.0f;
+        float ms = 1.0f + (float)gt->smooth * 0.2f;          /* 1 .. 21 ms */
+        fade[c->part] = (float)frames / (g->sr * ms * 0.001f);
+    }
+    for (int p = 0; p < SA_SYNTHS; ++p) {
+        float d = target[p] - g->gate_gain[p], k = fade[p] > 1.0f ? 1.0f : fade[p];
+        g->gate_gain[p] += d * k;
+        if (g->gate_gain[p] < 0.0f) g->gate_gain[p] = 0.0f;
+        if (g->gate_gain[p] > 1.0f) g->gate_gain[p] = 1.0f;
+        g->gate_off[p] = (uint8_t)((1.0f - g->gate_gain[p]) * 127.0f + 0.5f);
+    }
+}
+
+/* ---- the panning ---------------------------------------------------------------------------------------------- */
+static const char *const PAN_MODES[SA_PAN_MODES] = {"FIXED", "SWEEP", "PING-PONG", "RANDOM"};
+static const char *const PAN_RATES[SA_PRATES] = {"1/4 BAR", "1/2 BAR", "1 BAR", "2 BARS", "4 BARS"};
+const char *sa_pan_mode_name(int m) { return PAN_MODES[clampi(m, 0, SA_PAN_MODES - 1)]; }
+const char *sa_pan_rate_name(int r) { return PAN_RATES[clampi(r, 0, SA_PRATES - 1)]; }
+static int pan_val(int pos, int off) { return clampi((pos + off) * 64 / 50, -64, 63); }   /* -50..50 -> -64..63 */
+/* a note of a layer: PING-PONG and RANDOM move its part */
+static void pan_note(sa_groove *g, int l)
+{
+    const sa_code *c = &g->s.code[l];
+    const sa_pan *p = &g->s.pan[l];
+    if (c->type != SA_T_SYNTH || c->part >= SA_SYNTHS) return;
+    int w = p->width / 2;                          /* (WIDTH 100: 50 each way) */
+    if (p->mode == SA_PAN_PINGPONG) {
+        g->pan_side[l] ^= 1u;
+        g->pan_now[c->part] = (int8_t)pan_val(p->pos, g->pan_side[l] ? w : -w);
+    } else if (p->mode == SA_PAN_RANDOM) {
+        g->pan_rnd = g->pan_rnd * 1664525u + 1013904223u;
+        int r = w ? (int)((g->pan_rnd >> 16) % (uint32_t)(2 * w + 1)) - w : 0;
+        g->pan_now[c->part] = (int8_t)pan_val(p->pos, r);
+    }
+}
+/* every block: FIXED and SWEEP (a triangle from one side to the other and back over RATE) */
+static void pan_block(sa_groove *g)
+{
+    static const uint8_t RATE_Q[SA_PRATES] = {1, 2, 4, 8, 16};     /* in quarter bars */
+    for (int l = 0; l < SA_LAYERS; ++l) {
+        const sa_code *c = &g->s.code[l];
+        const sa_pan *p = &g->s.pan[l];
+        if (c->type != SA_T_SYNTH || c->part >= SA_SYNTHS) continue;
+        if (p->mode == SA_PAN_FIXED) {
+            g->pan_now[c->part] = (int8_t)pan_val(p->pos, 0);
+        } else if (p->mode == SA_PAN_SWEEP) {
+            float len = (float)(SA_TPB / 4 * RATE_Q[p->rate % SA_PRATES]);
+            float at = (float)((g->bar < 0 ? 0 : g->bar) * SA_TPB + (g->tick < 0 ? 0 : g->tick));
+            float ph = at / len;
+            ph -= (float)(int)ph;
+            float tri = ph < 0.5f ? ph * 4.0f - 1.0f : 3.0f - ph * 4.0f;   /* -1 .. 1 .. -1 */
+            g->pan_now[c->part] = (int8_t)pan_val(p->pos, (int)(tri * (float)(p->width / 2)));
+        }
+    }
+}
+
 /* ---- defaults and checks --------------------------------------------------------------------------------------- */
 static void code_drum(sa_code *c, int dv, int pat)
 {
@@ -778,8 +903,12 @@ void sa_defaults(sa_settings *s)
     s->harm.scale = SA_SC_MINOR;
     s->harm.prog = 1;
     s->harm.bars = 2;
-    for (int l = 0; l < SA_LAYERS; ++l)
+    for (int l = 0; l < SA_LAYERS; ++l) {
         live_default(&s->live[l]);
+        gate_default(&s->gate[l]);
+        s->pan[l].width = 60;
+        s->pan[l].rate = SA_PRATE_BAR;
+    }
     code_drum(&s->code[0], SA_DV_KICK, 0);         /* 4 FLOOR */
     code_drum(&s->code[1], SA_DV_HAT, 1);          /* OFFBEAT */
     code_drum(&s->code[2], SA_DV_CLAP, 2);         /* 2 + 4 */
@@ -852,6 +981,17 @@ void sa_settings_fix(sa_settings *s)
         v->env = (uint8_t)clampi(v->env, 0, 100);
         v->level = (uint8_t)clampi(v->level, 0, 100);
         v->nopump = (uint8_t)(v->nopump ? 1 : 0);
+        sa_gate *gt = &s->gate[l];
+        gt->pat %= SA_GATES;
+        gt->own = (uint8_t)(gt->own ? 1 : 0);
+        gt->depth = (uint8_t)clampi(gt->depth, 0, 100);
+        gt->width = (uint8_t)clampi(gt->width, 10, 100);
+        gt->smooth = (uint8_t)clampi(gt->smooth, 0, 100);
+        sa_pan *pn = &s->pan[l];
+        pn->mode = (uint8_t)(pn->mode % SA_PAN_MODES);
+        pn->pos = (int8_t)clampi(pn->pos, -50, 50);
+        pn->width = (uint8_t)clampi(pn->width, 0, 100);
+        pn->rate = (uint8_t)(pn->rate % SA_PRATES);
     }
 }
 
@@ -880,13 +1020,15 @@ void sa_set_sound(sa_groove *g, void (*fn)(void *ctx, const sa_event *e), void *
 void sa_edit_reset(sa_groove *g)
 {
     memcpy(g->ed, g->s.code, sizeof g->ed);
+    memcpy(g->ed_gate, g->s.gate, sizeof g->ed_gate);
     g->ed_harm = g->s.harm;
     g->drop_armed = false;
 }
 
 bool sa_layer_pending(const sa_groove *g, int l)
 {
-    return l >= 0 && l < SA_LAYERS && memcmp(&g->ed[l], &g->s.code[l], sizeof g->ed[l]) != 0;
+    return l >= 0 && l < SA_LAYERS && (memcmp(&g->ed[l], &g->s.code[l], sizeof g->ed[l]) != 0 ||
+                                       memcmp(&g->ed_gate[l], &g->s.gate[l], sizeof g->ed_gate[l]) != 0);
 }
 
 int sa_pending(const sa_groove *g)
@@ -999,6 +1141,7 @@ static void drop_now(sa_groove *g)
         g->arp_i[l] = 0;
     }
     memcpy(g->s.code, g->ed, sizeof g->ed);
+    memcpy(g->s.gate, g->ed_gate, sizeof g->ed_gate);
     g->s.harm = g->ed_harm;
     g->drop_armed = false;
     g->sound_sig++;
@@ -1081,6 +1224,7 @@ static void do_tick(sa_groove *g)
                                             : (uint32_t)((float)b->dur * tf);
         g->hits[b->layer] |= (uint16_t)(1u << (t / SA_TPS));
         if (delay == 0 || g->npend >= SA_PEND) {
+            pan_note(g, b->layer);
             note(g, part, b->note, b->vel, len);
         } else {
             g->pend[g->npend].at = g->clock + delay;
@@ -1113,7 +1257,12 @@ static void pump_block(sa_groove *g)
 
 void sa_process(sa_groove *g, int frames)
 {
-    if (!g->playing) { g->duck = 0; return; }
+    if (!g->playing) {
+        g->duck = 0;
+        for (int p = 0; p < SA_SYNTHS; ++p) { g->gate_gain[p] = 1.0f; g->gate_off[p] = 0; }
+        pan_block(g);
+        return;
+    }
     float tf = tick_frames(g);
     int left = frames;
     while (left > 0) {
@@ -1129,8 +1278,10 @@ void sa_process(sa_groove *g, int frames)
         left -= chunk;
         for (int k = 0; k < g->npend;) {           /* the swung notes */
             if ((int32_t)(g->clock - g->pend[k].at) >= 0) {
-                if (!g->s.live[g->pend[k].layer].mute)
+                if (!g->s.live[g->pend[k].layer].mute) {
+                    pan_note(g, g->pend[k].layer);
                     note(g, g->pend[k].part, g->pend[k].note, g->pend[k].vel, g->pend[k].len);
+                }
                 g->pend[k] = g->pend[--g->npend];
             } else {
                 ++k;
@@ -1142,6 +1293,8 @@ void sa_process(sa_groove *g, int frames)
         }
     }
     pump_block(g);
+    gate_block(g, frames);
+    pan_block(g);
 }
 
 void sa_key(sa_groove *g, int k, int note_in, bool down, int layer)

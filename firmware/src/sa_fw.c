@@ -284,7 +284,8 @@ static void sa_leds(void)
     bool pend = sa_pending(&sa_g) > 0;
     led_put(nl, panel.btn[B_REC], pend && (!sa_g.drop_armed || (fm1_ms / 125u) % 2u));
     int ml = sa_u.page == SV_PG_DRUMS ? sv_drow_layer(&sa_u) :
-             (sa_u.page == SV_PG_LAYER || sa_u.page == SV_PG_ARP || sa_u.page == SV_PG_STEPS) ? sa_u.layer : -1;
+             (sa_u.page == SV_PG_LAYER || sa_u.page == SV_PG_ARP || sa_u.page == SV_PG_STEPS ||
+              sa_u.page == SV_PG_GATE || sa_u.page == SV_PG_PAN) ? sa_u.layer : -1;
     if (ml >= 0 && sa_g.s.live[ml].mute)
         led_put(nl, panel.btn[B_FX], 1);
     uint32_t efull = 0, edim = 0;

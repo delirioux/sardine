@@ -174,6 +174,33 @@ int main(void)
     run_bars(&g, 1);
     CHECK(LG.per_part[1] == 9, "three chords of three notes, got %d", LG.per_part[1]);
 
+    /* the gate: a held chord cut to 8ths by its volume, no new notes */
+    sa_play(&g, false);
+    sa_init(&g, SR);
+    sa_set_sound(&g, snd, 0);
+    only(&g, 4);
+    g.ed[4].pat = 20;                               /* WASH: the chord held the bar */
+    g.ed_gate[4].pat = 2;                           /* 8THS */
+    CHECK(sa_pending(&g) == 1, "the gate is code (one layer pending)");
+    sa_drop(&g);
+    sa_play(&g, true);
+    clear_log();
+    {
+        int opens = 0, closes = 0, was = -1;
+        for (int i = 0; i < bar_frames(&g) * 2 / 128; ++i) {
+            sa_process(&g, 128);
+            int closed = g.gate_off[1] > 100, open = g.gate_off[1] < 20;
+            if (open && was == 0) opens++;
+            if (closed && was == 1) closes++;
+            if (open) was = 1;
+            if (closed) was = 0;
+        }
+        CHECK(opens >= 14 && closes >= 14, "8THS: open and closed 16 times in 2 bars (%d %d)", opens, closes);
+        CHECK(LG.per_part[1] == 6, "the chord played twice, not retriggered by the gate (%d notes)", LG.per_part[1]);
+    }
+    sa_gate_step(&g, 4, 1);                         /* an own gate step */
+    CHECK(g.ed_gate[4].own && g.ed_gate[4].mask == (0x5555 | 2), "a gate step on the keys (%04x)", g.ed_gate[4].mask);
+
     /* three synth layers at most */
     sa_init(&g, SR);
     CHECK(sa_synth_count(&g) == 2, "first groove: two synth layers");

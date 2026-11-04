@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.4. Live club mixing on the FM-1: a stack of layers, each a line of code you build with the knobs. A layer
+Sardine 0.5. Live club mixing on the FM-1: a stack of layers, each a line of code you build with the knobs. A layer
 is a sound and a pattern, bent by modifiers and, on a synth layer, an arpeggiator. You change the code, and REC drops
 your changes in on the one: the next bar line. The sound of a layer (its filter, drive, level) and the mutes act at
 once, as you turn.
@@ -82,6 +82,27 @@ the same note again takes the step off. **KNOB 2** is the step's length. On a ch
 chord on the step or takes it off: it plays the chord of the bar, so it follows the progression. The keys of the scale
 glow dim, the step's note full. As on DRUMS the first edit makes the pattern the layer's own, the edits wait for REC,
 and the modifiers and the arpeggiator still act on it. SEQ again goes back.
+
+## GATE
+
+<p align="center">
+<img src="screens/gate.png" alt="GATE" width="200">
+<img src="screens/pan.png" alt="PAN" width="200">
+</p>
+
+On a synth layer **ENV** opens GATE: the layer's volume cut to a rhythm on the sixteenths while its notes are held, so
+a pad pulses without a new attack each time. **KNOB 1** picks a ready gate (16THS, 8THS, OFFBEATS, PULSE 4, TRANCE A,
+TRANCE B, DOTTED, SYNCO, BREATH, STUTTER, HALVES, SPARSE, or OFF), **DEPTH** how far it closes, **WIDTH** how much of
+each step it stays open, **SMOOTH** how soft its edges are. **The 16 lowest keys are its steps**, lit as on DRUMS: a key
+turns a step on or off, and the ready gate becomes your own. The gate follows FEEL, and it is code: it drops with REC.
+The layer's GATE chip turns through the ready gates too. ENV again goes back.
+
+## PAN
+
+On a synth layer **LFO** opens PAN, at once like the layer's sound: **MODE** FIXED (where PAN says), SWEEP (from side
+to side and back over **RATE**, a quarter bar to four bars), PING-PONG (each note on the other side) or RANDOM (each
+note somewhere in the width); **PAN** the centre, **WIDTH** how far it moves. The drums all play on one part, so the
+kit stays in the middle. LFO again goes back.
 
 ## The modifiers
 

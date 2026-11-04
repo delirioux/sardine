@@ -162,7 +162,7 @@ static int sv_drow_layer(const sa_ui *u)
 }
 
 /* ---- the chips of a layer's code: SOUND PATTERN, the modifiers, + (room for one more), ARP (synth) ---- */
-enum { CH_SOUND, CH_PAT, CH_MOD, CH_PLUS, CH_ARP, CH_PUMP };
+enum { CH_SOUND, CH_PAT, CH_MOD, CH_PLUS, CH_ARP, CH_GATE, CH_PUMP };
 typedef struct { uint8_t kind, idx; } sv_chip;
 static int sv_chips(const sa_ui *u, sv_chip *out)
 {
@@ -175,6 +175,7 @@ static int sv_chips(const sa_ui *u, sv_chip *out)
         if (c->mod[i].type != SA_M_OFF) { out[n].kind = CH_MOD; out[n++].idx = (uint8_t)i; nm++; }
     if (nm < SA_MODS) { out[n].kind = CH_PLUS; out[n++].idx = 0; }
     if (t == SA_T_SYNTH) { out[n].kind = CH_ARP; out[n++].idx = 0; }
+    if (t == SA_T_SYNTH) { out[n].kind = CH_GATE; out[n++].idx = 0; }
     if (t == SA_T_SYNTH) { out[n].kind = CH_PUMP; out[n++].idx = 0; }
     return n;
 }
@@ -190,6 +191,13 @@ static void sv_chip_text(const sa_ui *u, const sa_code *c, sv_chip ch, char *t, 
     case CH_MOD: sa_mod_name(c->mod[ch.idx], t, (int)n); break;
     case CH_PLUS: sv_cpy(t, "+", n); break;
     case CH_PUMP: sv_cpy(t, u->g->s.live[u->layer].nopump ? "PUMP OFF" : "PUMP ON", n); break;
+    case CH_GATE: {
+        char gl[20];
+        sa_gate_label(&u->g->ed_gate[u->layer], gl, sizeof gl);
+        sv_cpy(t, "GATE ", n);
+        sv_cat(t, gl, n);
+        break;
+    }
     default:
         sv_cpy(t, "ARP ", n);
         sv_cat(t, sa_arp_name(c->amode), n);
@@ -207,6 +215,7 @@ static bool sv_chip_pending(const sa_ui *u, sv_chip ch)
                                     memcmp(e->sl, l->sl, sizeof e->sl)));
     case CH_MOD: return e->mod[ch.idx].type != l->mod[ch.idx].type || e->mod[ch.idx].val != l->mod[ch.idx].val;
     case CH_ARP: return e->amode != l->amode || e->arate != l->arate || e->arange != l->arange || e->agate != l->agate;
+    case CH_GATE: return memcmp(&u->g->ed_gate[u->layer], &u->g->s.gate[u->layer], sizeof(sa_gate)) != 0;
     default: return false;
     }
 }
@@ -320,6 +329,38 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         sv_card_off(&c[3]);
         break;
     }
+    case SV_PG_PAN: {
+        const sa_pan *p = &s->pan[sv_clampi(u->layer, 0, SA_LAYERS - 1)];
+        static const char *const SHORT[SA_PAN_MODES] = {"FIXED", "SWEEP", "PING", "RANDOM"};
+        sv_card_txt(&c[0], "MODE", SHORT[p->mode % SA_PAN_MODES], p->mode * 1000 / (SA_PAN_MODES - 1), false);
+        if (p->pos == 0) sv_cpy(t, "C", sizeof t);
+        else { sv_cpy(t, p->pos < 0 ? "L" : "R", sizeof t); char a[8]; sv_fmt_int(a, p->pos < 0 ? -p->pos : p->pos);
+               sv_cat(t, a, sizeof t); }
+        sv_card_txt(&c[1], "PAN", t, (p->pos + 50) * 10, false);
+        sv_card_num(&c[2], "WIDTH", p->width, 0, 100);
+        if (p->mode == SA_PAN_SWEEP) {
+            static const char *const R[SA_PRATES] = {"1/4", "1/2", "1 BAR", "2 BARS", "4 BARS"};
+            sv_card_txt(&c[3], "RATE", R[p->rate % SA_PRATES], p->rate * 1000 / (SA_PRATES - 1), false);
+        } else {
+            sv_card_off(&c[3]);
+        }
+        break;
+    }
+    case SV_PG_GATE: {
+        const sa_gate *e = &g->ed_gate[sv_clampi(u->layer, 0, SA_LAYERS - 1)], *l = &s->gate[sv_clampi(u->layer, 0, SA_LAYERS - 1)];
+        static const char *const SHORT[SA_GATES] = {"OFF", "16THS", "8THS", "OFFBT", "PULSE", "TRNC A", "TRNC B",
+                                                    "DOTTED", "SYNCO", "BREATH", "STUTTR", "HALVES", "SPARSE"};
+        sv_cpy(t, e->own && e->pat == 0 ? "MINE" : SHORT[e->pat % SA_GATES], sizeof t);   /* (EDIT: on the panel) */
+        sv_card_txt(&c[0], "GATE", t, e->own ? -1 : e->pat * 1000 / (SA_GATES - 1), e->pat != l->pat || e->own != l->own ||
+                    e->mask != l->mask);
+        sv_card_num(&c[1], "DEPTH", e->depth, 0, 100);
+        c[1].pend = e->depth != l->depth;
+        sv_card_num(&c[2], "WIDTH", e->width, 10, 100);
+        c[2].pend = e->width != l->width;
+        sv_card_num(&c[3], "SMOOTH", e->smooth, 0, 100);
+        c[3].pend = e->smooth != l->smooth;
+        break;
+    }
     case SV_PG_ARP: {
         const sa_code *e = sv_ed(u), *l = sv_live(u);
         static const char *const SHORT[SA_AR_MODES] = {"OFF", "UP", "DOWN", "UP-DN", "DN-UP", "CONVRG", "DIVRG",
@@ -401,6 +442,13 @@ static void sv_head_title(const sa_ui *u, char *t, unsigned n)
         break;
     case SV_PG_KEY: sv_cpy(t, "KEY", n); break;
     case SV_PG_DRUMS: sv_cpy(t, "DRUMS", n); break;
+    case SV_PG_GATE: case SV_PG_PAN:
+        sv_fmt_int(a, u->layer + 1);
+        sv_cpy(t, a, n);
+        sv_cat(t, "  ", n);
+        sv_cat(t, sv_layer_name(u, u->layer), n);
+        sv_cat(t, u->page == SV_PG_GATE ? "  GATE" : "  PAN", n);
+        break;
     case SV_PG_STEPS:
         sv_fmt_int(a, u->layer + 1);
         sv_cpy(t, a, n);
@@ -465,6 +513,8 @@ static void sv_draw_foot(sa_ui *u)
     case SV_PG_MAIN: sv_cpy(l, u->space ? "SPACE" : "MAIN", sizeof l); break;
     case SV_PG_DRUMS: sv_cpy(l, "DRUMS", sizeof l); break;
     case SV_PG_STEPS: sv_cpy(l, "STEPS", sizeof l); break;
+    case SV_PG_GATE: sv_cpy(l, "GATE", sizeof l); break;
+    case SV_PG_PAN: sv_cpy(l, "PAN", sizeof l); break;
     case SV_PG_LAYER: case SV_PG_ARP:
         if (sv_type(u, u->layer) == SA_T_DRUM) {
             sv_cpy(l, "DRUMS > ", sizeof l);
@@ -486,6 +536,8 @@ static void sv_draw_foot(sa_ui *u)
     else if (u->page == SV_PG_MAIN) sv_cpy(r, u->space ? "HOME: MAIN" : "HOME: SPACE", sizeof r);
     else if (u->page == SV_PG_DRUMS) sv_cpy(r, sv_drow_layer(u) >= 0 ? "KEYS: STEPS" : "ALGO: A DRUM", sizeof r);
     else if (u->page == SV_PG_STEPS) sv_cpy(r, "KEYS: NOTES", sizeof r);
+    else if (u->page == SV_PG_GATE) sv_cpy(r, "KEYS: STEPS", sizeof r);
+    else if (u->page == SV_PG_PAN) sv_cpy(r, "LFO: BACK", sizeof r);
     else if (u->from_drums && (u->page == SV_PG_LAYER || u->page == SV_PG_ARP)) sv_cpy(r, "EDIT: DRUMS", sizeof r);
     else if (u->page != SV_PG_MENU) sv_cpy(r, "HOME: MAIN", sizeof r);
     uint32_t sig = sv_hash(sv_hash((uint32_t)(now + 1) * 7u + (uint32_t)g->playing * 3u + ux.gen * 11u, l), r);
@@ -636,7 +688,7 @@ static void sv_panel_layer(sa_ui *u)
     }
     (void)on;
     /* the code as chips, in rows; the one PRESETS picked framed */
-    sv_chip ch[SA_MODS + 4];
+    sv_chip ch[SA_MODS + 5];
     int n = sv_chips(u, ch);
     if (u->chip >= n) u->chip = n - 1;
     int32_t x = 8, y = pend ? 40 : 26;
@@ -777,6 +829,65 @@ static void sv_panel_steps(sa_ui *u)
     cv_text_on(10, 104, &AF_S, "KNOB 1 THE STEP, A KEY ITS NOTE", T_DIM, T_SURF);
 }
 
+static void sv_panel_gate(sa_ui *u)
+{
+    sa_groove *g = u->g;
+    int l = sv_clampi(u->layer, 0, SA_LAYERS - 1);
+    const sa_gate *e = &g->ed_gate[l];
+    bool pend = memcmp(e, &g->s.gate[l], sizeof *e) != 0;
+    int now = g->playing && g->tick >= 0 ? g->tick / SA_TPS : -1;
+    uint16_t m = sa_gate_on(e) ? sa_gate_mask(e) : 0;
+    char t[32];
+    sa_gate_label(e, t, sizeof t);
+    cv_text_on(10, 4, &AF_S, t, pend ? T_ACCENT : T_THEME, T_SURF);
+    cv_text_r(230, 4, &AF_S, "NO NEW ATTACK", T_DIM, T_SURF);
+    /* the gain over the bar: each step open for WIDTH, down by DEPTH between */
+    int32_t y0 = 24, h = 46, closed = h * e->depth / 100;
+    for (int k = 0; k < 16; ++k) {
+        int32_t x = 8 + k * 14, ow = 14 * e->width / 100;
+        bool on = (m >> k) & 1u;
+        uint16_t c = pend ? T_ACCENT : T_THEME;
+        cv_rect(x, y0 + h - 2, 14, 2, sv_well());
+        if (on) cv_rect(x, y0, ow > 1 ? ow : 1, h, k == now ? T_TEXT : c);
+        if (on && ow < 14) cv_rect(x + ow, y0 + closed, 14 - ow, h - closed, ux_mix(T_SURF, c, 30));
+        if (!on) cv_rect(x, y0 + closed, 14, h - closed, ux_mix(T_SURF, c, 30));
+    }
+    for (int k = 0; k < 16; ++k) {                 /* the 16 step keys */
+        int32_t x = 8 + k * 14;
+        bool on = (m >> k) & 1u;
+        cv_rrect(x, 80, 12, 14, 2, on ? (pend ? T_ACCENT : T_THEME) : sv_well(), T_SURF);
+        if (k % 4 == 0) cv_rect(x, 96, 12, 2, T_DIM);
+    }
+    cv_text_on(10, 104, &AF_S, "KNOB 1 A READY GATE, KEYS ITS STEPS", T_DIM, T_SURF);
+}
+
+static void sv_panel_pan(sa_ui *u)
+{
+    const sa_groove *g = u->g;
+    int l = sv_clampi(u->layer, 0, SA_LAYERS - 1);
+    const sa_pan *p = &g->s.pan[l];
+    const sa_code *c = &g->s.code[l];
+    static const char *const SAY[SA_PAN_MODES] = {"WHERE PAN SAYS", "FROM SIDE TO SIDE OVER RATE",
+                                                  "EACH NOTE ON THE OTHER SIDE", "EACH NOTE SOMEWHERE IN WIDTH"};
+    cv_text_on(10, 4, &AF_S, SAY[p->mode % SA_PAN_MODES], T_MID, T_SURF);
+    int32_t x0 = 20, w = 200, y = 52;
+    cv_rect(x0, y, w, 2, T_LINE);
+    cv_rect(x0 + w / 2, y - 6, 1, 14, T_DIM);
+    cv_text_on(x0 - 12, y - 5, &AF_S, "L", T_MID, T_SURF);
+    cv_text_on(x0 + w + 4, y - 5, &AF_S, "R", T_MID, T_SURF);
+    if (p->mode != SA_PAN_FIXED) {                 /* the range it moves in */
+        int32_t a = x0 + (p->pos - p->width / 2 + 50) * w / 100, b = x0 + (p->pos + p->width / 2 + 50) * w / 100;
+        if (a < x0) a = x0;
+        if (b > x0 + w) b = x0 + w;
+        cv_rect(a, y - 1, b - a, 4, ux_mix(T_SURF, T_ACCENT, 50));
+    }
+    int now = c->type == SA_T_SYNTH && c->part < SA_SYNTHS ? g->pan_now[c->part] : 0;
+    int32_t px = x0 + (now + 64) * w / 128;
+    cv_rrect(px - 5, y - 6, 10, 14, 3, T_ACCENT, T_SURF);
+    cv_text_on(10, 84, &AF_S, "AT ONCE, AS THE SOUND", T_DIM, T_SURF);
+    cv_text_on(10, 100, &AF_S, "THE DRUMS SHARE ONE PART: CENTRED", T_DIM, T_SURF);
+}
+
 static void sv_panel_arp(sa_ui *u)
 {
     sa_groove *g = u->g;
@@ -858,6 +969,8 @@ static void sv_draw_panel(sa_ui *u)
     case SV_PG_KEY: sv_panel_key(u); break;
     case SV_PG_DRUMS: sv_panel_drums(u); break;
     case SV_PG_STEPS: sv_panel_steps(u); break;
+    case SV_PG_GATE: sv_panel_gate(u); break;
+    case SV_PG_PAN: sv_panel_pan(u); break;
     default: sv_panel_menu(u); break;
     }
     cv_blit(0, SV_PANEL_Y);
@@ -907,6 +1020,8 @@ int sv_page_button(const sa_ui *u)
     case SV_PG_ARP: return SV_B_ARP;
     case SV_PG_KEY: return SV_B_SCL;
     case SV_PG_STEPS: return SV_B_SEQ;
+    case SV_PG_GATE: return SV_B_ENV;
+    case SV_PG_PAN: return SV_B_LFO;
     default: return -1;
     }
 }
@@ -1013,7 +1128,7 @@ static void sv_chip_turn(sa_ui *u, int d)
 {
     sa_groove *g = u->g;
     sa_code *e = sv_ed(u);
-    sv_chip ch[SA_MODS + 4];
+    sv_chip ch[SA_MODS + 5];
     int n = sv_chips(u, ch), type = sv_type(u, u->layer);
     if (n == 0) return;
     sv_chip c = ch[sv_clampi(u->chip, 0, n - 1)];
@@ -1061,6 +1176,9 @@ static void sv_chip_turn(sa_ui *u, int d)
         e->mod[k] = sa_mod_opt(type, d > 0 ? 1 : sa_mod_opts(type) - 1);
         break;
     }
+    case CH_GATE:
+        sa_gate_pick(g, u->layer, d);
+        break;
     case CH_PUMP:                                   /* (at once: it is the sound, not the code) */
         g->s.live[u->layer].nopump = (uint8_t)(d < 0);
         break;
@@ -1085,7 +1203,7 @@ void sv_knob(sa_ui *u, int k, int d)
             return;
         }
         if (u->page == SV_PG_LAYER) {
-            sv_chip ch[SA_MODS + 4];
+            sv_chip ch[SA_MODS + 5];
             int n = sv_chips(u, ch);
             u->chip = sv_clampi(u->chip + d, 0, n - 1);
             u->hot = 9;
@@ -1157,6 +1275,22 @@ void sv_knob(sa_ui *u, int k, int d)
         else if (i == 3) s->kdecay = (uint8_t)sv_clampi(s->kdecay + d * 2, 0, 100);
         break;
     }
+    case SV_PG_PAN: {
+        sa_pan *p = &s->pan[sv_clampi(u->layer, 0, SA_LAYERS - 1)];
+        if (i == 0) p->mode = (uint8_t)sv_wrap(p->mode + d, SA_PAN_MODES);
+        else if (i == 1) p->pos = (int8_t)sv_clampi(p->pos + d * 2, -50, 50);
+        else if (i == 2) p->width = (uint8_t)sv_clampi(p->width + d * 2, 0, 100);
+        else if (p->mode == SA_PAN_SWEEP) p->rate = (uint8_t)sv_clampi(p->rate + d, 0, SA_PRATES - 1);
+        break;
+    }
+    case SV_PG_GATE: {
+        sa_gate *e = &g->ed_gate[sv_clampi(u->layer, 0, SA_LAYERS - 1)];
+        if (i == 0) sa_gate_pick(g, u->layer, d);
+        else if (i == 1) e->depth = (uint8_t)sv_clampi(e->depth + d * 5, 0, 100);
+        else if (i == 2) e->width = (uint8_t)sv_clampi(e->width + d * 5, 10, 100);
+        else e->smooth = (uint8_t)sv_clampi(e->smooth + d * 5, 0, 100);
+        break;
+    }
     case SV_PG_STEPS:
         if (i == 0) u->scur = sv_wrap(u->scur + d, 16);
         else if (i == 1) sa_step_len(g, u->layer, sv_clampi(u->scur, 0, 15), d);
@@ -1214,7 +1348,8 @@ void sv_button(sa_ui *u, int b, bool down)
         break;
     case SV_B_FX: {
         int l = u->page == SV_PG_DRUMS ? sv_drow_layer(u) :
-                (u->page == SV_PG_LAYER || u->page == SV_PG_ARP || u->page == SV_PG_STEPS) && !sv_is_new(u) ? u->layer : -1;
+                (u->page == SV_PG_LAYER || u->page == SV_PG_ARP || u->page == SV_PG_STEPS || u->page == SV_PG_GATE ||
+                 u->page == SV_PG_PAN) && !sv_is_new(u) ? u->layer : -1;
         if (l >= 0) {
             bool m = !g->s.live[l].mute;
             sa_mute(g, l, m);
@@ -1231,6 +1366,16 @@ void sv_button(sa_ui *u, int b, bool down)
             sv_goto(u, SV_PG_DRUMS, -1);
             u->from_drums = false;
         }
+        break;
+    case SV_B_LFO:
+        if (u->page == SV_PG_PAN) sv_goto(u, SV_PG_LAYER, u->layer);
+        else if ((u->page == SV_PG_LAYER || u->page == SV_PG_STEPS || u->page == SV_PG_ARP || u->page == SV_PG_GATE) &&
+                 !sv_is_new(u) && sv_type(u, u->layer) == SA_T_SYNTH) sv_goto(u, SV_PG_PAN, u->layer);
+        break;
+    case SV_B_ENV:
+        if (u->page == SV_PG_GATE) sv_goto(u, SV_PG_LAYER, u->layer);
+        else if ((u->page == SV_PG_LAYER || u->page == SV_PG_STEPS || u->page == SV_PG_ARP || u->page == SV_PG_PAN) &&
+                 !sv_is_new(u) && sv_type(u, u->layer) == SA_T_SYNTH) sv_goto(u, SV_PG_GATE, u->layer);
         break;
     case SV_B_SEQ:
         if (u->page == SV_PG_STEPS) sv_goto(u, SV_PG_LAYER, u->layer);
@@ -1276,7 +1421,15 @@ void sv_key(sa_ui *u, int note, bool down)
     if (note < SV_KEY_LO || note > SV_KEY_HI)
         return;
     int k = note - SV_KEY_LO;
-    int layer = u->page == SV_PG_LAYER || u->page == SV_PG_ARP || u->page == SV_PG_STEPS ? u->layer : -1;
+    int layer = u->page == SV_PG_LAYER || u->page == SV_PG_ARP || u->page == SV_PG_STEPS || u->page == SV_PG_GATE ||
+                u->page == SV_PG_PAN ? u->layer : -1;
+    if (u->page == SV_PG_GATE && k < 16) {         /* the lowest 16: the gate's steps; the others play the layer */
+        if (down) {
+            sa_gate_step(u->g, u->layer, k);
+            u->changed = true;
+        }
+        return;
+    }
     if (u->page == SV_PG_DRUMS) {                 /* the lowest 16: the row's steps; the others play its drum */
         int l = sv_drow_layer(u);
         if (l < 0 || u->g->ed[l].type != SA_T_DRUM) return;
@@ -1318,6 +1471,12 @@ bool sv_key_leds(const sa_ui *u, uint32_t *full, uint32_t *dim)
         *dim = 0xFFFFu;                            /* the step keys */
         *full = u->ed_code[l].type == SA_T_DRUM && !memcmp(&u->ed_code[l], &u->g->ed[l], sizeof u->ed_code[l])
                     ? u->ed_bits[l] : 0;            /* the steps set (as last drawn) */
+        return true;
+    }
+    if (u->page == SV_PG_GATE) {
+        const sa_gate *e = &u->g->ed_gate[sv_clampi(u->layer, 0, SA_LAYERS - 1)];
+        *dim = 0xFFFFu;
+        *full = sa_gate_on(e) ? sa_gate_mask(e) : 0;
         return true;
     }
     if (u->page == SV_PG_STEPS) {

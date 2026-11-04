@@ -78,6 +78,26 @@ typedef struct {
     uint8_t pad;
 } sa_live;
 
+/* a synth layer's gate (0.5): its volume cut to a rhythm on the sixteenths, the note held (no new attack). Code: it
+ * drops with REC. pat 0: off; own: the steps of `mask` (edited on the keys), else the ready gate pat's */
+typedef struct {
+    uint8_t pat, own;
+    uint8_t depth, width, smooth;                   /* 0..100: how far it closes; 10..100 % of a step open; the fade */
+    uint8_t pad;
+    uint16_t mask;
+} sa_gate;
+#define SA_GATES 13                                 /* OFF and twelve ready gates (sa_layer.c) */
+
+/* a synth layer's panning (0.5): at once, as its sound. FIXED at PAN; SWEEP from side to side over RATE; PING-PONG
+ * each note on the other side; RANDOM each note somewhere in WIDTH around PAN */
+enum { SA_PAN_FIXED, SA_PAN_SWEEP, SA_PAN_PINGPONG, SA_PAN_RANDOM, SA_PAN_MODES };
+enum { SA_PRATE_QUARTER, SA_PRATE_HALF, SA_PRATE_BAR, SA_PRATE_2BARS, SA_PRATE_4BARS, SA_PRATES };
+typedef struct {
+    uint8_t mode;
+    int8_t pos;                                     /* -50 (left) .. 50 (right) */
+    uint8_t width, rate;                            /* 0..100 how far it moves; SA_PRATE_* (SWEEP) */
+} sa_pan;
+
 /* the key and the chords: code too */
 typedef struct {
     uint8_t key, scale, prog, bars;                 /* 0..11 (C..B), SA_SC_*, the progression, 1 2 4 bars a chord */
@@ -95,6 +115,8 @@ typedef struct {
     /* 0.4, SPACE (MAIN's second page): PUMP 0..100 how deep the synth layers duck under the kick; REVERB, DELAY,
      * WIDTH 0..100, 70 the sounds' own sends and spread */
     uint8_t pump, reverb, delay, width;
+    sa_gate gate[SA_LAYERS];                        /* 0.5 */
+    sa_pan pan[SA_LAYERS];                          /* 0.5 */
 } sa_settings;
 
 typedef struct {
@@ -111,6 +133,7 @@ typedef struct {
     sa_settings s;                                  /* what plays */
     sa_harm ed_harm;                                /* the edit copy: the screen edits these */
     sa_code ed[SA_LAYERS];
+    sa_gate ed_gate[SA_LAYERS];
     bool drop_armed;                                /* REC pressed: the copy goes in on the next bar line */
     float sr;
     bool playing;
@@ -135,6 +158,11 @@ typedef struct {
     uint32_t kick_clock;                            /* the last kick a layer played (the pump) */
     bool kicked;
     uint8_t duck;                                   /* 0..127: how far the synth layers are ducked now (each block) */
+    float gate_gain[SA_SYNTHS];                     /* each synth part's gate, 0..1, as it fades */
+    uint8_t gate_off[SA_SYNTHS];                    /* 0..127: how far each synth part's gate has it down now */
+    int8_t pan_now[SA_SYNTHS];                      /* each synth part's pan now, -64..63 (the glue puts it in) */
+    uint8_t pan_side[SA_LAYERS];                    /* PING-PONG: the side the next note goes to */
+    uint32_t pan_rnd;
     char msg[24];
     uint8_t msg_new;
     void (*sound)(void *ctx, const sa_event *e);
@@ -186,5 +214,14 @@ void sa_step_note(sa_groove *g, int layer, int step, int note); /* a note (snapp
                                                                  * layer: the chord on or off */
 void sa_step_len(sa_groove *g, int layer, int step, int d);
 void sa_pat_label(const sa_code *c, char *out, int max);       /* "OFFBEAT", or "OFFBEAT EDIT" for an own one */
+const char *sa_pan_mode_name(int m);
+const char *sa_pan_rate_name(int r);
+/* the gates */
+const char *sa_gate_name(int pat);
+uint16_t sa_gate_mask(const sa_gate *gt);           /* its steps */
+bool sa_gate_on(const sa_gate *gt);
+void sa_gate_label(const sa_gate *gt, char *out, int max);     /* "TRANCE A", "TRANCE A EDIT", "MY GATE", "OFF" */
+void sa_gate_step(sa_groove *g, int layer, int step);          /* a gate step on or off (the copy) */
+void sa_gate_pick(sa_groove *g, int layer, int d);             /* the next ready gate (the copy) */
 
 #endif

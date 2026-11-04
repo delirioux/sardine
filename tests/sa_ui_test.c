@@ -343,6 +343,50 @@ int main(int argc, char **argv)
     all_palettes("steps");
     press(SV_B_SEQ);
     CHECK(ui.page == SV_PG_LAYER, "SEQ again: back");
+    /* GATE: ENV on a synth layer */
+    press(SV_B_ENV);
+    CHECK(ui.page == SV_PG_GATE, "ENV: GATE");
+    sv_knob(&ui, SV_K1, 5);
+    CHECK(g.ed_gate[3].pat == 5, "KNOB 1: TRANCE A (%d)", g.ed_gate[3].pat);
+    sv_key(&ui, SV_KEY_LO + 1, true);
+    sv_key(&ui, SV_KEY_LO + 1, false);
+    CHECK(g.ed_gate[3].own && g.ed_gate[3].mask == (0x6D6D ^ 2), "a key edits the gate (%04x)", g.ed_gate[3].mask);
+    {
+        uint32_t full, dim;
+        CHECK(sv_key_leds(&ui, &full, &dim) && dim == 0xFFFFu && full == g.ed_gate[3].mask, "the gate's keys lit (%x)", full);
+    }
+    sv_knob(&ui, SV_K3, -4);
+    shot("13b_gate");
+    all_palettes("gate");
+    press(SV_B_ENV);
+    CHECK(ui.page == SV_PG_LAYER, "ENV again: back");
+    /* PAN: LFO on a synth layer, at once */
+    press(SV_B_LFO);
+    CHECK(ui.page == SV_PG_PAN, "LFO: PAN");
+    int pend_before = sa_pending(&g);
+    sv_knob(&ui, SV_K2, -10);
+    CHECK(g.s.pan[3].pos == -20 && sa_pending(&g) == pend_before, "PAN L20 at once, not code (%d)", g.s.pan[3].pos);
+    run_ms(100);
+    CHECK(g.pan_now[0] < -20, "the part pans left (%d)", g.pan_now[0]);
+    sv_knob(&ui, SV_K1, 1);
+    CHECK(g.s.pan[3].mode == SA_PAN_SWEEP, "MODE: SWEEP");
+    {
+        int lo = 64, hi = -64;
+        for (int t = 0; t < 2500; t += 16) { run_ms(16); if (g.pan_now[0] < lo) lo = g.pan_now[0]; if (g.pan_now[0] > hi) hi = g.pan_now[0]; }
+        CHECK(hi - lo > 30, "SWEEP moves it (%d .. %d)", lo, hi);
+    }
+    shot("13c_pan");
+    all_palettes("pan");
+    sv_knob(&ui, SV_K1, 1);
+    {
+        int lo = 64, hi = -64;
+        for (int t = 0; t < 2500; t += 16) { run_ms(16); if (g.pan_now[0] < lo) lo = g.pan_now[0]; if (g.pan_now[0] > hi) hi = g.pan_now[0]; }
+        CHECK(g.s.pan[3].mode == SA_PAN_PINGPONG && hi - lo > 30, "PING-PONG: from side to side (%d .. %d)", lo, hi);
+    }
+    sv_knob(&ui, SV_K1, -2);
+    sv_knob(&ui, SV_K2, 10);
+    press(SV_B_LFO);
+    CHECK(ui.page == SV_PG_LAYER, "LFO again: back");
     press(SV_B_REC);
     bars(1);
     /* every chip text on the lint: every sound, every pattern, every modifier */

@@ -272,8 +272,7 @@ static inline void sas_synth(track_t *t, const sas_sound *snd, const sas_base *b
     t->p[P_M2SRC] = MS_EXPR;
     t->p[P_M2DST] = MD_AMP;
     t->p[P_M2AMT] = 64;
-    t->p[P_PAN] = 0;
-    t->p[P_ITYPE] = 0;
+    t->p[P_ITYPE] = 0;                           /* (P_PAN: each block, sas_block, the layer's panning) */
     if (snd->engine == SAS_SAMPLE) {             /* the piano: its velocity (the SAMPLE engine has none of its own) */
         t->p[P_M4SRC] = MS_VEL;
         t->p[P_M4DST] = MD_AMP;
@@ -283,7 +282,7 @@ static inline void sas_synth(track_t *t, const sas_sound *snd, const sas_base *b
     }
 }
 
-/* the block's pump into the synth parts (the audio ISR, after the layers): a layer with PUMP off stays up */
+/* the block's pump and gate into the synth parts (the audio ISR, after the layers): a layer with PUMP off stays up */
 static inline void sas_block(const sa_groove *g)
 {
     uint8_t duck[SA_SYNTHS] = {0, 0, 0};
@@ -291,8 +290,11 @@ static inline void sas_block(const sa_groove *g)
         const sa_code *c = &g->s.code[l];
         if (c->type == SA_T_SYNTH && c->part < SA_SYNTHS && !g->s.live[l].nopump) duck[c->part] = g->duck;
     }
-    for (int p = 0; p < SA_SYNTHS; ++p)
-        trk[p].ex_off = duck[p];
+    for (int p = 0; p < SA_SYNTHS; ++p) {         /* the pump and the gate together: the gains multiply */
+        int up = (127 - duck[p]) * (127 - g->gate_off[p]) / 127;
+        trk[p].ex_off = (uint8_t)(127 - up);
+        trk[p].p[P_PAN] = g->pan_now[p];          /* the layer's panning */
+    }
 }
 
 /* the song's own: the tempo for the delay and the LFOs, the delay, the room */

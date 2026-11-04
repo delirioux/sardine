@@ -16,6 +16,8 @@
  *              REC drops it
  *   EDIT       DRUMS: the row picked as a layer screen (its modifiers), again: back
  *   SEQ        a synth layer: STEPS (KNOB 1 the step, KNOB 2 its length, a key its note), again: back
+ *   LFO        a synth layer: PAN (MODE: FIXED SWEEP PING-PONG RANDOM, PAN, WIDTH, RATE; at once), again: back
+ *   ENV        a synth layer: GATE (KNOB 1 a ready gate, DEPTH WIDTH SMOOTH; the lowest 16 keys its steps), again: back
  *   REC        drop the copy in: playing, on the next bar line; stopped, at once
  *   PLAY       start / stop
  *   FX         a layer, a DRUMS row: mute it (at once)
@@ -38,7 +40,7 @@ enum {
     SV_B_HOME, SV_B_SAVE, SV_B_ARP, SV_B_SEQ, SV_B_PLAY, SV_B_REC,
     SV_B_OCTDN, SV_B_OCTUP, SV_BUTTONS
 };
-enum { SV_PG_MAIN, SV_PG_LAYER, SV_PG_ARP, SV_PG_KEY, SV_PG_MENU, SV_PG_DRUMS, SV_PG_STEPS, SV_PAGES };
+enum { SV_PG_MAIN, SV_PG_LAYER, SV_PG_ARP, SV_PG_KEY, SV_PG_MENU, SV_PG_DRUMS, SV_PG_STEPS, SV_PG_GATE, SV_PG_PAN, SV_PAGES };
 #define SV_KEY_LO 53                      /* F3: the FM-1's lowest key */
 #define SV_KEY_HI 79                      /* G5 */
 
