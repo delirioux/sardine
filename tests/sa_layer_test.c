@@ -125,6 +125,55 @@ int main(void)
     run_bars(&g, 1);
     CHECK(LG.per_part[0] >= 30, "ARP 1/32 over a held note: 32 a bar, got %d", LG.per_part[0]);
 
+    /* own patterns: a drum step added and one taken away (in the copy, dropped with REC) */
+    sa_play(&g, false);
+    sa_init(&g, SR);
+    sa_set_sound(&g, snd, 0);
+    only(&g, 0);                                    /* the kick: 4 FLOOR */
+    sa_step_drum(&g, 0, 4);                         /* the second kick off */
+    sa_step_drum(&g, 0, 14);                        /* a pickup on */
+    CHECK(g.ed[0].own && g.ed[0].hits == ((1u << 0) | (1u << 8) | (1u << 12) | (1u << 14)), "drum steps: %04x",
+          g.ed[0].hits);
+    CHECK(g.s.code[0].own == 0, "the edit waits for REC");
+    sa_drop(&g);
+    sa_play(&g, true);
+    clear_log();
+    run_bars(&g, 2);
+    CHECK(LG.on[3][36] == 8, "own kick: 4 a bar, got %d", LG.on[3][36]);
+    CHECK(sa_preview(&g, &g.s.code[0], 0, 0) == g.s.code[0].hits, "the preview shows the own steps");
+    /* a synth layer's own notes: a key on a step, the same key again takes it off */
+    sa_play(&g, false);
+    sa_init(&g, SR);
+    sa_set_sound(&g, snd, 0);
+    only(&g, 3);                                    /* ROLLER: notes on 2 3 6 7 10 11 14 15 */
+    sa_step_note(&g, 3, 0, 48);                     /* C3 on step 1 (A minor: C is in the scale) */
+    CHECK(g.ed[3].sn[0] == 48 - 9, "the note is kept above the key (%d)", g.ed[3].sn[0]);
+    sa_step_note(&g, 3, 2, 45);                     /* step 3: A2, ROLLER's own A2 there: it goes */
+    CHECK(g.ed[3].sn[2] == SA_NO_NOTE, "the same note again: off (%d)", g.ed[3].sn[2]);
+    sa_step_note(&g, 3, 4, 49);                     /* C#3: not in A minor, snapped to C3 or D3 */
+    CHECK(g.ed[3].sn[4] == 48 - 9 || g.ed[3].sn[4] == 50 - 9, "snapped to the scale (%d)", g.ed[3].sn[4]);
+    sa_step_len(&g, 3, 0, 3);
+    CHECK(g.ed[3].sl[0] == 4, "the length: 4 sixteenths (%d)", g.ed[3].sl[0]);
+    sa_drop(&g);
+    sa_play(&g, true);
+    clear_log();
+    run_bars(&g, 1);
+    CHECK(LG.on[0][48] == 1 + (g.s.code[3].sn[4] == 48 - 9), "the own C3 plays (%d)", LG.on[0][48]);
+    CHECK(LG.per_part[0] == 9, "ROLLER's 8 notes, one off, two on: 9, got %d", LG.per_part[0]);
+    /* a chord layer: a key toggles the chord */
+    sa_play(&g, false);
+    sa_init(&g, SR);
+    sa_set_sound(&g, snd, 0);
+    only(&g, 4);                                    /* STAB 2: chords on 4 and 11 */
+    CHECK(sa_chordy(&g.ed[4]), "STAB 2 is a chord pattern");
+    sa_step_note(&g, 4, 0, 60);
+    CHECK(g.ed[4].chord == ((1u << 0) | (1u << 3) | (1u << 10)), "a chord added on step 1 (%04x)", g.ed[4].chord);
+    sa_drop(&g);
+    sa_play(&g, true);
+    clear_log();
+    run_bars(&g, 1);
+    CHECK(LG.per_part[1] == 9, "three chords of three notes, got %d", LG.per_part[1]);
+
     /* three synth layers at most */
     sa_init(&g, SR);
     CHECK(sa_synth_count(&g) == 2, "first groove: two synth layers");

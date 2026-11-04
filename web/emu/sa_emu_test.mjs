@@ -40,13 +40,16 @@ check("PLAY's green LED lit", (w.web_lit_buttons() >> 14) & 1);
 
 // SELECT to a layer, ARP opens its page, SCL the KEY page, HOME back to MAIN
 const pages = [];
-w.web_enc(EN.SELECT, 4); run(0.2); pages.push(w.web_da_page());   // layer 4 (the bass): LAYER
+w.web_enc(EN.SELECT, 2); run(0.2); pages.push(w.web_da_page());   // MAIN, DRUMS, the bass layer: LAYER
 press(B.ARP); pages.push(w.web_da_page());                          // ARP
 press(B.SCL); pages.push(w.web_da_page());                          // KEY
 check(`SELECT, ARP, SCL open LAYER, ARP, KEY (${pages.join(" ")})`, pages[0] === 1 && pages[1] === 2 && pages[2] === 3);
 press(B.HOME);
 run(0.5);
 check("HOME returns to MAIN", w.web_da_page() === 0);
+w.web_enc(EN.SELECT, 1); run(0.2);
+check("SELECT after MAIN: DRUMS", w.web_da_page() === 5);
+press(B.HOME); run(0.3);
 
 press(B.PLAY);
 run(4);

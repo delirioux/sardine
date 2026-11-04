@@ -296,13 +296,14 @@ void sa_mod_name(sa_mod m, char *out, int max)
 /* ---- the query: a layer's notes over a span of ticks, the modifiers applied from the last one in (each one asks
  * the ones before it for the span it needs). One set of buffers, one per depth: the audio's bar line and the
  * screen's preview never run at once (the glue holds the audio off for the preview) ---- */
-typedef struct { int32_t t; uint8_t d, tone, v; int8_t oct; } qev;
+typedef struct { int32_t t; uint8_t d, tone, v; int8_t oct, n; } qev;   /* n: an own note (tone SA_NOTE) */
+#define SA_NOTE 10                                 /* a query note's tone: an own pattern's note, n above the key */
 #define QMAX 64
 static qev QB[SA_MODS + 1][QMAX];
 static int QN[SA_MODS + 1];
 static qev QT[QMAX];                               /* a transform's inner result, copied out of the deeper buffer */
 
-static void qadd(int k, int32_t t, int d, int tone, int oct, int v)
+static void qadd(int k, int32_t t, int d, int tone, int oct, int v, int n)
 {
     if (QN[k] >= QMAX) return;
     qev *e = &QB[k][QN[k]++];
@@ -311,6 +312,7 @@ static void qadd(int k, int32_t t, int d, int tone, int oct, int v)
     e->tone = (uint8_t)tone;
     e->oct = (int8_t)clampi(oct, -4, 4);
     e->v = (uint8_t)clampi(v, 1, 127);
+    e->n = (int8_t)n;
 }
 
 /* the active modifiers of a code, in order */
@@ -339,17 +341,32 @@ static void query(const sa_code *c, const sa_mod *m, int k, int layer, int32_t a
     if (b <= a) return;
     if (k == 0) {                                  /* the pattern itself, a bar long, over and over */
         for (int32_t cy = fdiv(a, SA_TPB); cy <= fdiv(b - 1, SA_TPB); ++cy) {
+            if (c->own) {                          /* the layer's own: its sixteenths */
+                for (int i = 0; i < 16; ++i) {
+                    int32_t t = cy * SA_TPB + i * SA_TPS;
+                    if (t < a || t >= b) continue;
+                    int v = (c->acc >> i) & 1u ? 124 : 104;
+                    if (c->type == SA_T_DRUM) {
+                        if ((c->hits >> i) & 1u) qadd(0, t, 3, 0, 0, v, 0);
+                    } else if ((c->chord >> i) & 1u) {
+                        qadd(0, t, c->sl[i] * SA_TPS, SA_CH, 0, v, 0);
+                    } else if (c->sn[i] != SA_NO_NOTE) {
+                        qadd(0, t, c->sl[i] * SA_TPS, SA_NOTE, 0, v, c->sn[i]);
+                    }
+                }
+                continue;
+            }
             if (c->type == SA_T_DRUM) {
                 const dpat *p = &DPAT[c->pat % NDPAT];
                 for (int i = 0; i < p->n; ++i) {
                     int32_t t = cy * SA_TPB + p->s[i].t;
-                    if (t >= a && t < b) qadd(0, t, 3, 0, 0, p->s[i].v);
+                    if (t >= a && t < b) qadd(0, t, 3, 0, 0, p->s[i].v, 0);
                 }
             } else {
                 const spat *p = &SPAT[c->pat % NSPAT];
                 for (int i = 0; i < p->n; ++i) {
                     int32_t t = cy * SA_TPB + p->s[i].t;
-                    if (t >= a && t < b) qadd(0, t, p->s[i].d, p->s[i].tone, p->s[i].oct, p->s[i].v);
+                    if (t >= a && t < b) qadd(0, t, p->s[i].d, p->s[i].tone, p->s[i].oct, p->s[i].v, 0);
                 }
             }
         }
@@ -360,13 +377,13 @@ static void query(const sa_code *c, const sa_mod *m, int k, int layer, int32_t a
     switch (md.type) {
     case SA_M_FAST:
         n = inner(c, m, k, layer, a * x, b * x);
-        for (int i = 0; i < n; ++i) qadd(k, fdiv(QT[i].t, x), QT[i].d / x, QT[i].tone, QT[i].oct, QT[i].v);
+        for (int i = 0; i < n; ++i) qadd(k, fdiv(QT[i].t, x), QT[i].d / x, QT[i].tone, QT[i].oct, QT[i].v, QT[i].n);
         break;
     case SA_M_SLOW:
         n = inner(c, m, k, layer, fdiv(a, x), fdiv(b + x - 1, x));
         for (int i = 0; i < n; ++i) {
             int32_t t = QT[i].t * x;
-            if (t >= a && t < b) qadd(k, t, QT[i].d * x, QT[i].tone, QT[i].oct, QT[i].v);
+            if (t >= a && t < b) qadd(k, t, QT[i].d * x, QT[i].tone, QT[i].oct, QT[i].v, QT[i].n);
         }
         break;
     case SA_M_REV:
@@ -381,7 +398,7 @@ static void query(const sa_code *c, const sa_mod *m, int k, int layer, int32_t a
                     t = c0 + SA_TPB - (QT[i].t - c0) - QT[i].d;
                     if (t < c0) t = c0;
                 }
-                if (t >= a && t < b) qadd(k, t, QT[i].d, QT[i].tone, QT[i].oct, QT[i].v);
+                if (t >= a && t < b) qadd(k, t, QT[i].d, QT[i].tone, QT[i].oct, QT[i].v, QT[i].n);
             }
         }
         break;
@@ -389,7 +406,7 @@ static void query(const sa_code *c, const sa_mod *m, int k, int layer, int32_t a
         n = inner(c, m, k, layer, a, b);
         for (int i = 0; i < n; ++i)
             if ((int)(hash2((uint32_t)QT[i].t, (uint32_t)layer * 31u + (uint32_t)k) % 100u) >= x * 10)
-                qadd(k, QT[i].t, QT[i].d, QT[i].tone, QT[i].oct, QT[i].v);
+                qadd(k, QT[i].t, QT[i].d, QT[i].tone, QT[i].oct, QT[i].v, QT[i].n);
         break;
     case SA_M_EUCLID:
         for (int32_t cy = fdiv(a, SA_TPB); cy <= fdiv(b - 1, SA_TPB); ++cy) {
@@ -405,7 +422,7 @@ static void query(const sa_code *c, const sa_mod *m, int k, int layer, int32_t a
                 const qev *e = &QT[j % n];
                 int32_t t = c0 + s * SA_TPS;
                 int dmax = (next - s) * SA_TPS;
-                if (t >= a && t < b) qadd(k, t, e->d < dmax ? e->d : dmax, e->tone, e->oct, e->v);
+                if (t >= a && t < b) qadd(k, t, e->d < dmax ? e->d : dmax, e->tone, e->oct, e->v, e->n);
                 j++;
                 last = s;
             }
@@ -415,7 +432,7 @@ static void query(const sa_code *c, const sa_mod *m, int k, int layer, int32_t a
     case SA_M_SHIFT: {
         int32_t sh = (x - 8) * SA_TPS;
         n = inner(c, m, k, layer, a - sh, b - sh);
-        for (int i = 0; i < n; ++i) qadd(k, QT[i].t + sh, QT[i].d, QT[i].tone, QT[i].oct, QT[i].v);
+        for (int i = 0; i < n; ++i) qadd(k, QT[i].t + sh, QT[i].d, QT[i].tone, QT[i].oct, QT[i].v, QT[i].n);
         break;
     }
     case SA_M_LEN: {
@@ -426,14 +443,14 @@ static void query(const sa_code *c, const sa_mod *m, int k, int layer, int32_t a
                 int32_t t = j * L + (QT[i].t - j * SA_TPB);
                 int d = QT[i].d;
                 if (t + d > (j + 1) * L) d = (int)((j + 1) * L - t);
-                if (t >= a && t < b) qadd(k, t, d, QT[i].tone, QT[i].oct, QT[i].v);
+                if (t >= a && t < b) qadd(k, t, d, QT[i].tone, QT[i].oct, QT[i].v, QT[i].n);
             }
         }
         break;
     }
     case SA_M_OCT:
         n = inner(c, m, k, layer, a, b);
-        for (int i = 0; i < n; ++i) qadd(k, QT[i].t, QT[i].d, QT[i].tone, QT[i].oct + (x - 2), QT[i].v);
+        for (int i = 0; i < n; ++i) qadd(k, QT[i].t, QT[i].d, QT[i].tone, QT[i].oct + (x - 2), QT[i].v, QT[i].n);
         break;
     case SA_M_PLY:
         n = inner(c, m, k, layer, a, b);
@@ -442,13 +459,13 @@ static void query(const sa_code *c, const sa_mod *m, int k, int layer, int32_t a
             if (d < 1) d = 1;
             for (int r = 0; r < x; ++r) {
                 int32_t t = QT[i].t + r * d;
-                if (t >= a && t < b) qadd(k, t, d, QT[i].tone, QT[i].oct, QT[i].v - r * 8);
+                if (t >= a && t < b) qadd(k, t, d, QT[i].tone, QT[i].oct, QT[i].v - r * 8, QT[i].n);
             }
         }
         break;
     default:
         n = inner(c, m, k, layer, a, b);
-        for (int i = 0; i < n; ++i) qadd(k, QT[i].t, QT[i].d, QT[i].tone, QT[i].oct, QT[i].v);
+        for (int i = 0; i < n; ++i) qadd(k, QT[i].t, QT[i].d, QT[i].tone, QT[i].oct, QT[i].v, QT[i].n);
         break;
     }
 }
@@ -570,11 +587,15 @@ static void layer_bar(sa_groove *g, int l, int bar)
             bn_add(g, (int)(e[i].t - b0), e[i].d, note, e[i].v * (20 + lv * 80 / 100) / 100, l);
         return;
     }
-    int poct = SPAT[c->pat % NSPAT].oct;
+    int poct = c->own ? c->ooct : SPAT[c->pat % NSPAT].oct;
     for (int i = 0; i < n; ++i) {
         int tick = (int)(e[i].t - b0), oct = poct + e[i].oct;
+        int own_note = e[i].tone == SA_NOTE ? g->s.harm.key + e[i].n + 12 * e[i].oct : -1;
+        if (own_note >= 0) oct = own_note / 12 - 1;
         if (c->amode == SA_AR_OFF || c->amode >= SA_AR_MODES) {
-            if (e[i].tone == SA_CH) {
+            if (own_note >= 0) {
+                bn_add(g, tick, e[i].d, own_note, e[i].v, l);
+            } else if (e[i].tone == SA_CH) {
                 for (int t = 0; t < 3; ++t)
                     bn_add(g, tick, e[i].d, tone_note(g, t, oct), e[i].v - t * 4, l);
             } else {
@@ -610,6 +631,97 @@ static void bar_build(sa_groove *g)
     g->bn_at = 0;
     for (int l = 0; l < SA_LAYERS; ++l)
         layer_bar(g, l, g->bar);
+}
+
+/* ---- the own patterns ------------------------------------------------------------------------------------------ */
+bool sa_chordy(const sa_code *c)
+{
+    if (c->type != SA_T_SYNTH) return false;
+    const spat *p = &SPAT[c->pat % NSPAT];
+    for (int i = 0; i < p->n; ++i)
+        if (p->s[i].tone == SA_CH) return true;
+    return false;
+}
+
+void sa_own_make(sa_groove *g, sa_code *c)
+{
+    if (c->own || c->type == SA_T_NONE) return;
+    c->hits = c->acc = c->chord = 0;
+    for (int i = 0; i < 16; ++i) {
+        c->sn[i] = SA_NO_NOTE;
+        c->sl[i] = 1;
+    }
+    if (c->type == SA_T_DRUM) {                    /* (a triplet hit goes to its nearest sixteenth) */
+        const dpat *p = &DPAT[c->pat % NDPAT];
+        for (int i = 0; i < p->n; ++i) {
+            int st = ((p->s[i].t + SA_TPS / 2) / SA_TPS) % 16;
+            c->hits |= (uint16_t)(1u << st);
+            if (p->s[i].v >= 120) c->acc |= (uint16_t)(1u << st);
+        }
+    } else {                                       /* the notes as the chord of the bar playing voices them */
+        const spat *p = &SPAT[c->pat % NSPAT];
+        c->ooct = (uint8_t)p->oct;
+        for (int i = 0; i < p->n; ++i) {
+            int st = ((p->s[i].t + SA_TPS / 2) / SA_TPS) % 16;
+            int len = (p->s[i].d + SA_TPS / 2) / SA_TPS;
+            c->sl[st] = (uint8_t)clampi(len, 1, 16);
+            if (p->s[i].v >= 115) c->acc |= (uint16_t)(1u << st);
+            if (p->s[i].tone == SA_CH) {
+                c->chord |= (uint16_t)(1u << st);
+            } else {
+                int nn = tone_note(g, p->s[i].tone, p->oct + p->s[i].oct) - g->s.harm.key;
+                c->sn[st] = (int8_t)clampi(nn, -127, 127);
+            }
+        }
+    }
+    c->own = 1;
+}
+
+void sa_step_drum(sa_groove *g, int l, int st)
+{
+    if (l < 0 || l >= SA_LAYERS || st < 0 || st > 15) return;
+    sa_code *c = &g->ed[l];
+    if (c->type != SA_T_DRUM) return;
+    sa_own_make(g, c);
+    c->hits ^= (uint16_t)(1u << st);
+    if (!((c->hits >> st) & 1u)) c->acc &= (uint16_t)~(1u << st);
+}
+
+void sa_step_note(sa_groove *g, int l, int st, int note)
+{
+    if (l < 0 || l >= SA_LAYERS || st < 0 || st > 15) return;
+    sa_code *c = &g->ed[l];
+    if (c->type != SA_T_SYNTH) return;
+    bool chordy = sa_chordy(c);
+    sa_own_make(g, c);
+    if (chordy) {
+        c->chord ^= (uint16_t)(1u << st);
+        c->sn[st] = SA_NO_NOTE;
+    } else {
+        int rel = clampi(sa_snap(&g->ed_harm, note) - g->ed_harm.key, -127, 127);
+        if (c->sn[st] == rel && !((c->chord >> st) & 1u)) {
+            c->sn[st] = SA_NO_NOTE;
+        } else {
+            c->sn[st] = (int8_t)rel;
+            c->chord &= (uint16_t)~(1u << st);
+        }
+    }
+    if (c->sl[st] < 1) c->sl[st] = 1;
+}
+
+void sa_step_len(sa_groove *g, int l, int st, int d)
+{
+    if (l < 0 || l >= SA_LAYERS || st < 0 || st > 15) return;
+    sa_code *c = &g->ed[l];
+    if (c->type != SA_T_SYNTH) return;
+    sa_own_make(g, c);
+    c->sl[st] = (uint8_t)clampi(c->sl[st] + d, 1, 16);
+}
+
+void sa_pat_label(const sa_code *c, char *out, int max)
+{
+    cpy(out, sa_pat_name(c->type, c->pat), max);
+    if (c->own) cat(out, " EDIT", max);
 }
 
 /* ---- defaults and checks --------------------------------------------------------------------------------------- */
@@ -717,6 +829,10 @@ void sa_settings_fix(sa_settings *s)
                 if (MODS[r].type == m->type) m->val = (uint8_t)clampi(m->val, MODS[r].lo, MODS[r].hi);
             if (mod_skip(c->type, m->type, m->val)) m->type = SA_M_OFF;
         }
+        c->own = (uint8_t)(c->own ? 1 : 0);
+        c->ooct = (uint8_t)clampi(c->ooct, 1, 6);
+        for (int i = 0; i < 16; ++i)
+            c->sl[i] = (uint8_t)clampi(c->sl[i], 1, 16);
         c->amode = (uint8_t)(c->amode < SA_AR_MODES ? c->amode : 0);
         c->arate = (uint8_t)clampi(c->arate, 0, SA_RATES - 1);
         c->arange = (uint8_t)clampi(c->arange, 1, 4);

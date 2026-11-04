@@ -52,7 +52,7 @@ static void sa_audio_post(int32_t *out, uint32_t n)
 
 /* ---- the settings: one record in Felucca's first project object; saved only while stopped (the flash is the code's:
  * XIP, writing it while playing would stall the audio) ---- */
-#define SA_REC_MAGIC 0x31524153u                             /* "SAR1" */
+#define SA_REC_MAGIC 0x32524153u                             /* "SAR2" (0.2: the own patterns; 0.1's record is not read) */
 typedef struct { uint32_t magic; uint16_t size, ver; sa_settings s; } sa_record;
 static uint32_t sa_save_ms;
 static bool sa_dirty;
@@ -279,12 +279,16 @@ static void sa_leds(void)
         led_put(nl, panel.btn[pb], 1);
     bool pend = sa_pending(&sa_g) > 0;
     led_put(nl, panel.btn[B_REC], pend && (!sa_g.drop_armed || (fm1_ms / 125u) % 2u));
-    if ((sa_u.page == SV_PG_LAYER || sa_u.page == SV_PG_ARP) && sa_u.layer >= 0 && sa_g.s.live[sa_u.layer].mute)
+    int ml = sa_u.page == SV_PG_DRUMS ? sv_drow_layer(&sa_u) :
+             (sa_u.page == SV_PG_LAYER || sa_u.page == SV_PG_ARP || sa_u.page == SV_PG_STEPS) ? sa_u.layer : -1;
+    if (ml >= 0 && sa_g.s.live[ml].mute)
         led_put(nl, panel.btn[B_FX], 1);
+    uint32_t efull = 0, edim = 0;
+    bool editing = sv_key_leds(&sa_u, &efull, &edim);   /* DRUMS, STEPS: the keys show what they edit */
     for (k = 0; k < NB; k++)
         led_put(nd, panel.btn[k], 1);
     uint32_t lit = 0;
-    if (sa_g.playing)
+    if (sa_g.playing && !editing)
         for (k = 0; k < 27u; k++)
             for (int t = 0; t < 3; ++t)
                 if ((SV_KEY_LO + k) % 12u == sa_g.chord_pc[t]) lit |= 1u << k;
@@ -299,6 +303,14 @@ static void sa_leds(void)
     for (k = 0; k < 27u; k++)
         if ((lit >> k) & 1u && !((fm1_in.notes >> k) & 1u))
             led_put(nd, 14u + k, 1);
+    if (editing)                                             /* the step keys dim, the steps set full (always: they
+                                                              * are the editor, not decoration) */
+        for (k = 0; k < 27u; k++) {
+            bool f = ((efull >> k) & 1u) || ((fm1_in.notes >> k) & 1u);
+            led_clear(nd, 14u + k);                          /* (only the editing keys glow: the rest dark) */
+            led_put(nl, 14u + k, f);
+            if (((edim >> k) & 1u) && !f) led_put(nd, 14u + k, 1);
+        }
     if (sa_g.playing)
         nl[LED_PLAY_GREEN >> 3] |= (uint8_t)(1u << (LED_PLAY_GREEN & 7u));
     fm1_led_dim_level(settings_leds == LEDS_DIM_LO);

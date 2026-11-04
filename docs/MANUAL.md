@@ -1,13 +1,14 @@
 # Sardine manual
 
-Sardine 0.1. Live club mixing on the FM-1: a stack of layers, each a line of code you build with the knobs. A layer
+Sardine 0.2. Live club mixing on the FM-1: a stack of layers, each a line of code you build with the knobs. A layer
 is a sound and a pattern, bent by modifiers and, on a synth layer, an arpeggiator. You change the code, and REC drops
 your changes in on the one: the next bar line. The sound of a layer (its filter, drive, level) and the mutes act at
 once, as you turn.
 
 ## The screens
 
-SELECT goes through them: **MAIN**, then one screen per layer, then **NEW** (a free slot for a new layer).
+SELECT goes through them: **MAIN**, **DRUMS** (every drum on one screen), then one screen per synth layer, then
+**NEW** (a new synth layer, while there is room for one).
 
 <p align="center">
 <img src="screens/main.png" alt="MAIN" width="200">
@@ -19,14 +20,37 @@ SELECT goes through them: **MAIN**, then one screen per layer, then **NEW** (a f
 once: **TEMPO**, **FILTER** (the whole mix darker to the left, OPEN at the top), **FEEL** (the swing of the off
 sixteenths; every layer follows it) and **KIT** (the drum kit).
 
+## DRUMS
+
+<p align="center">
+<img src="screens/drums.png" alt="DRUMS" width="200">
+<img src="screens/drums_edited.png" alt="A row edited" width="200">
+<img src="screens/drums_add.png" alt="+ ADD A DRUM" width="200">
+</p>
+
+Every drum is a row of one screen: its name, its bar, its first modifier. **PRESETS** picks a row; the row picked
+shows large under the rows, its 16 steps. **The 16 lowest keys are those steps**: a key puts a hit on, the same key
+takes it off. While DRUMS is open the step keys glow dim and the steps that are set glow full, so you see which key is
+which. The first edit makes the ready pattern the row's own (its name says EDIT); **ALGORITHM** turns the row to
+another ready pattern (and lets the own one go). The keys above the 16 play the row's drum.
+
+The knobs: the row's **LEVEL**, and the kit's **TUNE**, **TONE** and **DECAY**. **FX** mutes the row at once.
+
+The last row, **+ ADD A DRUM**: ALGORITHM picks a drum (KICK SNARE CLAP HAT OPEN HAT RIDE CRASH RIM TOM LOW TOM CONGA
+COWBELL CLAVE SHAKER) in a pattern that suits it. Until REC drops it in, ALGORITHM still changes which drum it is.
+
+**EDIT** opens the row picked as a layer screen: its modifiers, or REMOVE. EDIT again goes back to DRUMS.
+
+## A synth layer
+
 **A layer** has two halves. The knobs below are its sound, at once:
 
 | Layer | KNOB 1 | KNOB 2 | KNOB 3 | KNOB 4 |
 | --- | --- | --- | --- | --- |
 | synth | CUTOFF | RESO | DRIVE | ENV (the filter envelope, 50: the sound's own) |
-| drum | LEVEL | TUNE | TONE | DECAY |
+| drum (from DRUMS, EDIT) | LEVEL | TUNE | TONE | DECAY |
 
-A drum layer's TUNE, TONE and DECAY move the whole kit: every drum layer plays on it.
+A drum's TUNE, TONE and DECAY move the whole kit: every drum plays on it.
 
 The panel is its code, as chips: **SOUND**, **PATTERN**, up to four **modifiers**, **+** (room for one more) and, on
 a synth layer, **ARP**. PRESETS picks a chip, ALGORITHM changes it. A changed chip turns the second colour, the header
@@ -35,6 +59,19 @@ header says **ON THE 1** and REC blinks; on the next bar line it all goes in at 
 
 **FX** mutes the layer open (at once; again: back in). Turning SOUND down past its first entry says **REMOVE**: the
 layer goes on the drop.
+
+## STEPS
+
+<p align="center">
+<img src="screens/steps.png" alt="STEPS" width="200">
+</p>
+
+On a synth layer **SEQ** opens STEPS: the layer's notes over the bar. **KNOB 1** picks the step, **a key** writes its
+note there (snapped to the scale) and the cursor moves on to the next step, so a line goes in as fast as you play it;
+the same note again takes the step off. **KNOB 2** is the step's length. On a chord layer (stabs, pads) a key puts the
+chord on the step or takes it off: it plays the chord of the bar, so it follows the progression. The keys of the scale
+glow dim, the step's note full. As on DRUMS the first edit makes the pattern the layer's own, the edits wait for REC,
+and the modifiers and the arpeggiator still act on it. SEQ again goes back.
 
 ## The modifiers
 
@@ -72,17 +109,16 @@ back. The arpeggiator is code too: it drops with REC.
 ONE CHORD to four chords) and **BARS** (each chord 1, 2 or 4 bars). Every synth layer follows the chord of the bar;
 the drums do not. A key change is code: it drops with REC, on the one. SCL again goes back.
 
-## A new layer
+## A new synth layer
 
-Turn SELECT past the last layer: **NEW**. KNOB 1 picks its sound: the drums first (KICK SNARE CLAP HAT OPEN HAT RIDE
-CRASH RIM TOM LOW TOM CONGA COWBELL CLAVE SHAKER), then the synth sounds (BASS, KEYS, PADS, LEADS, FX: 65 of them).
-Any number of drum layers play on the kit; up to three synth layers, each with its own sound and filter (the FM-1
-runs four parts). With three synth layers, a new one can only be a drum. Up to twelve layers in all.
+Turn SELECT past the last synth layer: **NEW**. KNOB 1 picks its sound (BASS, KEYS, PADS, LEADS, FX: 65 of them),
+KNOB 2 its pattern. Up to three synth layers, each with its own sound and filter (the FM-1 runs four parts); every drum
+plays on the kit. Up to twelve layers in all, drums and synths together.
 
 ## The keys
 
-The keys play the layer open, live: a synth layer snapped to the scale, a drum layer its drum. On MAIN they play the
-first synth layer. OCT- and OCT+ move their octave. The keys never change a setting.
+The keys play the layer open, live, snapped to the scale; on MAIN the first synth layer. On DRUMS and STEPS they edit
+the steps (above). OCT- and OCT+ move their octave. The keys never change a setting.
 
 ## The kits
 
@@ -99,4 +135,5 @@ The synth layers' parts on channels 1, 2 and 3, the kit on 10 with General MIDI 
 ## Saving
 
 The layers and the settings save themselves two seconds after the last change while stopped, never while playing
-(writing the flash would stall the audio). They live in Felucca's first song slot.
+(writing the flash would stall the audio). They live in Felucca's first song slot. (0.2 keeps its layers in a new
+form: what 0.1 saved is not read, the first groove comes back.)

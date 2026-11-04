@@ -243,12 +243,83 @@ int main(int argc, char **argv)
     CHECK(g.s.live[3].mute, "FX mutes the layer");
     shot("07_layer_muted");
     press(SV_B_FX);
-    /* a drum layer's cards */
-    go_layer(0);
-    shot("08_layer_kick");
-    all_palettes("layer_kick");
+    /* DRUMS: every drum on one screen, the step keys */
+    sv_button(&ui, SV_B_HOME, true);
+    sv_button(&ui, SV_B_HOME, false);
+    sv_knob(&ui, SV_K_SELECT, 1);
+    CHECK(ui.page == SV_PG_DRUMS, "SELECT after MAIN: DRUMS (%d)", ui.page);
+    shot("08_drums");
+    all_palettes("drums");
     sv_knob(&ui, SV_K2, 3);
     CHECK(g.s.ktune == 56, "TUNE moves the kit (%d)", g.s.ktune);
+    sv_knob(&ui, SV_K_PRESETS, 1);                 /* the HAT row */
+    CHECK(sv_drow_layer(&ui) == 1, "PRESETS picks the hat row (%d)", sv_drow_layer(&ui));
+    {
+        uint32_t full, dim;
+        sv_draw(&ui);
+        CHECK(sv_key_leds(&ui, &full, &dim) && dim == 0xFFFFu && full == ((1u << 2) | (1u << 6) | (1u << 10) | (1u << 14)),
+              "the step keys dim, the hat's steps full (%x %x)", full, dim);
+        sv_key(&ui, SV_KEY_LO + 6, true);          /* step 7 off */
+        sv_key(&ui, SV_KEY_LO + 6, false);
+        sv_key(&ui, SV_KEY_LO + 15, true);         /* step 16 on */
+        sv_key(&ui, SV_KEY_LO + 15, false);
+        sv_draw(&ui);
+        sv_key_leds(&ui, &full, &dim);
+        CHECK(g.ed[1].own && g.ed[1].hits == ((1u << 2) | (1u << 10) | (1u << 14) | (1u << 15)), "keys edit the hat (%04x)",
+              g.ed[1].hits);
+        CHECK(full == g.ed[1].hits, "the keys show the edit (%x)", full);
+    }
+    shot("09_drums_edited");
+    all_palettes("drums_edited");
+    press(SV_B_REC);
+    bars(1);
+    CHECK(g.s.code[1].own && sa_pending(&g) == 0, "the hat's edit dropped");
+    sv_knob(&ui, SV_K_ALGO, 1);                    /* a ready pattern again */
+    CHECK(!g.ed[1].own && g.ed[1].pat == 2, "ALGORITHM: the next ready pattern (%d)", g.ed[1].pat);
+    sv_knob(&ui, SV_K_ALGO, -1);
+    /* + ADD A DRUM */
+    sv_knob(&ui, SV_K_PRESETS, 9);
+    CHECK(sv_drow_layer(&ui) < 0, "the last row: + ADD A DRUM");
+    shot("10_drums_add");
+    sv_knob(&ui, SV_K_ALGO, 10);                   /* a new drum: the conga (and another turn: still the new one) */
+    int nl = -1;
+    for (int l = 0; l < SA_LAYERS; ++l) if (g.ed[l].type == SA_T_DRUM && g.s.code[l].type == SA_T_NONE) nl = l;
+    CHECK(nl >= 0, "ADD: a drum layer in the copy");
+    sv_knob(&ui, SV_K_PRESETS, -9);
+    sv_knob(&ui, SV_K_PRESETS, 3);
+    CHECK(sv_drow_layer(&ui) == nl, "the new drum is a row (%d %d)", sv_drow_layer(&ui), nl);
+    sv_knob(&ui, SV_K_ALGO, 10);
+    CHECK(g.ed[nl].sound == (9 + 10) % SA_DVS, "a drum not yet dropped: ALGORITHM changes the drum (%d)", g.ed[nl].sound);
+    shot("11_drums_added");
+    press(SV_B_REC);
+    bars(1);
+    /* EDIT: the row as a layer screen, its modifiers; EDIT again: back */
+    press(SV_B_EDIT);
+    CHECK(ui.page == SV_PG_LAYER && ui.layer == nl, "EDIT opens the row");
+    shot("12_drum_layer");
+    press(SV_B_EDIT);
+    CHECK(ui.page == SV_PG_DRUMS, "EDIT again: DRUMS");
+    /* STEPS on the bass: notes on the keys */
+    go_layer(3);
+    press(SV_B_SEQ);
+    CHECK(ui.page == SV_PG_STEPS, "SEQ: STEPS");
+    sv_key(&ui, 57, true);                          /* A3 on step 1, the cursor on */
+    sv_key(&ui, 57, false);
+    CHECK(g.ed[3].own && g.ed[3].sn[0] == 57 - g.ed_harm.key && ui.scur == 1, "a key writes the step (%d %d)",
+          g.ed[3].sn[0], ui.scur);
+    sv_knob(&ui, SV_K1, -1);
+    sv_knob(&ui, SV_K2, 3);
+    CHECK(g.ed[3].sl[0] == 4, "KNOB 2: its length (%d)", g.ed[3].sl[0]);
+    {
+        uint32_t full, dim;
+        CHECK(sv_key_leds(&ui, &full, &dim) && (full >> (57 - SV_KEY_LO)) & 1u, "the step's note lit full");
+    }
+    shot("13_steps");
+    all_palettes("steps");
+    press(SV_B_SEQ);
+    CHECK(ui.page == SV_PG_LAYER, "SEQ again: back");
+    press(SV_B_REC);
+    bars(1);
     /* every chip text on the lint: every sound, every pattern, every modifier */
     go_layer(3);
     {
@@ -275,7 +346,7 @@ int main(int argc, char **argv)
             snprintf(nm, sizeof nm, "z_mod_%02d", i);
             lint_where = nm;
             sv_draw_all(&ui);
-            if (i == 20) write_ppm("09_layer_four_mods");
+            if (i == 20) write_ppm("19_layer_four_mods");
         }
         g.ed[3] = keep;
     }
@@ -284,7 +355,7 @@ int main(int argc, char **argv)
     CHECK(ui.page == SV_PG_KEY, "SCL: KEY");
     sv_knob(&ui, SV_K1, 2);
     CHECK(g.ed_harm.key == 11 && g.s.harm.key == 9, "KEY in the copy (%d %d)", g.ed_harm.key, g.s.harm.key);
-    shot("10_key");
+    shot("14_key");
     all_palettes("key");
     press(SV_B_REC);
     bars(1);
@@ -296,37 +367,37 @@ int main(int argc, char **argv)
     sv_button(&ui, SV_B_HOME, false);
     for (int k = 0; k < 16 && !sv_is_new(&ui); ++k)
         sv_knob(&ui, SV_K_SELECT, 1);
-    CHECK(sv_is_new(&ui) && ui.layer == 5, "SELECT past the last: NEW (layer %d)", ui.layer);
-    shot("11_new");
+    CHECK(sv_is_new(&ui) && sv_free_slot(&ui) == ui.layer, "SELECT past the last: NEW (layer %d)", ui.layer);
+    shot("15_new");
     all_palettes("new");
-    sv_knob(&ui, SV_K1, SA_DVS + 3);               /* past the drums: the fourth synth sound */
-    CHECK(g.ed[5].type == SA_T_SYNTH && g.ed[5].part == 2, "a new synth layer on the free part (%d %d)", g.ed[5].type,
-          g.ed[5].part);
-    shot("12_new_made");
+    int newl = ui.layer;
+    sv_knob(&ui, SV_K1, 4);                        /* the fourth synth sound */
+    CHECK(g.ed[newl].type == SA_T_SYNTH && g.ed[newl].part == 2 && g.ed[newl].sound == 3,
+          "a new synth layer on the free part (%d %d %d)", g.ed[newl].type, g.ed[newl].part, g.ed[newl].sound);
+    shot("16_new_made");
     press(SV_B_REC);
     bars(2);
     CHECK(part_on[2] > 0, "the new layer plays on part 3 (%d)", part_on[2]);
-    /* a fourth synth: refused (drums only) */
+    /* three synth layers: no NEW any more */
     sv_button(&ui, SV_B_HOME, true);
     sv_button(&ui, SV_B_HOME, false);
     for (int k = 0; k < 16 && !sv_is_new(&ui); ++k)
         sv_knob(&ui, SV_K_SELECT, 1);
-    CHECK(sv_new_sounds(&ui) == SA_DVS, "three synth layers: a new one can only be a drum");
-    shot("13_new_drums_only");
-    /* MAIN with eight layers and a mute */
+    CHECK(!sv_is_new(&ui), "three synth layers: no NEW screen");
+    /* MAIN with more drums and a mute */
+    sv_button(&ui, SV_B_HOME, true);
+    sv_button(&ui, SV_B_HOME, false);
+    sv_knob(&ui, SV_K_SELECT, 1);
     for (int k = 0; k < 2; ++k) {
-        sv_knob(&ui, SV_K1, 6 + k);
-        press(SV_B_REC);
-        bars(1);
-        sv_button(&ui, SV_B_HOME, true);
-        sv_button(&ui, SV_B_HOME, false);
-        for (int j = 0; j < 16 && !sv_is_new(&ui); ++j)
-            sv_knob(&ui, SV_K_SELECT, 1);
+        sv_knob(&ui, SV_K_PRESETS, 12);
+        sv_knob(&ui, SV_K_ALGO, 5 + k);
     }
+    press(SV_B_REC);
+    bars(1);
     sa_mute(&g, 1, true);
     press(SV_B_HOME);
     bars(1);
-    shot("14_main_full");
+    shot("17_main_full");
     all_palettes("main_full");
     /* the keys play the open layer */
     go_layer(3);
@@ -339,7 +410,7 @@ int main(int argc, char **argv)
     run_ms(700);
     sv_button(&ui, SV_B_HOME, false);
     CHECK(ui.page == SV_PG_MENU, "HOME held: MENU");
-    shot("15_menu");
+    shot("18_menu");
     all_palettes("menu");
     press(SV_B_HOME);
     press(SV_B_PLAY);

@@ -58,7 +58,16 @@ typedef struct {
     uint8_t part;                                   /* a synth layer's part, 0..2 (drums: 3) */
     sa_mod mod[SA_MODS];                            /* applied in order; OFF ones are skipped */
     uint8_t amode, arate, arange, agate;            /* the arpeggiator (synth): SA_AR_*, SA_RATE_*, 1..4 octaves, 10..100 % */
+    /* the layer's own pattern (own 1): a ready pattern becomes one the first time a step is edited; picking a
+     * pattern again drops it. A drum layer: a hit on each sixteenth of `hits`, accented on `acc`. A synth layer: a
+     * note on each step with sn != SA_NO_NOTE (semitones above the key's C, MIDI), sl sixteenths long; a step of
+     * `chord` plays the bar's chord instead (rooted in octave ooct): it follows the progression */
+    uint8_t own, ooct;
+    uint16_t hits, acc, chord;
+    int8_t sn[16];
+    uint8_t sl[16];
 } sa_code;
+#define SA_NO_NOTE (-128)
 
 /* a layer's sound: at once */
 typedef struct {
@@ -162,5 +171,13 @@ bool sa_used(const sa_groove *g, int l);            /* a layer that plays or wil
 int sa_snap(const sa_harm *h, int note);
 /* a whole bar of one layer's code, for the screen: a bit per sixteenth (bar 0) */
 uint16_t sa_preview(const sa_groove *g, const sa_code *c, int layer, int bar);
+/* the own pattern (in the copy, the edits wait for REC): made from the ready pattern on the first edit */
+void sa_own_make(sa_groove *g, sa_code *c);
+bool sa_chordy(const sa_code *c);                    /* a synth layer whose steps are chords (a key toggles a chord) */
+void sa_step_drum(sa_groove *g, int layer, int step);           /* a drum hit on or off */
+void sa_step_note(sa_groove *g, int layer, int step, int note); /* a note (snapped) on, the same again off; a chord
+                                                                 * layer: the chord on or off */
+void sa_step_len(sa_groove *g, int layer, int step, int d);
+void sa_pat_label(const sa_code *c, char *out, int max);       /* "OFFBEAT", or "OFFBEAT EDIT" for an own one */
 
 #endif
