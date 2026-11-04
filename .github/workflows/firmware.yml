@@ -34,10 +34,26 @@ jobs:
       - name: JieLi toolchain (clang 4.0.1 for pi32v2)
         run: sh tools/get_toolchain.sh
 
-      - name: JieLi AC79 SDK (three of its files go into the package)
+      - name: JieLi AC79 SDK (three of its files go into the package; in vendor/jieli-ac79 once kept, else from gitee)
         run: |
-          git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 \
-              https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git "$HOME/fw-AC79_AIoT_SDK"
+          if [ -f vendor/jieli-ac79/cpu/wl82/tools/uboot.boot ]; then
+            echo "the three SDK files are in vendor/jieli-ac79: no download"; exit 0
+          fi
+          for i in 1 2 3; do
+            git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 \
+                https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git "$HOME/fw-AC79_AIoT_SDK" && break
+            rm -rf "$HOME/fw-AC79_AIoT_SDK"
+            [ "$i" = 3 ] && exit 1
+            echo "gitee refused (try $i of 3): again in a minute"; sleep 60
+          done
+          mkdir -p sdkfiles/cpu/wl82/tools
+          cp "$HOME/fw-AC79_AIoT_SDK/cpu/wl82/tools/"{uboot.boot,cfg_tool.bin,eq_cfg_hw.bin} sdkfiles/cpu/wl82/tools/
+
+      - uses: actions/upload-artifact@v4
+        if: hashFiles('sdkfiles/cpu/wl82/tools/uboot.boot') != ''
+        with:
+          name: jieli-ac79-files                # (to keep in vendor/jieli-ac79: then no run needs gitee)
+          path: sdkfiles/
 
       - name: Host tests (the groove engine, the screen, the generated files)
         run: sh tests/sa_tests.sh
