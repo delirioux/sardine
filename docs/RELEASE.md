@@ -11,7 +11,8 @@ Sardine 0.6: live club mixing for the FM-1.
 - 81 synth sounds, among them an AMBIENT set (wide pads, dub stabs, a rumbling bass) in a big hall; nine
   synthesised drum kits; 24 drum and 29 synth patterns
 - Key, scale and ten chord progressions, followed by every synth layer
-- Every start a fresh groove; SETS keeps eight grooves (LOAD on the one, STORE, NEW, CLEAR)
+- Every start a fresh groove; SETS keeps eight grooves (LOAD on the one, STORE, NEW, CLEAR) and LAST, the
+  last groove, by itself
 
 Install it from the site with a Chromium browser (Chrome, Edge) and a USB cable. The package also holds three files of
 JieLi's AC79 SDK under Apache-2.0: see LICENSING.md.

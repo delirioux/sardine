@@ -505,6 +505,17 @@ int main(int argc, char **argv)
     press(SV_B_REC);
     CHECK(ui.req_act == SV_SA_STORE && ui.req_slot == 6, "REC: STORE into an empty set asked");
     ui.req_act = -1;
+    ui.sets[SV_LAST] = (sv_set_info){1, 128, 5, SA_SC_MINOR, SA_KIT_HOUSE, 2, {2, 4, 0}, 0};
+    sv_knob(&ui, SV_K1, 9);
+    CHECK(ui.set_slot == SV_LAST, "KNOB 1 ends on LAST (%d)", ui.set_slot);
+    shot("19b_sets_last");
+    press(SV_B_REC);
+    CHECK(ui.req_act == -1, "STORE into LAST: refused (it keeps itself)");
+    sv_knob(&ui, SV_K2, -1);
+    press(SV_B_REC);
+    CHECK(ui.req_act == SV_SA_LOAD && ui.req_slot == SV_LAST, "LOAD LAST asked");
+    ui.req_act = -1;
+    sv_knob(&ui, SV_K1, -2);
     sv_knob(&ui, SV_K2, 9);
     CHECK(ui.set_act == SV_SA_CLEAR, "KNOB 2 stops at CLEAR");
     shot("20_sets_clear");

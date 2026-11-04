@@ -171,8 +171,8 @@ All synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY, CLASSIC.
 <img src="screens/sets.png" alt="SETS" width="200">
 </p>
 
-**SAVE** opens SETS: eight grooves kept in the flash, a row each with its tempo and key; beside the rows, what the set
-picked holds (its kit, its synth sounds). **KNOB 1** (or PRESETS) picks a set, **KNOB 2** the action, **REC** does it:
+**SAVE** opens SETS: eight grooves kept in the flash and **LAST** (L), a row each with its tempo and key; beside the
+rows, what the set picked holds (its kit, its synth sounds). **KNOB 1** (or PRESETS) picks a set, **KNOB 2** the action, **REC** does it:
 
 | Action | What REC does |
 | --- | --- |
@@ -184,6 +184,11 @@ picked holds (its kit, its synth sounds). **KNOB 1** (or PRESETS) picks a set, *
 The flash is written only while stopped: a STORE or CLEAR while playing is kept and written as you stop (the row says
 WAITS; one set at a time). SAVE again goes back.
 
+**LAST** keeps itself: three seconds after a change, stopped (and three seconds after you stop), the groove as it is
+goes into LAST. It never comes back on its own (a start is still a fresh groove), but LOAD brings it back: after a
+power cut, or the morning after. STORE and CLEAR leave it alone. Every set stays as it is until you STORE over it or
+CLEAR it, and loads as often as you like.
+
 ## MENU
 
 HOME held: the colour (SHOAL by default, and Felucca's) and the look (FLAT, LINE).
@@ -194,5 +199,5 @@ The synth layers' parts on channels 1, 2 and 3, the kit on 10 with General MIDI 
 
 ## Saving
 
-Nothing saves itself: a start is a fresh groove, and what you keep goes into SETS. The colour and the look are kept.
+A start is a fresh groove; what you keep goes into SETS, and the last groove into LAST by itself. The colour and the look are kept.
 0.5's saved groove comes back once, as set 1.

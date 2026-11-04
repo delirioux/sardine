@@ -20,7 +20,7 @@ every layer, its filter, resonance, drive and envelope, is under your fingers at
 - GATE: a held pad cut to a rhythm (twelve ready gates, edited on the keys); PAN: fixed, sweeping, ping-pong or random
 - An arpeggiator with ten modes, triplet rates and up to four octaves, always in the key
 - Key, scale and ten chord progressions; every synth layer follows the chord
-- Every start a fresh groove (other sounds, patterns, kit, key); eight sets keep the ones you want
+- Every start a fresh groove (other sounds, patterns, kit, key); eight sets keep the ones you want, LAST the last one
 
 Version 0.6 is a test build on the `dev` branch, not released yet: [install it on the FM-1](https://delirioux.github.io/sardine/dev/install/)
 or [try it in the browser](https://delirioux.github.io/sardine/dev/try/). The [manual](docs/MANUAL.md) has every screen.

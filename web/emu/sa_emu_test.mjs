@@ -61,14 +61,15 @@ check(`PLAY again stops (tail peak ${peak.toFixed(4)})`, !w.web_playing() && pea
 
 const writes = w.web_flash_writes_count();
 w.web_enc(EN.K1, 2);  // TEMPO
-run(3);
-check("a setting alone writes nothing (the groove is not kept)", w.web_flash_writes_count() === writes);
+run(4);
+check("a setting changed, stopped: LAST keeps it", w.web_flash_writes_count() > writes && w.web_da_set_used(8) === 1);
+const groove1b = w.web_da_groove();
 press(B.SAVE);
 check("SAVE opens SETS", w.web_da_page() === 9);
 w.web_enc(EN.K2, 1); run(0.1);  // STORE
 w.web_enc(EN.K1, 2); run(0.1);  // set 3
 press(B.REC); run(0.2);
-check("REC: STORE writes set 3", w.web_flash_writes_count() > writes && w.web_da_set_used(2) && !w.web_da_set_used(0));
+check("REC: STORE writes set 3", w.web_da_set_used(2) && !w.web_da_set_used(0));
 const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice();
 {
   const again = await WebAssembly.instantiate(bytes, { wasi_snapshot_preview1: stub });
@@ -83,6 +84,9 @@ const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice
   w.web_enc(EN.K1, 2); run(0.1);
   press(B.REC); run(0.2);
   check("REC: LOAD brings set 3 back", w.web_da_groove() === groove1);
+  w.web_enc(EN.K1, 9); run(0.1);
+  press(B.REC); run(0.2);
+  check("REC: LOAD LAST brings the last groove back", w.web_da_groove() === groove1b);
 }
 
 console.log(fails ? `sardine emu: ${fails} FAILED` : "sardine emu: all passed");

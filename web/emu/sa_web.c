@@ -470,5 +470,5 @@ EXPORT uint32_t web_da_page(void) { return (uint32_t)sa_u.page; }
 EXPORT uint32_t web_da_style(void) { uint32_t n = 0; for (int l = 0; l < SA_LAYERS; ++l) n += sa_used(&sa_g, l); return n; }
 EXPORT const char *web_da_version(void) { return SA_VERSION; }
 EXPORT uint32_t web_da_groove(void) { return sv_hashb(2166136261u, sa_g.s.code, sizeof sa_g.s.code); }
-EXPORT uint32_t web_da_set_used(uint32_t k) { return k < SV_SETS ? sa_u.sets[k].used : 0u; }
+EXPORT uint32_t web_da_set_used(uint32_t k) { return k < SV_SLOTS ? sa_u.sets[k].used : 0u; }
 EXPORT uint32_t web_sample_rate(void) { return FS; }

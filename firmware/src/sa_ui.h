@@ -24,8 +24,8 @@
  *   FX         a layer, a DRUMS row: mute it (at once)
  *   ARP        a synth layer: its ARP page (MODE RATE RANGE GATE), again: back
  *   SCL        the KEY page (KEY SCALE CHORDS BARS), again: back
- *   SAVE       SETS: eight grooves kept in the flash (KNOB 1 or PRESETS the set, KNOB 2 LOAD STORE NEW CLEAR, REC does
- *              it; a load or a new groove goes in on the one), again: back
+ *   SAVE       SETS: eight grooves kept in the flash and LAST, the last one kept by itself (KNOB 1 or PRESETS the
+ *              set, KNOB 2 LOAD STORE NEW CLEAR, REC does it; a load or a new groove goes in on the one), again: back
  *   HOME       MAIN, on MAIN: SPACE and back; held: MENU (colour, look)
  *   keys       the open layer, live (snapped to the scale); DRUMS: the lowest 16 are the row's steps (a hit on, off),
  *              the others play it; STEPS: the step's note. Music and steps only
@@ -50,6 +50,8 @@ enum { SV_PG_MAIN, SV_PG_LAYER, SV_PG_ARP, SV_PG_KEY, SV_PG_MENU, SV_PG_DRUMS, S
 
 /* SETS: eight grooves in the flash (the glue keeps them; the screen shows what each holds and asks for the action) */
 #define SV_SETS 8
+#define SV_LAST SV_SETS                       /* the ninth slot: the last groove, kept by itself (LOAD only) */
+#define SV_SLOTS (SV_SETS + 1)
 enum { SV_SA_LOAD, SV_SA_STORE, SV_SA_NEW, SV_SA_CLEAR, SV_SA_ACTS };
 typedef struct {
     uint8_t used, bpm, key, scale, kit, nsyn;
@@ -77,7 +79,7 @@ typedef struct {
     uint32_t frame;
     int batt;
     bool changed;                         /* a setting changed: the glue applies it (and keeps the look) */
-    sv_set_info sets[SV_SETS];            /* what each set holds (the glue fills it) */
+    sv_set_info sets[SV_SLOTS];           /* what each set holds, and LAST (the glue fills it) */
     int set_slot, set_act;                /* SETS: the set picked, the action (SV_SA_*) */
     int req_act, req_slot;                /* REC on SETS: what the glue is to do (req_act -1: nothing) */
     int sback, sback_layer;               /* the page SAVE goes back to */

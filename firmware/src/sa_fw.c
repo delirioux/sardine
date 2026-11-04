@@ -55,7 +55,8 @@ static void sa_audio_post(int32_t *out, uint32_t n)
 }
 
 /* ---- the flash: the preferences (the look, a count of the starts: each start's fresh groove) in Felucca's first
- * project object; the eight sets, three to an object, in the other three. Written only while stopped (the flash is
+ * project object; the eight sets and LAST (the groove as it was last left, stopped), three to an object, in the other
+ * three. Written only while stopped (the flash is
  * the code's: XIP, writing it while playing would stall the audio); read at any time (storage_hw.c reads in short
  * windows, the audio keeps up) ---- */
 #define SA_PREF_MAGIC 0x31504153u                            /* "SAP1" */
@@ -69,7 +70,9 @@ typedef struct { uint32_t magic; uint16_t size, ver; sa_settings s; } sa_record;
 #define SA_SET_OBJ(k) (OBJ_PROJECT0 + 1u + (uint32_t)(k) / SA_SET_PER)
 #define SA_SET_OFF(k) ((uint32_t)(k) % SA_SET_PER * SA_SET_STRIDE)
 _Static_assert(sizeof(sa_record) <= SA_SET_STRIDE && SA_SET_LEN <= ST_PAYLOAD_MAX, "the sets' room in the flash");
-_Static_assert(OBJ_PROJECT0 + 1u + (SV_SETS - 1u) / SA_SET_PER < OBJ_PROJECT0 + 4u, "the sets in the project objects");
+_Static_assert(OBJ_PROJECT0 + 1u + (SV_SLOTS - 1u) / SA_SET_PER < OBJ_PROJECT0 + 4u, "the sets in the project objects");
+#define SA_LAST_MS 3000u                                     /* LAST: kept this long after the last change, stopped */
+static uint32_t sa_last_sig;                                 /* the groove LAST holds (0: not written this start) */
 static sa_prefs sa_pref;
 static uint8_t sa_pref_look;                                 /* the look as last written */
 static sa_settings sa_next;                                  /* a groove armed for the bar line (a set, a fresh one) */
@@ -183,7 +186,7 @@ static void sa_set_info_of(int k, const sa_settings *s)
 }
 static void sa_sets_scan(void)
 {
-    for (int k = 0; k < SV_SETS; ++k)
+    for (int k = 0; k < SV_SLOTS; ++k)
         sa_set_info_of(k, sa_set_read(k, &sa_next) ? &sa_next : 0);
 }
 
@@ -223,10 +226,14 @@ static void sa_prefs_load(void)
 static void sa_set_do(int act, int k)
 {
     char m[32];
-    k = k < 0 ? 0 : k >= SV_SETS ? SV_SETS - 1 : k;
+    k = k < 0 ? 0 : k >= SV_SLOTS ? SV_SLOTS - 1 : k;
     sv_cpy(m, "SET ", sizeof m);
     m[4] = (char)('1' + k);
     m[5] = 0;
+    if (k == SV_LAST) {
+        if (act == SV_SA_STORE || act == SV_SA_CLEAR) { sv_msg(&sa_u, "LAST KEEPS ITSELF"); return; }
+        sv_cpy(m, "LAST", sizeof m);
+    }
     switch (act) {
     case SV_SA_LOAD:
     case SV_SA_NEW:
@@ -553,8 +560,16 @@ static void sa_frame(void)
             sv_msg(&sa_u, "THE FLASH FAILED");
         }
     }
-    if (sa_dirty && !sa_g.playing && now - sa_save_ms > 2000u) {   /* the look (the groove is not kept: SETS) */
+    static bool was_playing;
+    if (was_playing && !sa_g.playing) sa_save_ms = now;     /* (stopped: the tails ring out before the flash) */
+    was_playing = sa_g.playing;
+    if (sa_dirty && !sa_g.playing && now - sa_save_ms > SA_LAST_MS) {   /* the look; LAST, when the groove changed */
         if (sa_g.s.look != sa_pref_look) sa_prefs_save();
+        uint32_t sig = sv_hashb(2166136261u, &sa_g.s, sizeof sa_g.s) | 1u;
+        if (sig != sa_last_sig && sa_set_write(SV_LAST, &sa_g.s)) {
+            sa_last_sig = sig;
+            sa_set_info_of(SV_LAST, &sa_g.s);
+        }
         sa_dirty = false;
     }
     song.playing = sa_g.playing;

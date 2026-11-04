@@ -389,8 +389,9 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
     }
     case SV_PG_SETS: {
         static const char *const ACT[SV_SA_ACTS] = {"LOAD", "STORE", "NEW", "CLEAR"};
-        sv_fmt_int(t, u->set_slot + 1);
-        sv_card_txt(&c[0], "SET", t, u->set_slot * 1000 / (SV_SETS - 1), false);
+        if (u->set_slot == SV_LAST) sv_cpy(t, "LAST", sizeof t);
+        else sv_fmt_int(t, u->set_slot + 1);
+        sv_card_txt(&c[0], "SET", t, u->set_slot * 1000 / (SV_SLOTS - 1), false);
         sv_card_txt(&c[1], "ACTION", ACT[sv_wrap(u->set_act, SV_SA_ACTS)], -1, false);
         sv_card_off(&c[2]);
         sv_card_off(&c[3]);
@@ -965,23 +966,24 @@ static void sv_panel_key(sa_ui *u)
     }
 }
 
-/* SETS: the eight sets, a row each (its tempo and key), the one picked lit; beside them what it holds (its kit, its
- * synth sounds) */
+/* SETS: the eight sets and LAST, a row each (its tempo and key), the one picked lit; beside them what it holds (its
+ * kit, its synth sounds) */
 static void sv_panel_sets(sa_ui *u)
 {
-    for (int i = 0; i < SV_SETS; ++i) {
+    for (int i = 0; i < SV_SLOTS; ++i) {
         const sv_set_info *si = &u->sets[i];
-        int32_t y = 4 + i * 14;
+        int32_t y = 4 + i * 13;
         bool on = i == u->set_slot;
         char t[24], a[8];
-        if (on) cv_rect(6, y - 1, 108, 14, sv_well());
+        if (on) cv_rect(6, y - 1, 108, 13, sv_well());
         uint16_t bg = on ? sv_well() : T_SURF;
-        sv_fmt_int(a, i + 1);
-        cv_text_on(10, y + 2, &AF_S, a, on ? T_ACCENT : T_MID, bg);
+        if (i == SV_LAST) sv_cpy(a, "L", sizeof a);
+        else sv_fmt_int(a, i + 1);
+        cv_text_on(10, y + 1, &AF_S, a, on ? T_ACCENT : i == SV_LAST ? T_THEME : T_MID, bg);
         if (si->wait) {
             sv_cpy(t, "WAITS", sizeof t);
         } else if (!si->used) {
-            sv_cpy(t, "EMPTY", sizeof t);
+            sv_cpy(t, i == SV_LAST ? "LAST: NONE" : "EMPTY", sizeof t);
         } else {
             sv_fmt_int(t, si->bpm);
             sv_cat(t, " ", sizeof t);
@@ -989,24 +991,33 @@ static void sv_panel_sets(sa_ui *u)
             sv_cat(t, si->scale == SA_SC_MAJOR ? " MAJ" : si->scale == SA_SC_DORIAN ? " DOR" :
                       si->scale == SA_SC_PHRYGIAN ? " PHR" : " MIN", sizeof t);
         }
-        cv_text_fit(26, y + 2, &AF_S, t, si->wait ? T_ACCENT : on ? T_ACCENT : si->used ? T_TEXT : T_DIM, bg, 86);
+        cv_text_fit(26, y + 1, &AF_S, t, si->wait ? T_ACCENT : on ? T_ACCENT : si->used ? T_TEXT : T_DIM, bg, 86);
     }
-    cv_rect(120, 6, 1, 108, T_LINE);
-    const sv_set_info *si = &u->sets[sv_clampi(u->set_slot, 0, SV_SETS - 1)];
+    cv_rect(120, 6, 1, 110, T_LINE);
+    int k = sv_clampi(u->set_slot, 0, SV_SLOTS - 1);
+    const sv_set_info *si = &u->sets[k];
     if (si->wait) {
         sv_label(128, 6, si->wait == 2 ? "CLEARS WHEN" : "SAVES WHEN", T_ACCENT);
         sv_label(128, 22, "STOPPED", T_ACCENT);
         return;
     }
-    if (!si->used) {
+    if (k == SV_LAST) {
+        sv_label(128, 6, "LAST", T_THEME);
+        if (!si->used) {
+            sv_label(128, 26, "KEPT BY ITSELF", T_MID);
+            sv_label(128, 42, "WHEN STOPPED", T_MID);
+            return;
+        }
+    } else if (!si->used) {
         sv_label(128, 6, "EMPTY", T_DIM);
         sv_label(128, 26, "STORE KEEPS", T_MID);
         sv_label(128, 42, "WHAT PLAYS", T_MID);
         return;
     }
-    cv_text_fit(128, 6, &AF_S, sa_kit_name(si->kit), T_MID, T_SURF, 104);
-    for (int k = 0; k < si->nsyn && k < SA_SYNTHS; ++k)
-        cv_text_fit(128, 26 + k * 16, &AF_S, sas_of(si->snd[k])->name, T_TEXT, T_SURF, 104);
+    int32_t y0 = k == SV_LAST ? 22 : 6;
+    cv_text_fit(128, y0, &AF_S, sa_kit_name(si->kit), T_MID, T_SURF, 104);
+    for (int n = 0; n < si->nsyn && n < SA_SYNTHS; ++n)
+        cv_text_fit(128, y0 + 20 + n * 16, &AF_S, sas_of(si->snd[n])->name, T_TEXT, T_SURF, 104);
 }
 
 static void sv_panel_menu(sa_ui *u)
@@ -1261,7 +1272,7 @@ void sv_knob(sa_ui *u, int k, int d)
     }
     if (k == SV_K_PRESETS) {
         if (u->page == SV_PG_SETS) {
-            u->set_slot = sv_clampi(u->set_slot + d, 0, SV_SETS - 1);
+            u->set_slot = sv_clampi(u->set_slot + d, 0, SV_SLOTS - 1);
             return;
         }
         if (u->page == SV_PG_DRUMS) {
@@ -1300,7 +1311,7 @@ void sv_knob(sa_ui *u, int k, int d)
     if (k < SV_K1 || k > SV_K4) return;
     int i = k - SV_K1;
     if (u->page == SV_PG_SETS) {                   /* (nothing to keep: the set picked and the action) */
-        if (i == 0) u->set_slot = sv_clampi(u->set_slot + d, 0, SV_SETS - 1);
+        if (i == 0) u->set_slot = sv_clampi(u->set_slot + d, 0, SV_SLOTS - 1);
         else if (i == 1) u->set_act = sv_clampi(u->set_act + d, 0, SV_SA_ACTS - 1);
         else return;
         u->hot = i;
@@ -1418,7 +1429,11 @@ void sv_button(sa_ui *u, int b, bool down)
     case SV_B_PLAY: sa_play(g, !g->playing); break;
     case SV_B_REC:
         if (u->page == SV_PG_SETS) {               /* the action: the glue does it (the flash is its) */
-            const sv_set_info *si = &u->sets[sv_clampi(u->set_slot, 0, SV_SETS - 1)];
+            const sv_set_info *si = &u->sets[sv_clampi(u->set_slot, 0, SV_SLOTS - 1)];
+            if (u->set_slot == SV_LAST && (u->set_act == SV_SA_STORE || u->set_act == SV_SA_CLEAR)) {
+                sv_msg(u, "LAST KEEPS ITSELF");
+                break;
+            }
             if ((u->set_act == SV_SA_LOAD || u->set_act == SV_SA_CLEAR) && !si->used && !si->wait) {
                 sv_msg(u, "THAT SET IS EMPTY");
                 break;
