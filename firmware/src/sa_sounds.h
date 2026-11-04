@@ -235,8 +235,9 @@ static inline void sas_drums(track_t *t, const sa_settings *s)
     t->p[P_DIST] = 0;
     t->p[P_ITYPE] = 0;
     t->p[P_PAN] = 0;
-    t->p[P_REV] = 10;
+    t->p[P_REV] = sas_clamp(10 * s->reverb / 70, 0, 127);
     t->p[P_DLY] = 0;
+    t->p[P_M2SRC] = MS_OFF;                      /* (the drums never duck) */
 }
 
 /* what a synth part's preset left (sa_fw.c keeps it on loading the sound): CUTOFF, ENV and DRIVE move from there */
@@ -263,9 +264,14 @@ static inline void sas_synth(track_t *t, const sas_sound *snd, const sas_base *b
                                   : snd->voice == SAS_MONO ? V_MONO : V_POLY);
     static const uint8_t REV[SAS_ROLES] = {6, 30, 55, 35, 45}, DLY[SAS_ROLES] = {0, 20, 15, 30, 25},
                          WIDE[SAS_ROLES] = {0, 40, 80, 20, 60};
-    t->p[P_REV] = snd->rev ? snd->rev : REV[snd->role % SAS_ROLES];
-    t->p[P_DLY] = snd->dly ? snd->dly : DLY[snd->role % SAS_ROLES];
-    t->p[P_SPRD] = snd->wide ? snd->wide : WIDE[snd->role % SAS_ROLES];   /* (POLY voices around the middle) */
+    /* SPACE's REVERB DELAY WIDTH: 70 the sound's own, 0 none, 100 about half as much again */
+    t->p[P_REV] = sas_clamp((snd->rev ? snd->rev : REV[snd->role % SAS_ROLES]) * s->reverb / 70, 0, 127);
+    t->p[P_DLY] = sas_clamp((snd->dly ? snd->dly : DLY[snd->role % SAS_ROLES]) * s->delay / 70, 0, 127);
+    t->p[P_SPRD] = sas_clamp((snd->wide ? snd->wide : WIDE[snd->role % SAS_ROLES]) * s->width / 70, 0, 127);
+    /* the pump: the matrix's slot 2, EXPR -> AMP (sas_block sets t->ex_off to the duck: the gain is 1 - duck) */
+    t->p[P_M2SRC] = MS_EXPR;
+    t->p[P_M2DST] = MD_AMP;
+    t->p[P_M2AMT] = 64;
     t->p[P_PAN] = 0;
     t->p[P_ITYPE] = 0;
     if (snd->engine == SAS_SAMPLE) {             /* the piano: its velocity (the SAMPLE engine has none of its own) */
@@ -275,6 +281,18 @@ static inline void sas_synth(track_t *t, const sas_sound *snd, const sas_base *b
     } else {
         t->p[P_M4SRC] = MS_OFF;
     }
+}
+
+/* the block's pump into the synth parts (the audio ISR, after the layers): a layer with PUMP off stays up */
+static inline void sas_block(const sa_groove *g)
+{
+    uint8_t duck[SA_SYNTHS] = {0, 0, 0};
+    for (int l = 0; l < SA_LAYERS; ++l) {
+        const sa_code *c = &g->s.code[l];
+        if (c->type == SA_T_SYNTH && c->part < SA_SYNTHS && !g->s.live[l].nopump) duck[c->part] = g->duck;
+    }
+    for (int p = 0; p < SA_SYNTHS; ++p)
+        trk[p].ex_off = duck[p];
 }
 
 /* the song's own: the tempo for the delay and the LFOs, the delay, the room */

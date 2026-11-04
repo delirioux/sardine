@@ -74,7 +74,8 @@ typedef struct {
     uint8_t mute;
     uint8_t cut, reso, drive, env;                  /* synth: 0..100 (CUT 100: the sound as it is) */
     uint8_t level;                                  /* drum: 0..100 */
-    uint8_t pad[2];
+    uint8_t nopump;                                 /* synth: 1 = this layer does not duck under the kick (0.4) */
+    uint8_t pad;
 } sa_live;
 
 /* the key and the chords: code too */
@@ -91,6 +92,9 @@ typedef struct {
     sa_harm harm;
     sa_code code[SA_LAYERS];
     sa_live live[SA_LAYERS];
+    /* 0.4, SPACE (MAIN's second page): PUMP 0..100 how deep the synth layers duck under the kick; REVERB, DELAY,
+     * WIDTH 0..100, 70 the sounds' own sends and spread */
+    uint8_t pump, reverb, delay, width;
 } sa_settings;
 
 typedef struct {
@@ -128,6 +132,9 @@ typedef struct {
     uint32_t keys;                                  /* the FM-1's keys held */
     int key_note[27], key_part[27];
     uint8_t sound_sig;                              /* bumped when the code changed (the glue loads the sounds) */
+    uint32_t kick_clock;                            /* the last kick a layer played (the pump) */
+    bool kicked;
+    uint8_t duck;                                   /* 0..127: how far the synth layers are ducked now (each block) */
     char msg[24];
     uint8_t msg_new;
     void (*sound)(void *ctx, const sa_event *e);

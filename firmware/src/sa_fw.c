@@ -42,7 +42,11 @@ static void sa_sound(void *ctx, const sa_event *e)
     midi_out_event(cin | st << 8 | (uint32_t)e->note << 16 | (uint32_t)(e->on ? e->vel : 0u) << 24);
 }
 
-static void sa_audio_pre(uint32_t n) { sa_process(&sa_g, (int)n); }
+static void sa_audio_pre(uint32_t n)
+{
+    sa_process(&sa_g, (int)n);
+    sas_block(&sa_g);                                        /* the pump */
+}
 
 static void sa_audio_post(int32_t *out, uint32_t n)
 {

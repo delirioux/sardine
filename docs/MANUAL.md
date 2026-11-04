@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.3. Live club mixing on the FM-1: a stack of layers, each a line of code you build with the knobs. A layer
+Sardine 0.4. Live club mixing on the FM-1: a stack of layers, each a line of code you build with the knobs. A layer
 is a sound and a pattern, bent by modifiers and, on a synth layer, an arpeggiator. You change the code, and REC drops
 your changes in on the one: the next bar line. The sound of a layer (its filter, drive, level) and the mutes act at
 once, as you turn.
@@ -19,6 +19,16 @@ SELECT goes through them: **MAIN**, **DRUMS** (every drum on one screen), then o
 **MAIN** shows the whole stack: every layer, what it plays this bar, the muted ones crossed out. Its knobs act at
 once: **TEMPO**, **FILTER** (the whole mix darker to the left, OPEN at the top), **FEEL** (the swing of the off
 sixteenths; every layer follows it) and **KIT** (the drum kit).
+
+**HOME on MAIN** turns it to **SPACE**, HOME again back: **PUMP** (how deep the synth layers duck under the kick),
+**REVERB**, **DELAY** and **WIDTH** (at 70 each sound has its own sends and stereo spread; lower dries and narrows the
+mix, higher opens it up). The pump follows the kick layer's hits as they play: mute the kick, or give it a broken
+pattern, and the pump follows. The drums never duck. On a synth layer the last chip, **PUMP ON / OFF**, lets that
+layer stay out of it (at once, not code).
+
+<p align="center">
+<img src="screens/space.png" alt="SPACE" width="200">
+</p>
 
 ## DRUMS
 

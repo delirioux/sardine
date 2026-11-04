@@ -9,7 +9,7 @@
  * The controls
  *   SELECT     through the screens: MAIN, DRUMS, each synth layer, NEW
  *   MASTER     volume (Felucca's)
- *   KNOB 1..4  MAIN: TEMPO FILTER FEEL KIT. A synth layer: CUTOFF RESO DRIVE ENV; a drum layer: LEVEL, and the kit's
+ *   KNOB 1..4  MAIN: TEMPO FILTER FEEL KIT; SPACE (HOME on MAIN): PUMP REVERB DELAY WIDTH. A synth layer: CUTOFF RESO DRIVE ENV; a drum layer: LEVEL, and the kit's
  *              TUNE TONE DECAY. At once
  *   PRESETS    a layer: picks a chip of its code (SOUND, PATTERN, the modifiers, +, ARP); DRUMS: picks a row
  *   ALGORITHM  a layer: changes the chip picked; DRUMS: the row's pattern (+ ADD A DRUM: a new drum). In the copy:
@@ -21,7 +21,7 @@
  *   FX         a layer, a DRUMS row: mute it (at once)
  *   ARP        a synth layer: its ARP page (MODE RATE RANGE GATE), again: back
  *   SCL        the KEY page (KEY SCALE CHORDS BARS), again: back
- *   HOME       MAIN; held: MENU (colour, look)
+ *   HOME       MAIN, on MAIN: SPACE and back; held: MENU (colour, look)
  *   keys       the open layer, live (snapped to the scale); DRUMS: the lowest 16 are the row's steps (a hit on, off),
  *              the others play it; STEPS: the step's note. Music and steps only
  *   OCT- OCT+  the keys' octave */
@@ -48,6 +48,7 @@ typedef struct {
     int layer;                            /* the layer open (SV_PG_LAYER, SV_PG_ARP); -1 on MAIN */
     int back;                             /* the page KEY goes back to */
     int drow;                             /* DRUMS: the row picked (the last one: + ADD A DRUM) */
+    bool space;                           /* MAIN's second page: SPACE (PUMP REVERB DELAY WIDTH) */
     bool from_drums;                      /* the layer open came from DRUMS (EDIT goes back there) */
     int scur;                             /* STEPS: the step the keys write */
     int chip;                             /* the chip PRESETS picked */

@@ -162,7 +162,7 @@ static int sv_drow_layer(const sa_ui *u)
 }
 
 /* ---- the chips of a layer's code: SOUND PATTERN, the modifiers, + (room for one more), ARP (synth) ---- */
-enum { CH_SOUND, CH_PAT, CH_MOD, CH_PLUS, CH_ARP };
+enum { CH_SOUND, CH_PAT, CH_MOD, CH_PLUS, CH_ARP, CH_PUMP };
 typedef struct { uint8_t kind, idx; } sv_chip;
 static int sv_chips(const sa_ui *u, sv_chip *out)
 {
@@ -175,6 +175,7 @@ static int sv_chips(const sa_ui *u, sv_chip *out)
         if (c->mod[i].type != SA_M_OFF) { out[n].kind = CH_MOD; out[n++].idx = (uint8_t)i; nm++; }
     if (nm < SA_MODS) { out[n].kind = CH_PLUS; out[n++].idx = 0; }
     if (t == SA_T_SYNTH) { out[n].kind = CH_ARP; out[n++].idx = 0; }
+    if (t == SA_T_SYNTH) { out[n].kind = CH_PUMP; out[n++].idx = 0; }
     return n;
 }
 static void sv_chip_text(const sa_ui *u, const sa_code *c, sv_chip ch, char *t, unsigned n)
@@ -188,6 +189,7 @@ static void sv_chip_text(const sa_ui *u, const sa_code *c, sv_chip ch, char *t, 
     case CH_PAT: (void)type; sa_pat_label(c, t, (int)n); break;
     case CH_MOD: sa_mod_name(c->mod[ch.idx], t, (int)n); break;
     case CH_PLUS: sv_cpy(t, "+", n); break;
+    case CH_PUMP: sv_cpy(t, u->g->s.live[u->layer].nopump ? "PUMP OFF" : "PUMP ON", n); break;
     default:
         sv_cpy(t, "ARP ", n);
         sv_cat(t, sa_arp_name(c->amode), n);
@@ -243,6 +245,13 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
     char t[20];
     switch (u->page) {
     case SV_PG_MAIN:
+        if (u->space) {
+            sv_card_num(&c[0], "PUMP", s->pump, 0, 100);
+            sv_card_num(&c[1], "REVERB", s->reverb, 0, 100);
+            sv_card_num(&c[2], "DELAY", s->delay, 0, 100);
+            sv_card_num(&c[3], "WIDTH", s->width, 0, 100);
+            break;
+        }
         sv_card_num(&c[0], "TEMPO", s->bpm, 60, 200);
         if (s->filter >= 100) sv_card_txt(&c[1], "FILTER", "OPEN", 1000, false);
         else sv_card_num(&c[1], "FILTER", s->filter, 0, 100);
@@ -381,7 +390,7 @@ static void sv_head_title(const sa_ui *u, char *t, unsigned n)
     t[0] = 0;
     if (u->msg_ms > 0) { sv_cpy(t, u->msg, n); return; }
     switch (u->page) {
-    case SV_PG_MAIN: sv_cpy(t, u->g->playing ? u->g->chord_name : "MAIN", n); break;
+    case SV_PG_MAIN: sv_cpy(t, u->space ? "SPACE" : u->g->playing ? u->g->chord_name : "MAIN", n); break;
     case SV_PG_LAYER: case SV_PG_ARP:
         if (sv_is_new(u)) { sv_cpy(t, "NEW SYNTH LAYER", n); break; }
         sv_fmt_int(a, u->layer + 1);
@@ -453,7 +462,7 @@ static void sv_draw_foot(sa_ui *u)
     for (int i = 0; i < n; ++i)
         if (list[i] == cur) at = i;
     switch (u->page) {
-    case SV_PG_MAIN: sv_cpy(l, "MAIN", sizeof l); break;
+    case SV_PG_MAIN: sv_cpy(l, u->space ? "SPACE" : "MAIN", sizeof l); break;
     case SV_PG_DRUMS: sv_cpy(l, "DRUMS", sizeof l); break;
     case SV_PG_STEPS: sv_cpy(l, "STEPS", sizeof l); break;
     case SV_PG_LAYER: case SV_PG_ARP:
@@ -474,7 +483,7 @@ static void sv_draw_foot(sa_ui *u)
     default: sv_cpy(l, "MENU", sizeof l); break;
     }
     if (sa_pending(g)) sv_cpy(r, g->drop_armed ? "DROPS ON THE 1" : "REC: DROP", sizeof r);
-    else if (u->page == SV_PG_MAIN) sv_cpy(r, "SELECT: LAYERS", sizeof r);
+    else if (u->page == SV_PG_MAIN) sv_cpy(r, u->space ? "HOME: MAIN" : "HOME: SPACE", sizeof r);
     else if (u->page == SV_PG_DRUMS) sv_cpy(r, sv_drow_layer(u) >= 0 ? "KEYS: STEPS" : "ALGO: A DRUM", sizeof r);
     else if (u->page == SV_PG_STEPS) sv_cpy(r, "KEYS: NOTES", sizeof r);
     else if (u->from_drums && (u->page == SV_PG_LAYER || u->page == SV_PG_ARP)) sv_cpy(r, "EDIT: DRUMS", sizeof r);
@@ -531,8 +540,39 @@ static uint16_t sv_preview(sa_ui *u, int slot, const sa_code *c, int layer)
     return b;
 }
 
+static void sv_panel_space(sa_ui *u)
+{
+    const sa_groove *g = u->g;
+    const sa_settings *s = &g->s;
+    cv_text_on(10, 4, &AF_S, "THE PUMP OVER A BEAT", T_MID, T_SURF);
+    int32_t x0 = 10, w = 220, y0 = 22, h = 60, py = -1;
+    float depth = (float)s->pump / 100.0f * 0.85f;
+    for (int32_t x = 0; x < w; ++x) {               /* the gain: down on the kick, back over 70 % of the beat */
+        float t = (float)x / (float)w, d;
+        if (t < 0.02f) d = depth * t / 0.02f;
+        else { float k = (t - 0.02f) / 0.7f; d = k < 1.0f ? depth * (1.0f - k) * (1.0f - k) : 0.0f; }
+        int32_t y = y0 + (int32_t)(d * (float)h);
+        if (py >= 0) cv_line_t(x0 + x - 1, py, x0 + x, y, T_ACCENT, 2);
+        py = y;
+    }
+    cv_rect(x0, y0 - 2, 2, h + 4, T_THEME);
+    int ducked = 0, synth = 0;
+    for (int l = 0; l < SA_LAYERS; ++l)
+        if (s->code[l].type == SA_T_SYNTH) { synth++; ducked += !s->live[l].nopump; }
+    char t[40], a[8];
+    sv_fmt_int(a, ducked);
+    sv_cpy(t, a, sizeof t);
+    sv_cat(t, " OF ", sizeof t);
+    sv_fmt_int(a, synth);
+    sv_cat(t, a, sizeof t);
+    sv_cat(t, " SYNTH LAYERS PUMP", sizeof t);
+    cv_text_on(10, 90, &AF_S, t, T_TEXT, T_SURF);
+    cv_text_on(10, 106, &AF_S, "A LAYER'S PUMP CHIP: ON OR OFF", T_DIM, T_SURF);
+}
+
 static void sv_panel_main(sa_ui *u)
 {
+    if (u->space) { sv_panel_space(u); return; }
     sa_groove *g = u->g;
     int now = g->playing && g->tick >= 0 ? g->tick / SA_TPS : -1, row = 0;
     if (u->main_ms <= 0) {                         /* (stopped: the code's bars, worked out a few times a second) */
@@ -918,6 +958,7 @@ static void sv_select(sa_ui *u, int d)
         if (list[i] == cur) at = i;
     at = sv_clampi(at + d, 0, n - 1);               /* (a fast turn: several screens) */
     u->from_drums = false;
+    u->space = false;
     if (list[at] == SV_SCR_MAIN) sv_goto(u, SV_PG_MAIN, -1);
     else if (list[at] == SV_SCR_DRUMS) sv_goto(u, SV_PG_DRUMS, -1);
     else sv_goto(u, SV_PG_LAYER, list[at]);
@@ -1020,11 +1061,13 @@ static void sv_chip_turn(sa_ui *u, int d)
         e->mod[k] = sa_mod_opt(type, d > 0 ? 1 : sa_mod_opts(type) - 1);
         break;
     }
+    case CH_PUMP:                                   /* (at once: it is the sound, not the code) */
+        g->s.live[u->layer].nopump = (uint8_t)(d < 0);
+        break;
     default:
         e->amode = (uint8_t)sv_wrap(e->amode + d, SA_AR_MODES);
         break;
     }
-    (void)g;
     u->changed = true;
 }
 
@@ -1077,6 +1120,11 @@ void sv_knob(sa_ui *u, int k, int d)
     u->changed = true;
     switch (u->page) {
     case SV_PG_MAIN:
+        if (u->space) {
+            uint8_t *f = i == 0 ? &s->pump : i == 1 ? &s->reverb : i == 2 ? &s->delay : &s->width;
+            *f = (uint8_t)sv_clampi(*f + d * 2, 0, 100);
+            break;
+        }
         if (i == 0) { s->bpm = (uint8_t)sv_clampi(s->bpm + d, 60, 200); u->hot = 8; u->hot_ms = 700; }
         else if (i == 1) s->filter = (uint8_t)sv_clampi(s->filter + d * 2, 0, 100);
         else if (i == 2) s->feel = (uint8_t)sv_clampi(s->feel + d * 2, 0, 60);
@@ -1147,7 +1195,12 @@ void sv_button(sa_ui *u, int b, bool down)
             u->home_ms = 0;
         } else if (u->home_down) {
             u->home_down = false;
-            if (u->home_ms < SV_MENU_HOLD_MS) sv_goto(u, SV_PG_MAIN, -1);
+            if (u->home_ms < SV_MENU_HOLD_MS) {
+                if (u->page == SV_PG_MAIN) u->space = !u->space;   /* on MAIN: SPACE and back */
+                else u->space = false;
+                sv_goto(u, SV_PG_MAIN, -1);
+                u->force = true;
+            }
         }
         return;
     }

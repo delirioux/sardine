@@ -199,6 +199,20 @@ int main(int argc, char **argv)
     sv_knob(&ui, SV_K4, 3);
     CHECK(g.s.kit == SA_KIT_HARD, "KIT +3: HARD (%d)", g.s.kit);
     CHECK(sa_pending(&g) == 0, "MAIN's knobs are not code");
+    /* SPACE: HOME on MAIN; the pump follows the kick */
+    press(SV_B_HOME);
+    CHECK(ui.page == SV_PG_MAIN && ui.space, "HOME on MAIN: SPACE");
+    sv_knob(&ui, SV_K1, 10);
+    CHECK(g.s.pump == 55, "PUMP +10 steps of 2 (%d)", g.s.pump);
+    {
+        int maxd = 0;
+        for (int t = 0; t < 2000; t += 16) { run_ms(16); if (g.duck > maxd) maxd = g.duck; }
+        CHECK(maxd > 40, "the synth layers duck under the kick (%d)", maxd);
+    }
+    shot("02b_space");
+    all_palettes("space");
+    press(SV_B_HOME);
+    CHECK(!ui.space, "HOME again: MAIN");
     /* SELECT: to the bass layer (4) */
     go_layer(3);
     CHECK(ui.page == SV_PG_LAYER && ui.layer == 3, "SELECT reaches layer 4");
@@ -206,6 +220,17 @@ int main(int argc, char **argv)
     all_palettes("layer_bass");
     sv_knob(&ui, SV_K1, -10);
     CHECK(g.s.live[3].cut == 80, "CUTOFF at once (%d)", g.s.live[3].cut);
+    {                                              /* the PUMP chip: off and on at once, not code */
+        sv_chip ch[SA_MODS + 5];
+        int n = sv_chips(&ui, ch);
+        CHECK(ch[n - 1].kind == CH_PUMP, "the last chip of a synth layer: PUMP");
+        ui.chip = n - 1;
+        sv_knob(&ui, SV_K_ALGO, -1);
+        CHECK(g.s.live[3].nopump && sa_pending(&g) == 0, "PUMP OFF at once");
+        sv_knob(&ui, SV_K_ALGO, 1);
+        CHECK(!g.s.live[3].nopump, "PUMP ON again");
+        ui.chip = 0;
+    }
     CHECK(sa_pending(&g) == 0, "the tone is not code");
     /* the code: PRESETS to the pattern chip, ALGORITHM to the next pattern; then a modifier on + */
     sv_knob(&ui, SV_K_PRESETS, 1);

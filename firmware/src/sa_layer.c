@@ -770,6 +770,10 @@ void sa_defaults(sa_settings *s)
     s->ktone = 55;
     s->kdecay = 50;
     s->kdrive = 15;
+    s->pump = 35;
+    s->reverb = 70;
+    s->delay = 70;
+    s->width = 70;
     s->harm.key = 9;                               /* A minor */
     s->harm.scale = SA_SC_MINOR;
     s->harm.prog = 1;
@@ -794,6 +798,10 @@ void sa_settings_fix(sa_settings *s)
     s->kdecay = (uint8_t)clampi(s->kdecay, 0, 100);
     s->kdrive = (uint8_t)clampi(s->kdrive, 0, 100);
     s->look = (uint8_t)(s->look ? 1 : 0);
+    s->pump = (uint8_t)clampi(s->pump, 0, 100);
+    s->reverb = (uint8_t)clampi(s->reverb, 0, 100);
+    s->delay = (uint8_t)clampi(s->delay, 0, 100);
+    s->width = (uint8_t)clampi(s->width, 0, 100);
     s->harm.key %= 12;
     s->harm.scale = (uint8_t)clampi(s->harm.scale, 0, SA_SCALES - 1);
     s->harm.prog = (uint8_t)clampi(s->harm.prog, 0, SA_PROGS - 1);
@@ -843,6 +851,7 @@ void sa_settings_fix(sa_settings *s)
         v->drive = (uint8_t)clampi(v->drive, 0, 100);
         v->env = (uint8_t)clampi(v->env, 0, 100);
         v->level = (uint8_t)clampi(v->level, 0, 100);
+        v->nopump = (uint8_t)(v->nopump ? 1 : 0);
     }
 }
 
@@ -955,6 +964,10 @@ static float tick_frames(const sa_groove *g)
 /* a note now, its note-off after len frames; the part's note at that pitch still sounding is cut first */
 static void note(sa_groove *g, int part, int n, int vel, uint32_t len)
 {
+    if (part == SA_PART_DRUMS && n == 36) {        /* a kick: the pump starts again */
+        g->kick_clock = g->clock;
+        g->kicked = true;
+    }
     for (int i = 0; i < g->nheld; ++i)
         if (g->held[i].part == part && g->held[i].note == n) {
             note_off_now(g, i);
@@ -1081,9 +1094,26 @@ static void do_tick(sa_groove *g)
     }
 }
 
+/* the pump: down fast on the kick (6 ms), back over 70 % of a beat, as deep as PUMP says */
+static void pump_block(sa_groove *g)
+{
+    float d = 0.0f;
+    if (g->playing && g->kicked && g->s.pump) {
+        float depth = (float)g->s.pump / 100.0f * 0.85f;
+        float t = (float)(g->clock - g->kick_clock) / g->sr, beat = 60.0f / (float)clampi(g->s.bpm, 60, 200);
+        if (t < 0.006f) {
+            d = depth * t / 0.006f;
+        } else {
+            float k = (t - 0.006f) / (0.7f * beat);
+            if (k < 1.0f) d = depth * (1.0f - k) * (1.0f - k);
+        }
+    }
+    g->duck = (uint8_t)(d * 127.0f + 0.5f);
+}
+
 void sa_process(sa_groove *g, int frames)
 {
-    if (!g->playing) return;
+    if (!g->playing) { g->duck = 0; return; }
     float tf = tick_frames(g);
     int left = frames;
     while (left > 0) {
@@ -1111,6 +1141,7 @@ void sa_process(sa_groove *g, int frames)
             else ++k;
         }
     }
+    pump_block(g);
 }
 
 void sa_key(sa_groove *g, int k, int note_in, bool down, int layer)

@@ -16,10 +16,11 @@ every layer, its filter, resonance, drive and envelope, is under your fingers at
 - 81 synth sounds on Felucca's engines (bass, keys, pads, leads, FX, and an AMBIENT set of wide pads, dub stabs and a
   rumbling bass in a big hall) and nine synthesised drum kits
 - 24 drum patterns and 29 synth patterns, straight, broken and triplet; FEEL swings them all together
+- The synth layers pump under the kick (PUMP), with REVERB, DELAY and WIDTH for the space they sit in
 - An arpeggiator with ten modes, triplet rates and up to four octaves, always in the key
 - Key, scale and ten chord progressions; every synth layer follows the chord
 
-Version 0.3 is a test build on the `dev` branch, not released yet: [install it on the FM-1](https://delirioux.github.io/sardine/dev/install/)
+Version 0.4 is a test build on the `dev` branch, not released yet: [install it on the FM-1](https://delirioux.github.io/sardine/dev/install/)
 or [try it in the browser](https://delirioux.github.io/sardine/dev/try/). The [manual](docs/MANUAL.md) has every screen.
 
 Sardine runs on [Felucca](https://github.com/hugelton/Felucca), Leo Kuroshita's firmware for the FM-1, by way of Sill
