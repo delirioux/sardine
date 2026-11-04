@@ -46,8 +46,10 @@ jobs:
             [ "$i" = 3 ] && exit 1
             echo "gitee refused (try $i of 3): again in a minute"; sleep 60
           done
-          mkdir -p sdkfiles/cpu/wl82/tools
-          cp "$HOME/fw-AC79_AIoT_SDK/cpu/wl82/tools/"{uboot.boot,cfg_tool.bin,eq_cfg_hw.bin} sdkfiles/cpu/wl82/tools/
+          T="$HOME/fw-AC79_AIoT_SDK/cpu/wl82/tools"           # (as tools/fm1pkg_make.py reads them)
+          mkdir -p sdkfiles/cpu/wl82/tools/cfg
+          cp "$T/uboot.boot" "$T/cfg_tool.bin" sdkfiles/cpu/wl82/tools/
+          cp "$T/cfg/eq_cfg_hw.bin" sdkfiles/cpu/wl82/tools/cfg/
 
       - uses: actions/upload-artifact@v4
         if: hashFiles('sdkfiles/cpu/wl82/tools/uboot.boot') != ''
