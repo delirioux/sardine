@@ -226,6 +226,72 @@ int main(void)
     CHECK(synths <= SA_SYNTHS, "fix: at most three synths, got %d", synths);
     CHECK(s.bpm <= 200 && s.harm.key < 12, "fix: ranges");
 
+    /* a fresh groove: a kick, hats, a clap or snare, a bass on part 1, stabs or a pad; each seed its own */
+    {
+        static const uint8_t PB[] = {10, 11, 12}, PK[] = {20, 21}, PP[] = {30, 31, 32};
+        sa_pool pool = {PB, PK, PP, 3, 2, 3};
+        int differ = 0, gated = 0, both = 0;
+        sa_settings a, b;
+        for (uint32_t seed = 1; seed <= 200; ++seed) {
+            sa_random(&a, seed, &pool);
+            int drums = 0, kick = 0, bass = 0, upper = 0;
+            for (int l = 0; l < SA_LAYERS; ++l) {
+                const sa_code *c = &a.code[l];
+                if (c->type == SA_T_DRUM) {
+                    drums++;
+                    kick += c->sound == SA_DV_KICK;
+                }
+                if (c->type == SA_T_SYNTH) {
+                    const char *pn = sa_pat_name(SA_T_SYNTH, c->pat);
+                    if (c->part == 0) {
+                        bass++;
+                        CHECK(c->sound >= 10 && c->sound <= 12, "seed %u: the bass from the bass list", seed);
+                    } else {
+                        upper++;
+                        bool pad = c->sound >= 30;
+                        CHECK(pad ? (c->sound <= 32) : (c->sound == 20 || c->sound == 21), "seed %u: a stab or a pad",
+                              seed);
+                        CHECK(pad ? !strcmp(pn, "WASH") || !strcmp(pn, "TWO HALVES") || !strcmp(pn, "SWELL")
+                                  : sa_chordy(c), "seed %u: a %s's pattern (%s)", seed, pad ? "pad" : "stab", pn);
+                        gated += sa_gate_on(&a.gate[l]);
+                    }
+                }
+            }
+            both += upper == 2;
+            CHECK(drums >= 3 && kick == 1, "seed %u: three drums or more, one kick (%d, %d)", seed, drums, kick);
+            CHECK(bass == 1 && upper >= 1 && upper <= 2, "seed %u: a bass and one or two above (%d %d)", seed, bass,
+                  upper);
+            CHECK(a.bpm >= 120 && a.bpm <= 130, "seed %u: a club tempo, %d", seed, a.bpm);
+            sa_random(&b, seed, &pool);
+            CHECK(!memcmp(&a, &b, sizeof a), "seed %u: the same seed, the same groove", seed);
+            sa_random(&b, seed + 1, &pool);
+            differ += memcmp(&a, &b, sizeof a) != 0;
+        }
+        CHECK(differ == 200, "each seed its own groove (%d of 200)", differ);
+        CHECK(gated > 0 && both > 20 && both < 180, "some gated pads (%d), now and then both (%d)", gated, both);
+
+        /* a whole groove in: stopped at once, playing on the bar line; the look stays, what waited goes */
+        sa_init(&g, SR);
+        sa_set_sound(&g, snd, 0);
+        g.s.look = 1;
+        g.s.palette = 2;
+        sa_random(&a, 7, &pool);
+        a.look = 0;
+        sa_set_arm(&g, &a);
+        CHECK(!g.set_next && g.s.bpm == a.bpm && !memcmp(g.s.code, a.code, sizeof a.code), "stopped: in at once");
+        CHECK(g.s.look == 1 && g.s.palette == 2, "the look and the colour stay");
+        sa_random(&b, 8, &pool);
+        sa_play(&g, true);
+        run_bars(&g, 1);
+        g.ed[0].mod[0] = sa_mod_opt(SA_T_DRUM, 1);
+        sa_set_arm(&g, &b);
+        CHECK(g.set_next == &b && g.s.bpm == a.bpm, "playing: armed, the old one plays on");
+        run_bars(&g, 1);
+        CHECK(!g.set_next && !memcmp(g.s.code, b.code, sizeof b.code) && sa_pending(&g) == 0,
+              "on the bar line: in, the copy with it");
+        sa_play(&g, false);
+    }
+
     /* every pattern with every modifier, two bars: no crash, notes within the bar */
     sa_init(&g, SR);
     sa_set_sound(&g, snd, 0);

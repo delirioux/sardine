@@ -1,9 +1,12 @@
 # Sardine manual
 
-Sardine 0.5. Live club mixing on the FM-1: a stack of layers, each a line of code you build with the knobs. A layer
+Sardine 0.6. Live club mixing on the FM-1: a stack of layers, each a line of code you build with the knobs. A layer
 is a sound and a pattern, bent by modifiers and, on a synth layer, an arpeggiator. You change the code, and REC drops
 your changes in on the one: the next bar line. The sound of a layer (its filter, drive, level) and the mutes act at
 once, as you turn.
+
+Every start is a fresh groove: other sounds, patterns, kit, key and tempo, ready to play. What you want to keep goes
+into one of eight sets (SAVE, below).
 
 ## The screens
 
@@ -162,6 +165,25 @@ delay. The room every layer plays in is a big hall; the drums send little into i
 
 All synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY, CLASSIC.
 
+## SETS
+
+<p align="center">
+<img src="screens/sets.png" alt="SETS" width="200">
+</p>
+
+**SAVE** opens SETS: eight grooves kept in the flash, a row each with its tempo and key; beside the rows, what the set
+picked holds (its kit, its synth sounds). **KNOB 1** (or PRESETS) picks a set, **KNOB 2** the action, **REC** does it:
+
+| Action | What REC does |
+| --- | --- |
+| LOAD | the set in, on the one while playing (at once when stopped); what waited for REC goes |
+| STORE | what plays into the set (over what was there) |
+| NEW | a fresh groove, as at a start, on the one |
+| CLEAR | the set empty |
+
+The flash is written only while stopped: a STORE or CLEAR while playing is kept and written as you stop (the row says
+WAITS; one set at a time). SAVE again goes back.
+
 ## MENU
 
 HOME held: the colour (SHOAL by default, and Felucca's) and the look (FLAT, LINE).
@@ -172,6 +194,5 @@ The synth layers' parts on channels 1, 2 and 3, the kit on 10 with General MIDI 
 
 ## Saving
 
-The layers and the settings save themselves two seconds after the last change while stopped, never while playing
-(writing the flash would stall the audio). They live in Felucca's first song slot. (0.2 keeps its layers in a new
-form: what 0.1 saved is not read, the first groove comes back.)
+Nothing saves itself: a start is a fresh groove, and what you keep goes into SETS. The colour and the look are kept.
+0.5's saved groove comes back once, as set 1.

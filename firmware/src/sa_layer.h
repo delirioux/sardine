@@ -135,6 +135,7 @@ typedef struct {
     sa_code ed[SA_LAYERS];
     sa_gate ed_gate[SA_LAYERS];
     bool drop_armed;                                /* REC pressed: the copy goes in on the next bar line */
+    const sa_settings *set_next;                    /* a whole groove armed (a set, a fresh one): in on the next bar line */
     float sr;
     bool playing;
     uint32_t clock;                                 /* frames since PLAY */
@@ -195,6 +196,13 @@ void sa_edit_reset(sa_groove *g);                   /* the edit copy = what play
 int sa_pending(const sa_groove *g);                 /* how many changes wait for REC (layers, plus 1 for the key) */
 bool sa_layer_pending(const sa_groove *g, int l);
 void sa_drop(sa_groove *g);                         /* REC: playing, on the next bar line; stopped, at once */
+/* a whole groove in (a set loaded, a fresh one): playing, on the next bar line; stopped, at once. What waits for REC
+ * goes, the colour and the look stay. s is read on the bar line: the caller keeps it until then */
+void sa_set_arm(sa_groove *g, const sa_settings *s);
+/* a fresh groove from a seed: a kick, hats, a clap or snare and maybe more, a bass, stabs or a pad (sometimes both),
+ * a key, scale, progression, kit, tempo and swing that suit a club. The sounds come from the glue's lists */
+typedef struct { const uint8_t *bass, *keys, *pad; uint8_t nbass, nkeys, npad; } sa_pool;
+void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p);
 void sa_play(sa_groove *g, bool on);
 void sa_process(sa_groove *g, int frames);
 void sa_all_off(sa_groove *g);

@@ -995,6 +995,93 @@ void sa_settings_fix(sa_settings *s)
     }
 }
 
+/* ---- a fresh groove ---------------------------------------------------------------------------------------------- */
+static uint32_t rnd_next(uint32_t *r)
+{
+    uint32_t x = *r;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    return *r = x;
+}
+static int rnd(uint32_t *r, int n) { return n > 0 ? (int)((rnd_next(r) >> 8) % (uint32_t)n) : 0; }
+static bool streq(const char *a, const char *b)
+{
+    while (*a && *a == *b) { a++; b++; }
+    return *a == *b;
+}
+static int pat_find(int type, const char *name)
+{
+    int n = type == SA_T_DRUM ? NDPAT : NSPAT;
+    for (int i = 0; i < n; ++i)
+        if (streq(type == SA_T_DRUM ? DPAT[i].name : SPAT[i].name, name)) return i;
+    return 0;
+}
+static int pick_pat(uint32_t *r, int type, const char *const *names, int n) { return pat_find(type, names[rnd(r, n)]); }
+static int pick_sound(uint32_t *r, const uint8_t *list, int n) { return n > 0 ? list[rnd(r, n)] : 0; }
+
+void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p)
+{
+    static const char *const BASS[] = {"OFFBEAT", "ROLLER", "ROOT 8THS", "OCTAVE", "PUMP 16", "SYNCO", "ACID",
+                                       "GROWL", "2-STEP", "HALF"};
+    static const char *const STABS[] = {"STAB 1", "STAB 2", "OFFBEATS", "HOUSE", "CHARLESTON", "DOWNBEAT", "PUSH",
+                                        "DOTTED"};
+    static const char *const PADS[] = {"WASH", "TWO HALVES", "SWELL"};
+    static const char *const HATS[] = {"OFFBEAT", "16THS", "SKIP", "OFFBEAT"};
+    static const uint8_t BPM[] = {122, 124, 125, 126, 126, 128, 128, 130};
+    static const uint8_t FEEL[] = {0, 8, 14, 18, 18, 24};
+    static const uint8_t SCL[] = {SA_SC_MINOR, SA_SC_MINOR, SA_SC_MINOR, SA_SC_MINOR, SA_SC_DORIAN, SA_SC_DORIAN,
+                                    SA_SC_PHRYGIAN, SA_SC_MAJOR};
+    static const uint8_t BARS[] = {1, 2, 2, 4};
+    static const uint8_t PUMP[] = {20, 30, 35, 45};
+    uint32_t r = seed * 2654435761u ^ 0x9E3779B9u;
+    if (!r) r = 1;
+    for (int i = 0; i < 4; ++i) rnd_next(&r);
+    sa_defaults(s);
+    memset(s->code, 0, sizeof s->code);
+    s->bpm = BPM[rnd(&r, sizeof BPM)];
+    s->feel = FEEL[rnd(&r, sizeof FEEL)];
+    s->kit = (uint8_t)rnd(&r, SA_KITS);
+    s->pump = PUMP[rnd(&r, sizeof PUMP)];
+    s->harm.key = (uint8_t)rnd(&r, 12);
+    s->harm.scale = SCL[rnd(&r, sizeof SCL)];
+    s->harm.prog = (uint8_t)rnd(&r, SA_PROGS);
+    s->harm.bars = BARS[rnd(&r, sizeof BARS)];
+    int l = 0;
+    /* the drums: a kick, hats, a clap or a snare on 2 and 4; sometimes an open hat, a shaker, a rim, a conga, a ride */
+    code_drum(&s->code[l++], SA_DV_KICK, pat_find(SA_T_DRUM, rnd(&r, 8) ? "4 FLOOR" : rnd(&r, 2) ? "2-STEP" : "BROKEN"));
+    int hat = pick_pat(&r, SA_T_DRUM, HATS, (int)(sizeof HATS / sizeof HATS[0]));
+    code_drum(&s->code[l++], SA_DV_HAT, hat);
+    code_drum(&s->code[l++], rnd(&r, 3) ? SA_DV_CLAP : SA_DV_SNARE, pat_find(SA_T_DRUM, "2 + 4"));
+    if (hat != pat_find(SA_T_DRUM, "OFFBEAT") && rnd(&r, 2))
+        code_drum(&s->code[l++], SA_DV_OPEN, pat_find(SA_T_DRUM, "OFFBEAT"));
+    switch (rnd(&r, 6)) {
+    case 0: code_drum(&s->code[l++], SA_DV_SHAKER, pat_find(SA_T_DRUM, "SHAKE")); break;
+    case 1: code_drum(&s->code[l++], SA_DV_RIM, pat_find(SA_T_DRUM, "SYNCO")); break;
+    case 2: code_drum(&s->code[l++], SA_DV_CONGA, pat_find(SA_T_DRUM, "TRESILLO")); break;
+    case 3: code_drum(&s->code[l++], SA_DV_RIDE, pat_find(SA_T_DRUM, "8THS")); break;
+    default: break;
+    }
+    /* the synths: a bass; stabs or a pad; now and then both */
+    code_synth(&s->code[l++], pick_sound(&r, p->bass, p->nbass),
+               pick_pat(&r, SA_T_SYNTH, BASS, (int)(sizeof BASS / sizeof BASS[0])), 0);
+    bool stab = rnd(&r, 100) < 55, both = rnd(&r, 100) < 40;
+    for (int k = 0; k < (both ? 2 : 1); ++k) {
+        bool st = k == 0 ? stab : !stab;
+        int sl = l++;
+        if (st) {
+            code_synth(&s->code[sl], pick_sound(&r, p->keys, p->nkeys),
+                       pick_pat(&r, SA_T_SYNTH, STABS, (int)(sizeof STABS / sizeof STABS[0])), 1 + k);
+        } else {
+            code_synth(&s->code[sl], pick_sound(&r, p->pad, p->npad),
+                       pick_pat(&r, SA_T_SYNTH, PADS, (int)(sizeof PADS / sizeof PADS[0])), 1 + k);
+            if (rnd(&r, 100) < 35) s->gate[sl].pat = (uint8_t)(1 + rnd(&r, SA_GATES - 1));   /* a gated pad */
+            if (rnd(&r, 100) < 40) s->pan[sl].mode = SA_PAN_SWEEP;
+        }
+    }
+    sa_settings_fix(s);
+}
+
 /* ---- the engine ------------------------------------------------------------------------------------------------ */
 void sa_init(sa_groove *g, float sample_rate)
 {
@@ -1162,13 +1249,40 @@ void sa_drop(sa_groove *g)
     g->drop_armed = true;
 }
 
+static void set_now(sa_groove *g)
+{
+    const sa_settings *n = g->set_next;
+    uint8_t pal = g->s.palette, look = g->s.look;
+    g->set_next = 0;
+    sa_all_off(g);
+    g->s = *n;
+    g->s.palette = pal;
+    g->s.look = look;
+    sa_settings_fix(&g->s);
+    memset(g->arp_i, 0, sizeof g->arp_i);
+    sa_edit_reset(g);
+    g->sound_sig++;
+}
+
+void sa_set_arm(sa_groove *g, const sa_settings *s)
+{
+    g->set_next = s;
+    if (!g->playing) {
+        set_now(g);
+        chord_of_bar(g, 0);
+    }
+}
+
 static void bar_line(sa_groove *g)
 {
     for (int l = 0; l < SA_LAYERS; ++l) {
         g->hits_last[l] = g->hits[l];
         g->hits[l] = 0;
     }
-    if (g->drop_armed) {
+    if (g->set_next) {
+        set_now(g);
+        msg(g, "IN ON THE 1");
+    } else if (g->drop_armed) {
         drop_now(g);
         msg(g, "DROPPED");
     }
@@ -1187,7 +1301,8 @@ void sa_play(sa_groove *g, bool on)
     if (!on) {
         g->tick = -1;
         g->bar = 0;
-        if (g->drop_armed) drop_now(g);            /* (stopped: what was armed goes in now) */
+        if (g->set_next) set_now(g);               /* (stopped: what was armed goes in now) */
+        else if (g->drop_armed) drop_now(g);
         chord_of_bar(g, 0);
         for (int l = 0; l < SA_LAYERS; ++l) g->hits[l] = g->hits_last[l] = 0;
     }

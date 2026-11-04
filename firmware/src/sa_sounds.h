@@ -201,6 +201,46 @@ static inline const char *sas_name(int type, int i)
     return type == SA_T_DRUM ? sa_dv_name(i) : sas_of(i)->name;
 }
 
+/* ---- a fresh groove's sounds (sa_random): the ones that glue in a club mix, by name (a name not found is left out) */
+static const char *const SAS_POOL_BASS[] = {"TECH BASS", "SUB", "SQUARE", "ACID", "FM BASS", "REESE", "OCTAVE",
+                                            "SINE BASS", "FAT BASS", "GROWL", "WOW BASS", "ORGAN BASS", "RUMBLE",
+                                            "DEEP SUB"};
+static const char *const SAS_POOL_KEYS[] = {"DUB CHORD", "TECH STAB", "SUPER", "TRANCE", "PLUCK", "E-PIANO", "RAVE",
+                                            "ORGAN", "PIANO", "FM PLUCK", "GOSPEL", "DUB STAB", "SPACE STAB",
+                                            "ECHO CHORD"};
+static const char *const SAS_POOL_PAD[] = {"SOFT PAD", "STRINGS", "PWM STR", "FM PAD", "CLOUD", "SHIMMER", "FROZEN",
+                                           "WIDE PAD", "DARK PAD", "GLASS", "VAPOR", "SWELL", "NIGHT", "SKY",
+                                           "TAPE PAD", "CHOIR AIR"};
+static inline int sas_find(const char *name)
+{
+    for (int i = 0; i < SAS_NSOUNDS; ++i) {
+        const char *a = SAS_SOUND[i].name, *b = name;
+        while (*a && *a == *b) { a++; b++; }
+        if (*a == *b) return i;
+    }
+    return -1;
+}
+static inline uint8_t sas_pool_list(uint8_t *out, const char *const *names, int n)
+{
+    uint8_t k = 0;
+    for (int i = 0; i < n; ++i) {
+        int s = sas_find(names[i]);
+        if (s >= 0) out[k++] = (uint8_t)s;
+    }
+    return k;
+}
+static inline void sas_pool_make(sa_pool *p)
+{
+    static uint8_t b[sizeof SAS_POOL_BASS / sizeof SAS_POOL_BASS[0]], k[sizeof SAS_POOL_KEYS / sizeof SAS_POOL_KEYS[0]],
+        d[sizeof SAS_POOL_PAD / sizeof SAS_POOL_PAD[0]];
+    p->bass = b;
+    p->keys = k;
+    p->pad = d;
+    p->nbass = sas_pool_list(b, SAS_POOL_BASS, (int)sizeof b);
+    p->nkeys = sas_pool_list(k, SAS_POOL_KEYS, (int)sizeof k);
+    p->npad = sas_pool_list(d, SAS_POOL_PAD, (int)sizeof d);
+}
+
 /* ---- the kits: the DRUM engine's {KIT, TUNE, TONE, DECY, SNAP, ACC, KICK, DRV} (eng_drum.c DK_*: STD 0, the model
  * kits 4..8, DEEP 9, TIGHT 10, PERC 11) ---- */
 static const uint8_t SAS_KIT[SA_KITS][8] = {

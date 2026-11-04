@@ -8,8 +8,8 @@
  *   the audio ISR (audio.c audio_block -> sa_audio_pre): the layers in time, their notes straight into Felucca's
  *     tracks (trk_note_on / off) and out as USB MIDI;
  *   the main loop (main.c -> sa_frame, sa_input): the panel into the controls (the audio held off while one acts), a
- *     synth part's sound loaded when its layer's changed, the cards into the tracks, the LEDs, the settings saved
- *     while stopped, the screen.
+ *     synth part's sound loaded when its layer's changed, the cards into the tracks, the LEDs, the sets read and
+ *     written (written while stopped), the screen.
  * Tracks: 1..3 the synth layers' parts, 4 the kit (DRUM engine). */
 #include "sa_layer.h"
 #include "sa_sounds.h"
@@ -54,39 +54,229 @@ static void sa_audio_post(int32_t *out, uint32_t n)
     (void)n;
 }
 
-/* ---- the settings: one record in Felucca's first project object; saved only while stopped (the flash is the code's:
- * XIP, writing it while playing would stall the audio) ---- */
-#define SA_REC_MAGIC 0x32524153u                             /* "SAR2" (0.2: the own patterns; 0.1's record is not read) */
+/* ---- the flash: the preferences (the look, a count of the starts: each start's fresh groove) in Felucca's first
+ * project object; the eight sets, three to an object, in the other three. Written only while stopped (the flash is
+ * the code's: XIP, writing it while playing would stall the audio); read at any time (storage_hw.c reads in short
+ * windows, the audio keeps up) ---- */
+#define SA_PREF_MAGIC 0x31504153u                            /* "SAP1" */
+#define SA_SET_MAGIC 0x31534153u                             /* "SAS1" */
+#define SA_REC_MAGIC 0x32524153u                             /* "SAR2": 0.2..0.5's groove, moved into set 1 once */
+typedef struct { uint32_t magic, boots; uint8_t look, pad[3]; } sa_prefs;
 typedef struct { uint32_t magic; uint16_t size, ver; sa_settings s; } sa_record;
+#define SA_SET_PER 3u                                        /* sets to an object */
+#define SA_SET_STRIDE 1280u                                  /* the room a set has (sa_settings may grow into it) */
+#define SA_SET_LEN (SA_SET_PER * SA_SET_STRIDE)
+#define SA_SET_OBJ(k) (OBJ_PROJECT0 + 1u + (uint32_t)(k) / SA_SET_PER)
+#define SA_SET_OFF(k) ((uint32_t)(k) % SA_SET_PER * SA_SET_STRIDE)
+_Static_assert(sizeof(sa_record) <= SA_SET_STRIDE && SA_SET_LEN <= ST_PAYLOAD_MAX, "the sets' room in the flash");
+_Static_assert(OBJ_PROJECT0 + 1u + (SV_SETS - 1u) / SA_SET_PER < OBJ_PROJECT0 + 4u, "the sets in the project objects");
+static sa_prefs sa_pref;
+static uint8_t sa_pref_look;                                 /* the look as last written */
+static sa_settings sa_next;                                  /* a groove armed for the bar line (a set, a fresh one) */
+static sa_record sa_wait;                                    /* a set stored while playing, written once stopped */
+static int sa_wait_slot = -1;
+static bool sa_wait_clear;
+static sa_pool sa_pl;
 static uint32_t sa_save_ms;
 static bool sa_dirty;
-static void sa_settings_load(void)
+
+#if FELUCCA_FLASH
+/* st_buf as it is into copy `to` of obj, sequence seq (st_save_to's steps, without its reload of the current copy into
+ * st_buf: the caller has read it and changed one set in it) */
+static int sa_st_commit(uint32_t obj, uint32_t len, uint32_t to, uint32_t seq)
+{
+    uint32_t base = st_sector(obj, to), off;
+    st_hdr_t h, chk;
+    int rc;
+    if ((rc = st_erase(base)) != 0)
+        return rc;
+    for (off = 0; off < len; off += 256u) {
+        uint32_t n = len - off > 256u ? 256u : len - off;
+        if ((rc = st_prog(base + ST_PAYLOAD_OFF + off, st_buf + off, n)) != 0)
+            return rc;
+    }
+    h.magic = ST_MAGIC;
+    h.type = (uint16_t)obj;
+    h.slot = (uint16_t)to;
+    h.seq = seq;
+    h.len = len;
+    h.crc = st_crc32(st_buf, len);
+    h.rsv[0] = h.rsv[1] = 0xFFFFFFFFu;
+    h.hcrc = st_crc32(&h, sizeof h - 4u);
+    if ((rc = st_prog(base, &h, sizeof h)) != 0)
+        return rc;
+    if (st_head(obj, to, &chk) || memcmp(&chk, &h, sizeof h) || st_body(obj, to, &chk))
+        return -7;
+    return 0;
+}
+#endif
+
+/* set k from the flash into *s (an older, shorter record: the new fields their defaults); false: empty */
+static bool sa_set_read(int k, sa_settings *s)
 {
 #if FELUCCA_FLASH
-    static sa_record r;                                      /* (static: off the stack) */
-    memset(&r, 0, sizeof r);
-    int n = st_load(OBJ_PROJECT0, &r, sizeof r);
-    if (n >= (int)(sizeof r - sizeof r.s) && r.magic == SA_REC_MAGIC) {
-        sa_settings s;
-        sa_defaults(&s);                                     /* (a shorter, older record: the new fields their defaults) */
-        uint32_t k = r.size < sizeof s ? r.size : sizeof s;
-        memcpy(&s, &r.s, k);
-        sa_settings_fix(&s);
-        sa_g.s = s;
-    }
+    st_hdr_t h;
+    uint32_t off = SA_SET_OFF(k);
+    sa_record r;
+    if (!flash_ok || st_current(SA_SET_OBJ(k), &h) < 0 || h.len < off + 8u)
+        return false;
+    memcpy(&r, st_buf + off, 8u);
+    if (r.magic != SA_SET_MAGIC || r.size < 16u || r.size > SA_SET_STRIDE - 8u || h.len < off + 8u + r.size)
+        return false;
+    sa_defaults(s);
+    memcpy(s, st_buf + off + 8u, r.size < sizeof *s ? r.size : sizeof *s);
+    sa_settings_fix(s);
+    return true;
+#else
+    (void)k;
+    (void)s;
+    return false;
 #endif
 }
-static void sa_settings_save(void)
+
+/* set k into the flash (s 0: cleared); stopped only */
+static bool sa_set_write(int k, const sa_settings *s)
 {
 #if FELUCCA_FLASH
-    static sa_record r;
-    memset(&r, 0, sizeof r);
-    r.magic = SA_REC_MAGIC;
-    r.size = (uint16_t)sizeof r.s;
-    r.ver = 1;
-    r.s = sa_g.s;
-    st_save(OBJ_PROJECT0, &r, sizeof r);
+    st_hdr_t h;
+    uint32_t obj = SA_SET_OBJ(k), off = SA_SET_OFF(k);
+    int cur = flash_ok ? st_current(obj, &h) : -1;           /* (its payload, the other sets, now in st_buf) */
+    if (!flash_ok)
+        return false;
+    if (cur < 0 || h.len != SA_SET_LEN) {
+        memset(st_buf, 0, SA_SET_LEN);
+        h.seq = 0;
+        cur = 1;                                             /* (the first write: copy A) */
+    }
+    memset(st_buf + off, 0, SA_SET_STRIDE);
+    if (s) {
+        sa_record r;
+        r.magic = SA_SET_MAGIC;
+        r.size = (uint16_t)sizeof r.s;
+        r.ver = 1;
+        r.s = *s;
+        memcpy(st_buf + off, &r, sizeof r);
+    }
+    return sa_st_commit(obj, SA_SET_LEN, cur == 0 ? 1u : 0u, h.seq + 1u) == 0;
+#else
+    (void)k;
+    (void)s;
+    return false;
 #endif
+}
+
+/* what set k holds, for SETS */
+static void sa_set_info_of(int k, const sa_settings *s)
+{
+    sv_set_info *si = &sa_u.sets[k];
+    memset(si, 0, sizeof *si);
+    if (!s)
+        return;
+    si->used = 1;
+    si->bpm = s->bpm;
+    si->key = s->harm.key;
+    si->scale = s->harm.scale;
+    si->kit = s->kit;
+    for (int l = 0; l < SA_LAYERS && si->nsyn < SA_SYNTHS; ++l)
+        if (s->code[l].type == SA_T_SYNTH)
+            si->snd[si->nsyn++] = s->code[l].sound;
+}
+static void sa_sets_scan(void)
+{
+    for (int k = 0; k < SV_SETS; ++k)
+        sa_set_info_of(k, sa_set_read(k, &sa_next) ? &sa_next : 0);
+}
+
+static void sa_prefs_save(void)
+{
+#if FELUCCA_FLASH
+    sa_pref.magic = SA_PREF_MAGIC;
+    sa_pref.look = sa_g.s.look;
+    if (flash_ok && st_save(OBJ_PROJECT0, &sa_pref, sizeof sa_pref) == 0)
+        sa_pref_look = sa_pref.look;
+#endif
+}
+/* the preferences; once, 0.5's groove (the one record in the first project object) moved into set 1 */
+static void sa_prefs_load(void)
+{
+#if FELUCCA_FLASH
+    memset(&sa_pref, 0, sizeof sa_pref);
+    if (!flash_ok)
+        return;
+    int n = st_load(OBJ_PROJECT0, &sa_wait, sizeof sa_wait);
+    if (n >= (int)sizeof(sa_prefs) && sa_wait.magic == SA_PREF_MAGIC) {
+        memcpy(&sa_pref, &sa_wait, sizeof sa_pref);
+    } else if (n >= (int)(sizeof sa_wait - sizeof sa_wait.s) && sa_wait.magic == SA_REC_MAGIC &&
+               !sa_set_read(0, &sa_next)) {
+        uint32_t k = sa_wait.size < sizeof sa_next ? sa_wait.size : sizeof sa_next;
+        sa_defaults(&sa_next);
+        memcpy(&sa_next, &sa_wait.s, k);
+        sa_settings_fix(&sa_next);
+        sa_pref.look = sa_next.look;
+        sa_set_write(0, &sa_next);
+    }
+    sa_pref_look = sa_pref.look;
+#endif
+}
+
+/* SETS' action (REC there), in the main loop */
+static void sa_set_do(int act, int k)
+{
+    char m[32];
+    k = k < 0 ? 0 : k >= SV_SETS ? SV_SETS - 1 : k;
+    sv_cpy(m, "SET ", sizeof m);
+    m[4] = (char)('1' + k);
+    m[5] = 0;
+    switch (act) {
+    case SV_SA_LOAD:
+    case SV_SA_NEW:
+        if (act == SV_SA_NEW) {
+            sa_random(&sa_next, sa_pref.boots * 7919u + fm1_ms * 31u + sa_u.frame, &sa_pl);
+            sv_cpy(m, "A NEW GROOVE", sizeof m);
+        } else if (k == sa_wait_slot) {
+            if (sa_wait_clear) { sv_msg(&sa_u, "THAT SET IS EMPTY"); return; }
+            sa_next = sa_wait.s;
+        } else if (!sa_set_read(k, &sa_next)) {
+            sv_msg(&sa_u, "THAT SET IS EMPTY");
+            return;
+        }
+        fm1_irq_off();
+        sa_set_arm(&sa_g, &sa_next);
+        fm1_irq_on();
+        sv_cat(m, sa_g.playing ? ": ON THE 1" : " IN", sizeof m);
+        break;
+    case SV_SA_STORE:
+    case SV_SA_CLEAR:
+        if (sa_g.playing) {                                  /* kept now, written once stopped */
+            if (sa_wait_slot >= 0 && sa_wait_slot != k) {
+                sv_msg(&sa_u, "STOP FIRST: A SET WAITS");
+                return;
+            }
+            sa_wait_clear = act == SV_SA_CLEAR;
+            fm1_irq_off();
+            sa_wait.s = sa_g.s;
+            fm1_irq_on();
+            sa_wait_slot = k;
+            sa_set_info_of(k, sa_wait_clear ? 0 : &sa_wait.s);
+            sa_u.sets[k].wait = (uint8_t)(sa_wait_clear ? 2 : 1);
+            sv_cat(m, ": WHEN STOPPED", sizeof m);
+            break;
+        }
+        fm1_irq_off();
+        sa_next = sa_g.s;
+        fm1_irq_on();
+        if (k == sa_wait_slot) sa_wait_slot = -1;
+        if (!sa_set_write(k, act == SV_SA_CLEAR ? 0 : &sa_next)) {
+            sv_msg(&sa_u, "THE FLASH FAILED");
+            return;
+        }
+        sa_set_info_of(k, act == SV_SA_CLEAR ? 0 : &sa_next);
+        sv_cat(m, act == SV_SA_CLEAR ? " CLEARED" : " STORED", sizeof m);
+        break;
+    default:
+        return;
+    }
+    sv_msg(&sa_u, m);
 }
 
 /* ---- the sounds into the tracks (main loop) ---------------------------------------------------------------------- */
@@ -221,11 +411,17 @@ static void sa_fw_init(void)
     song.sel = 0;
     song.master_q12 = 2048;
     sa_init(&sa_g, (float)FS);
-    sa_settings_load();
+    sas_pool_make(&sa_pl);
+    sa_prefs_load();
+    sa_pref.boots++;                                         /* each start its own groove (the count kept) */
+    sa_prefs_save();
+    sa_random(&sa_g.s, sa_pref.boots, &sa_pl);
+    sa_g.s.look = sa_pref.look;
     sa_g.s.palette = (uint8_t)(settings.palette % NPALETTES);
     sa_edit_reset(&sa_g);
     sa_set_sound(&sa_g, sa_sound, 0);
     sv_init(&sa_u, &sa_g);
+    sa_sets_scan();
     sa_apply();
 }
 
@@ -326,8 +522,8 @@ static void sa_leds(void)
     }
 }
 
-/* a frame: the settings into the tracks, the LEDs, the screen; the settings saved a while after the last change,
- * stopped */
+/* a frame: SETS' action, the settings into the tracks, a set stored while playing written once stopped, the look
+ * kept a while after the last change (stopped), the LEDs, the screen */
 static uint32_t sa_last_ms;
 static void sa_frame(void)
 {
@@ -341,9 +537,24 @@ static void sa_frame(void)
         sa_dirty = true;
         sa_save_ms = now;
     }
+    if (sa_u.req_act >= 0) {
+        sa_set_do(sa_u.req_act, sa_u.req_slot);
+        sa_u.req_act = -1;
+    }
     sa_apply();
-    if (sa_dirty && !sa_g.playing && now - sa_save_ms > 2000u) {
-        sa_settings_save();
+    if (sa_wait_slot >= 0 && !sa_g.playing) {                /* a set stored while playing: now */
+        int k = sa_wait_slot;
+        sa_wait_slot = -1;
+        sa_u.sets[k].wait = 0;
+        if (sa_set_write(k, sa_wait_clear ? 0 : &sa_wait.s)) {
+            sv_msg(&sa_u, sa_wait_clear ? "SET CLEARED" : "SET STORED");
+        } else {
+            sa_set_info_of(k, sa_set_read(k, &sa_next) ? &sa_next : 0);
+            sv_msg(&sa_u, "THE FLASH FAILED");
+        }
+    }
+    if (sa_dirty && !sa_g.playing && now - sa_save_ms > 2000u) {   /* the look (the groove is not kept: SETS) */
+        if (sa_g.s.look != sa_pref_look) sa_prefs_save();
         sa_dirty = false;
     }
     song.playing = sa_g.playing;

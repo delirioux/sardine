@@ -137,7 +137,8 @@ static int sv_screens(const sa_ui *u, int *list)
 /* the screen showing: its entry in that list */
 static int sv_screen_now(const sa_ui *u)
 {
-    if (u->page == SV_PG_MAIN || u->page == SV_PG_KEY || u->page == SV_PG_MENU) return SV_SCR_MAIN;
+    if (u->page == SV_PG_MAIN || u->page == SV_PG_KEY || u->page == SV_PG_MENU || u->page == SV_PG_SETS)
+        return SV_SCR_MAIN;
     if (u->page == SV_PG_DRUMS || sv_type(u, u->layer) == SA_T_DRUM) return SV_SCR_DRUMS;
     return u->layer;
 }
@@ -386,6 +387,15 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         sv_card_txt(&c[3], "BARS", t, e->bars == 1 ? 0 : e->bars == 2 ? 500 : 1000, e->bars != l->bars);
         break;
     }
+    case SV_PG_SETS: {
+        static const char *const ACT[SV_SA_ACTS] = {"LOAD", "STORE", "NEW", "CLEAR"};
+        sv_fmt_int(t, u->set_slot + 1);
+        sv_card_txt(&c[0], "SET", t, u->set_slot * 1000 / (SV_SETS - 1), false);
+        sv_card_txt(&c[1], "ACTION", ACT[sv_wrap(u->set_act, SV_SA_ACTS)], -1, false);
+        sv_card_off(&c[2]);
+        sv_card_off(&c[3]);
+        break;
+    }
     default:                                       /* MENU */
         sv_card_txt(&c[0], "COLOR", UI_PALETTES[s->palette % NPALETTES].name, -1, false);
         sv_card_txt(&c[1], "LOOK", s->look ? "LINE" : "FLAT", -1, false);
@@ -441,6 +451,7 @@ static void sv_head_title(const sa_ui *u, char *t, unsigned n)
         if (u->page == SV_PG_ARP) sv_cat(t, "  ARP", n);
         break;
     case SV_PG_KEY: sv_cpy(t, "KEY", n); break;
+    case SV_PG_SETS: sv_cpy(t, "SETS", n); break;
     case SV_PG_DRUMS: sv_cpy(t, "DRUMS", n); break;
     case SV_PG_GATE: case SV_PG_PAN:
         sv_fmt_int(a, u->layer + 1);
@@ -467,7 +478,7 @@ static void sv_draw_head(sa_ui *u)
     int pend = sa_pending(g);
     sv_head_title(u, m, sizeof m);
     bd[0] = 0;
-    if (g->drop_armed) {
+    if (g->drop_armed || g->set_next) {
         sv_cpy(bd, "ON THE 1", sizeof bd);
     } else if (pend) {
         sv_fmt_int(bd, pend);
@@ -530,9 +541,13 @@ static void sv_draw_foot(sa_ui *u)
         if (u->page == SV_PG_LAYER && !sv_is_new(u) && g->s.live[u->layer].mute) sv_cat(l, "  MUTED", sizeof l);
         break;
     case SV_PG_KEY: sv_cpy(l, "KEY", sizeof l); break;
+    case SV_PG_SETS: sv_cpy(l, "SETS", sizeof l); break;
     default: sv_cpy(l, "MENU", sizeof l); break;
     }
-    if (sa_pending(g)) sv_cpy(r, g->drop_armed ? "DROPS ON THE 1" : "REC: DROP", sizeof r);
+    if (u->page == SV_PG_SETS) {
+        static const char *const ACT[SV_SA_ACTS] = {"REC: LOAD", "REC: STORE", "REC: NEW", "REC: CLEAR"};
+        sv_cpy(r, g->set_next ? "IN ON THE 1" : ACT[sv_wrap(u->set_act, SV_SA_ACTS)], sizeof r);
+    } else if (sa_pending(g)) sv_cpy(r, g->drop_armed ? "DROPS ON THE 1" : "REC: DROP", sizeof r);
     else if (u->page == SV_PG_MAIN) sv_cpy(r, u->space ? "HOME: MAIN" : "HOME: SPACE", sizeof r);
     else if (u->page == SV_PG_DRUMS) sv_cpy(r, sv_drow_layer(u) >= 0 ? "KEYS: STEPS" : "ALGO: A DRUM", sizeof r);
     else if (u->page == SV_PG_STEPS) sv_cpy(r, "KEYS: NOTES", sizeof r);
@@ -549,7 +564,7 @@ static void sv_draw_foot(sa_ui *u)
         cv_rect(10 + i * 14, 6, 10, 2, i < now ? T_THEME : i == now ? T_ACCENT : T_LINE);
     cv_free_text(10, 17, &AF_M, l, T_THEME, T_BG, 130);
     int32_t yb = 17 + AF_M_CAP_Y + AF_M_CAP_H - AF_S_CAP_Y - AF_S_CAP_H;
-    if (r[0]) cv_text_r(230, yb, &AF_S, r, sa_pending(g) ? T_ACCENT : T_MID, T_BG);
+    if (r[0]) cv_text_r(230, yb, &AF_S, r, sa_pending(g) || g->set_next ? T_ACCENT : T_MID, T_BG);
     cv_blit(0, SV_FOOT_Y);
 }
 
@@ -950,6 +965,50 @@ static void sv_panel_key(sa_ui *u)
     }
 }
 
+/* SETS: the eight sets, a row each (its tempo and key), the one picked lit; beside them what it holds (its kit, its
+ * synth sounds) */
+static void sv_panel_sets(sa_ui *u)
+{
+    for (int i = 0; i < SV_SETS; ++i) {
+        const sv_set_info *si = &u->sets[i];
+        int32_t y = 4 + i * 14;
+        bool on = i == u->set_slot;
+        char t[24], a[8];
+        if (on) cv_rect(6, y - 1, 108, 14, sv_well());
+        uint16_t bg = on ? sv_well() : T_SURF;
+        sv_fmt_int(a, i + 1);
+        cv_text_on(10, y + 2, &AF_S, a, on ? T_ACCENT : T_MID, bg);
+        if (si->wait) {
+            sv_cpy(t, "WAITS", sizeof t);
+        } else if (!si->used) {
+            sv_cpy(t, "EMPTY", sizeof t);
+        } else {
+            sv_fmt_int(t, si->bpm);
+            sv_cat(t, " ", sizeof t);
+            sv_cat(t, sa_note_name(si->key % 12), sizeof t);
+            sv_cat(t, si->scale == SA_SC_MAJOR ? " MAJ" : si->scale == SA_SC_DORIAN ? " DOR" :
+                      si->scale == SA_SC_PHRYGIAN ? " PHR" : " MIN", sizeof t);
+        }
+        cv_text_fit(26, y + 2, &AF_S, t, si->wait ? T_ACCENT : on ? T_ACCENT : si->used ? T_TEXT : T_DIM, bg, 86);
+    }
+    cv_rect(120, 6, 1, 108, T_LINE);
+    const sv_set_info *si = &u->sets[sv_clampi(u->set_slot, 0, SV_SETS - 1)];
+    if (si->wait) {
+        sv_label(128, 6, si->wait == 2 ? "CLEARS WHEN" : "SAVES WHEN", T_ACCENT);
+        sv_label(128, 22, "STOPPED", T_ACCENT);
+        return;
+    }
+    if (!si->used) {
+        sv_label(128, 6, "EMPTY", T_DIM);
+        sv_label(128, 26, "STORE KEEPS", T_MID);
+        sv_label(128, 42, "WHAT PLAYS", T_MID);
+        return;
+    }
+    cv_text_fit(128, 6, &AF_S, sa_kit_name(si->kit), T_MID, T_SURF, 104);
+    for (int k = 0; k < si->nsyn && k < SA_SYNTHS; ++k)
+        cv_text_fit(128, 26 + k * 16, &AF_S, sas_of(si->snd[k])->name, T_TEXT, T_SURF, 104);
+}
+
 static void sv_panel_menu(sa_ui *u)
 {
     (void)u;
@@ -971,6 +1030,7 @@ static void sv_draw_panel(sa_ui *u)
     case SV_PG_STEPS: sv_panel_steps(u); break;
     case SV_PG_GATE: sv_panel_gate(u); break;
     case SV_PG_PAN: sv_panel_pan(u); break;
+    case SV_PG_SETS: sv_panel_sets(u); break;
     default: sv_panel_menu(u); break;
     }
     cv_blit(0, SV_PANEL_Y);
@@ -1022,6 +1082,7 @@ int sv_page_button(const sa_ui *u)
     case SV_PG_STEPS: return SV_B_SEQ;
     case SV_PG_GATE: return SV_B_ENV;
     case SV_PG_PAN: return SV_B_LFO;
+    case SV_PG_SETS: return SV_B_SAVE;
     default: return -1;
     }
 }
@@ -1059,6 +1120,7 @@ void sv_init(sa_ui *u, sa_groove *g)
     u->hot = -1;
     u->batt = 3;
     u->pv_layer = -1;
+    u->req_act = -1;
     for (int k = 0; k < 27; ++k)
         u->key_sent[k] = -1;
     memset(u->main_code, 0xFF, sizeof u->main_code);
@@ -1198,6 +1260,10 @@ void sv_knob(sa_ui *u, int k, int d)
         return;
     }
     if (k == SV_K_PRESETS) {
+        if (u->page == SV_PG_SETS) {
+            u->set_slot = sv_clampi(u->set_slot + d, 0, SV_SETS - 1);
+            return;
+        }
         if (u->page == SV_PG_DRUMS) {
             u->drow = sv_clampi(u->drow + d, 0, sv_drow_count(u) - 1);
             return;
@@ -1233,6 +1299,14 @@ void sv_knob(sa_ui *u, int k, int d)
     }
     if (k < SV_K1 || k > SV_K4) return;
     int i = k - SV_K1;
+    if (u->page == SV_PG_SETS) {                   /* (nothing to keep: the set picked and the action) */
+        if (i == 0) u->set_slot = sv_clampi(u->set_slot + d, 0, SV_SETS - 1);
+        else if (i == 1) u->set_act = sv_clampi(u->set_act + d, 0, SV_SA_ACTS - 1);
+        else return;
+        u->hot = i;
+        u->hot_ms = 700;
+        return;
+    }
     u->hot = i;
     u->hot_ms = 700;
     u->changed = true;
@@ -1343,8 +1417,31 @@ void sv_button(sa_ui *u, int b, bool down)
     switch (b) {
     case SV_B_PLAY: sa_play(g, !g->playing); break;
     case SV_B_REC:
+        if (u->page == SV_PG_SETS) {               /* the action: the glue does it (the flash is its) */
+            const sv_set_info *si = &u->sets[sv_clampi(u->set_slot, 0, SV_SETS - 1)];
+            if ((u->set_act == SV_SA_LOAD || u->set_act == SV_SA_CLEAR) && !si->used && !si->wait) {
+                sv_msg(u, "THAT SET IS EMPTY");
+                break;
+            }
+            u->req_act = u->set_act;
+            u->req_slot = u->set_slot;
+            break;
+        }
         sa_drop(g);
         u->changed = true;
+        break;
+    case SV_B_SAVE:
+        if (u->page == SV_PG_SETS) {
+            int pg = u->sback, l = u->sback_layer;
+            bool ok = pg == SV_PG_MAIN || pg == SV_PG_DRUMS || (l >= 0 && sa_used(g, l) &&
+                      (pg != SV_PG_LAYER || sv_type(u, l) != SA_T_DRUM || u->from_drums));
+            if (!ok || pg == SV_PG_MENU || pg == SV_PG_SETS) { pg = SV_PG_MAIN; l = -1; u->from_drums = false; }
+            sv_goto(u, pg, l);
+        } else {
+            u->sback = u->page;
+            u->sback_layer = u->layer;
+            sv_goto(u, SV_PG_SETS, u->layer);
+        }
         break;
     case SV_B_FX: {
         int l = u->page == SV_PG_DRUMS ? sv_drow_layer(u) :

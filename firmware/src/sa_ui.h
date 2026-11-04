@@ -4,7 +4,8 @@
  * felucca.c through sa_fw.c, or a host test).
  *
  * The screens: MAIN (the whole stack), DRUMS (every drum layer, a row each, their steps on the keys), one screen per
- * synth layer, NEW (a synth layer, past the last one); on a synth layer its ARP and STEPS pages; the KEY page; MENU.
+ * synth layer, NEW (a synth layer, past the last one); on a synth layer its ARP and STEPS pages; the KEY page; SETS;
+ * MENU.
  *
  * The controls
  *   SELECT     through the screens: MAIN, DRUMS, each synth layer, NEW
@@ -23,6 +24,8 @@
  *   FX         a layer, a DRUMS row: mute it (at once)
  *   ARP        a synth layer: its ARP page (MODE RATE RANGE GATE), again: back
  *   SCL        the KEY page (KEY SCALE CHORDS BARS), again: back
+ *   SAVE       SETS: eight grooves kept in the flash (KNOB 1 or PRESETS the set, KNOB 2 LOAD STORE NEW CLEAR, REC does
+ *              it; a load or a new groove goes in on the one), again: back
  *   HOME       MAIN, on MAIN: SPACE and back; held: MENU (colour, look)
  *   keys       the open layer, live (snapped to the scale); DRUMS: the lowest 16 are the row's steps (a hit on, off),
  *              the others play it; STEPS: the step's note. Music and steps only
@@ -40,9 +43,19 @@ enum {
     SV_B_HOME, SV_B_SAVE, SV_B_ARP, SV_B_SEQ, SV_B_PLAY, SV_B_REC,
     SV_B_OCTDN, SV_B_OCTUP, SV_BUTTONS
 };
-enum { SV_PG_MAIN, SV_PG_LAYER, SV_PG_ARP, SV_PG_KEY, SV_PG_MENU, SV_PG_DRUMS, SV_PG_STEPS, SV_PG_GATE, SV_PG_PAN, SV_PAGES };
+enum { SV_PG_MAIN, SV_PG_LAYER, SV_PG_ARP, SV_PG_KEY, SV_PG_MENU, SV_PG_DRUMS, SV_PG_STEPS, SV_PG_GATE, SV_PG_PAN,
+       SV_PG_SETS, SV_PAGES };
 #define SV_KEY_LO 53                      /* F3: the FM-1's lowest key */
 #define SV_KEY_HI 79                      /* G5 */
+
+/* SETS: eight grooves in the flash (the glue keeps them; the screen shows what each holds and asks for the action) */
+#define SV_SETS 8
+enum { SV_SA_LOAD, SV_SA_STORE, SV_SA_NEW, SV_SA_CLEAR, SV_SA_ACTS };
+typedef struct {
+    uint8_t used, bpm, key, scale, kit, nsyn;
+    uint8_t snd[SA_SYNTHS];                           /* its synth layers' sounds */
+    uint8_t wait;                                     /* stored while playing: written once stopped */
+} sv_set_info;
 
 typedef struct {
     sa_groove *g;
@@ -63,7 +76,11 @@ typedef struct {
     int key_sent[27];
     uint32_t frame;
     int batt;
-    bool changed;                         /* a setting changed: the glue applies it and saves it later */
+    bool changed;                         /* a setting changed: the glue applies it (and keeps the look) */
+    sv_set_info sets[SV_SETS];            /* what each set holds (the glue fills it) */
+    int set_slot, set_act;                /* SETS: the set picked, the action (SV_SA_*) */
+    int req_act, req_slot;                /* REC on SETS: what the glue is to do (req_act -1: nothing) */
+    int sback, sback_layer;               /* the page SAVE goes back to */
     uint32_t sig_head, sig_card[4], sig_foot;
     bool force;
     /* the previews (the code's bar, a bit a sixteenth), worked out again when the code changes */
