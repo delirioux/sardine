@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.2. Live club mixing on the FM-1: a stack of layers, each a line of code you build with the knobs. A layer
+Sardine 0.3. Live club mixing on the FM-1: a stack of layers, each a line of code you build with the knobs. A layer
 is a sound and a pattern, bent by modifiers and, on a synth layer, an arpeggiator. You change the code, and REC drops
 your changes in on the one: the next bar line. The sound of a layer (its filter, drive, level) and the mutes act at
 once, as you turn.
@@ -111,7 +111,7 @@ the drums do not. A key change is code: it drops with REC, on the one. SCL again
 
 ## A new synth layer
 
-Turn SELECT past the last synth layer: **NEW**. KNOB 1 picks its sound (BASS, KEYS, PADS, LEADS, FX: 65 of them),
+Turn SELECT past the last synth layer: **NEW**. KNOB 1 picks its sound (BASS, KEYS, PADS, LEADS, FX, AMBIENT: 81 of them),
 KNOB 2 its pattern. Up to three synth layers, each with its own sound and filter (the FM-1 runs four parts); every drum
 plays on the kit. Up to twelve layers in all, drums and synths together.
 
@@ -119,6 +119,13 @@ plays on the kit. Up to twelve layers in all, drums and synths together.
 
 The keys play the layer open, live, snapped to the scale; on MAIN the first synth layer. On DRUMS and STEPS they edit
 the steps (above). OCT- and OCT+ move their octave. The keys never change a setting.
+
+## AMBIENT
+
+The last sixteen sounds are for wide, deep club nights: pads (WIDE PAD, DARK PAD, GLASS, VAPOR, SWELL, NIGHT, DRONE
+PAD, SKY, TAPE PAD, CHOIR AIR), dub stabs with long tails (DUB STAB, SPACE STAB, ECHO CHORD), RUMBLE (a low bass sent
+into the hall), DEEP SUB and AIR LEAD. Each spreads its voices across the stereo field and has its own reverb and
+delay. The room every layer plays in is a big hall; the drums send little into it.
 
 ## The kits
 

@@ -11,6 +11,9 @@
  * (ANALOG, TRIO, NOISE), DRIVE the track's DIST over the sound's own, ENV the filter envelope's amount (50: the
  * preset's).
  *
+ * The AMBIENT sounds at the end of the list (pads, dub stabs, a rumbling bass) carry their own stereo spread, reverb
+ * and delay; the others take their role's. The room is a big hall.
+ *
  * The kits: the DRUM engine's model kits (all synthesised: no samples), each with its own tuning, tone, decay, snap
  * and drive; a drum layer's TUNE, TONE and DECAY move the whole kit around its own values. */
 #ifndef SA_SOUNDS_H
@@ -33,6 +36,7 @@ typedef struct {
     int8_t bright, reso;                  /* the E parameters CUTOFF and RESO move (-1: none) */
     int8_t trim;                          /* added to the level (half-dB steps): each role's sounds at one loudness,
                                            * measured in the browser build with a pattern of their role */
+    uint8_t wide, rev, dly;               /* the stereo spread of its voices, its reverb and delay sends (0: its role's) */
 } sas_sound;
 
 /* ---- the own sounds (Felucca's preset layout: {name, E0..E7, ATK DEC SUS REL, ENV->FLT, mono, FX(dist, chorus,
@@ -51,6 +55,25 @@ static const preset_t SAS_SINEBASS = {"SINE BASS", {3, 0, 0, 0, 127, 0, 25, 0}, 
 static const preset_t SAS_WHISTLE = {"WHISTLE", {3, 0, 0, 6, 127, 0, 0, 64}, {6, 70, 110, 25}, 0, 1, FX(0, 20, 40, 45)};
 static const preset_t SAS_ROBOT = {"ROBOT", {0, 64, 40, 0, 127, 0, 110, 0}, {2, 70, 110, 30}, 0, 1, FX(0, 15, 30, 25)};
 
+/* ---- the ambient sounds (0.3): wide, slow pads, dub stabs with long tails, a rumbling bass. ANALOG's WAVE: 0 SAW
+ * 1 SQR 2 TRI 3 SIN 4 PWM 5 SYNC 6 SUB ---- */
+static const preset_t SAS_WIDEPAD = {"WIDE PAD", {0, 38, 64, 0, 72, 12, 0, 32}, {70, 90, 115, 100}, 8, 0, FX(0, 100, 20, 90)};
+static const preset_t SAS_DARKPAD = {"DARK PAD", {1, 22, 64, 0, 48, 18, 0, 32}, {90, 90, 115, 105}, 6, 0, FX(0, 80, 10, 90)};
+static const preset_t SAS_GLASS = {"GLASS", {2, 14, 64, 0, 100, 8, 0, 48}, {60, 90, 110, 100}, 4, 0, FX(0, 90, 35, 95)};
+static const preset_t SAS_VAPOR = {"VAPOR", {0, 30, 64, 40, 64, 20, 0, 32}, {100, 90, 110, 110}, 10, 0, FX(0, 90, 20, 100)};
+static const preset_t SAS_SWELL = {"SWELL", {4, 16, 50, 0, 80, 14, 0, 40}, {118, 100, 120, 110}, 20, 0, FX(0, 80, 25, 95)};
+static const preset_t SAS_NIGHT = {"NIGHT", {0, 10, 40, 0, 56, 28, 6, 32}, {85, 100, 112, 100}, 24, 0, FX(0, 70, 30, 90)};
+static const preset_t SAS_DRONEPAD = {"DRONE PAD", {6, 26, 64, 0, 60, 16, 8, 32}, {90, 100, 120, 115}, 4, 0, FX(0, 90, 10, 100)};
+static const preset_t SAS_SKY = {"SKY", {3, 30, 64, 8, 110, 0, 0, 64}, {90, 100, 115, 110}, 0, 0, FX(0, 110, 30, 110)};
+static const preset_t SAS_TAPEPAD = {"TAPE PAD", {0, 18, 64, 12, 58, 10, 18, 32}, {70, 90, 110, 95}, 6, 0, FX(0, 60, 10, 80)};
+static const preset_t SAS_CHOIRAIR = {"CHOIR AIR", {0, 0, 40, 0, 40, 26, 64, 6}, {60, 90, 112, 90}, 0, 0, FX(0, 90, 15, 100)};
+static const preset_t SAS_DUBSTAB = {"DUB STAB", {1, 20, 64, 0, 78, 34, 10, 64}, {0, 58, 40, 24}, 26, 0, FX(0, 50, 90, 70)};
+static const preset_t SAS_SPACESTAB = {"SPACE STAB", {0, 30, 64, 0, 96, 22, 8, 64}, {0, 52, 30, 40}, 30, 0, FX(0, 70, 60, 100)};
+static const preset_t SAS_ECHOCHORD = {"ECHO CHORD", {4, 14, 64, 0, 84, 30, 0, 64}, {0, 50, 20, 30}, 28, 0, FX(0, 40, 100, 60)};
+static const preset_t SAS_RUMBLE = {"RUMBLE", {0, 12, 64, 0, 46, 10, 40, 32}, {0, 80, 100, 40}, 10, 1, FX(0, 0, 0, 70)};
+static const preset_t SAS_DEEPSUB = {"DEEP SUB", {3, 0, 0, 0, 127, 0, 0, 0}, {2, 80, 120, 30}, 0, 1, FX(0, 0, 0, 4)};
+static const preset_t SAS_AIRLEAD = {"AIR LEAD", {3, 6, 64, 6, 110, 0, 0, 64}, {10, 80, 110, 60}, 0, 1, FX(0, 40, 70, 80)};
+
 #include "sa_fm6.inc"
 
 #define S(n, r, e, p, b, rs, v, tr) {(n), (r), (uint8_t)(e), (uint8_t)(p), SAS_KEEP, SAS_KEEP, (int8_t)(v), 0, 0, \
@@ -59,6 +82,9 @@ static const preset_t SAS_ROBOT = {"ROBOT", {0, 64, 40, 0, 127, 0, 110, 0}, {2, 
                                           (int8_t)(b), (int8_t)(rs), (int8_t)(tr)}
 #define SO(n, r, e, own, gl, v, b, rs, tr) {(n), (r), (uint8_t)(e), 0, SAS_KEEP, (int8_t)(gl), (int8_t)(v), &(own), 0, \
                                             (int8_t)(b), (int8_t)(rs), (int8_t)(tr)}
+/* an ambient sound: its spread, reverb and delay sends its own */
+#define SA(n, r, e, own, gl, v, b, rs, tr, w, rv, dl) {(n), (r), (uint8_t)(e), 0, SAS_KEEP, (int8_t)(gl), (int8_t)(v), &(own), \
+                                                      0, (int8_t)(b), (int8_t)(rs), (int8_t)(tr), (w), (rv), (dl)}
 #define SF(n, r, patch, gl, v, tr) {(n), (r), (uint8_t)SAS_FM6, 0, SAS_KEEP, (int8_t)(gl), (int8_t)(v), 0, (patch), 2, -1, \
                                     (int8_t)(tr)}
 #define B SAS_R_BASS
@@ -138,11 +164,29 @@ static const sas_sound SAS_SOUND[] = {
     S("METAL", F, SAS_NOISE, 3, 2, 3, SAS_POLY, 0),
     S("GLITCH", F, SAS_GRAIN, 1, 7, -1, SAS_POLY, 0),
     S("WHISPER", F, SAS_VOICE, 3, -1, -1, SAS_POLY, -6),
+    /* AMBIENT (0.3, after the others: the saved layers keep their sounds) */
+    SA("WIDE PAD", P, SAS_ANALOG, SAS_WIDEPAD, SAS_KEEP, SAS_POLY, 4, 5, -16, 127, 90, 20),
+    SA("DARK PAD", P, SAS_ANALOG, SAS_DARKPAD, SAS_KEEP, SAS_POLY, 4, 5, -2, 110, 95, 10),
+    SA("GLASS", P, SAS_ANALOG, SAS_GLASS, SAS_KEEP, SAS_POLY, 4, 5, -16, 120, 100, 35),
+    SA("VAPOR", P, SAS_ANALOG, SAS_VAPOR, SAS_KEEP, SAS_POLY, 4, 5, -16, 127, 110, 20),
+    SA("SWELL", P, SAS_ANALOG, SAS_SWELL, SAS_KEEP, SAS_POLY, 4, 5, 0, 110, 95, 25),
+    SA("NIGHT", P, SAS_ANALOG, SAS_NIGHT, SAS_KEEP, SAS_POLY, 4, 5, -11, 100, 90, 30),
+    SA("DRONE PAD", P, SAS_ANALOG, SAS_DRONEPAD, SAS_KEEP, SAS_POLY, 4, 5, -13, 127, 105, 10),
+    SA("SKY", P, SAS_ANALOG, SAS_SKY, SAS_KEEP, SAS_POLY, 4, 5, -28, 127, 115, 30),
+    SA("TAPE PAD", P, SAS_ANALOG, SAS_TAPEPAD, SAS_KEEP, SAS_POLY, 4, 5, -10, 90, 85, 10),
+    SA("CHOIR AIR", P, SAS_VOICE, SAS_CHOIRAIR, SAS_KEEP, SAS_POLY, -1, -1, -19, 120, 110, 15),
+    SA("DUB STAB", K, SAS_ANALOG, SAS_DUBSTAB, SAS_KEEP, SAS_POLY, 4, 5, 2, 90, 80, 90),
+    SA("SPACE STAB", K, SAS_ANALOG, SAS_SPACESTAB, SAS_KEEP, SAS_POLY, 4, 5, 1, 110, 110, 60),
+    SA("ECHO CHORD", K, SAS_ANALOG, SAS_ECHOCHORD, SAS_KEEP, SAS_POLY, 4, 5, 13, 80, 60, 110),
+    SA("RUMBLE", B, SAS_ANALOG, SAS_RUMBLE, SAS_KEEP, SAS_MONO, 4, 5, -14, 1, 70, 1),
+    SA("DEEP SUB", B, SAS_ANALOG, SAS_DEEPSUB, SAS_KEEP, SAS_MONO, -1, -1, -21, 1, 4, 1),
+    SA("AIR LEAD", L, SAS_ANALOG, SAS_AIRLEAD, 10, SAS_LEGATO, -1, -1, -16, 60, 80, 70),
 };
 #undef S
 #undef SG
 #undef SO
 #undef SF
+#undef SA
 #undef B
 #undef K
 #undef P
@@ -217,9 +261,11 @@ static inline void sas_synth(track_t *t, const sas_sound *snd, const sas_base *b
     if (snd->voice >= 0)
         t->p[P_VOICE] = (int16_t)(snd->voice == SAS_UNISON ? V_UNISON : snd->voice == SAS_LEGATO ? V_LEGATO
                                   : snd->voice == SAS_MONO ? V_MONO : V_POLY);
-    static const uint8_t REV[SAS_ROLES] = {6, 30, 55, 35, 45}, DLY[SAS_ROLES] = {0, 20, 15, 30, 25};
-    t->p[P_REV] = REV[snd->role % SAS_ROLES];
-    t->p[P_DLY] = DLY[snd->role % SAS_ROLES];
+    static const uint8_t REV[SAS_ROLES] = {6, 30, 55, 35, 45}, DLY[SAS_ROLES] = {0, 20, 15, 30, 25},
+                         WIDE[SAS_ROLES] = {0, 40, 80, 20, 60};
+    t->p[P_REV] = snd->rev ? snd->rev : REV[snd->role % SAS_ROLES];
+    t->p[P_DLY] = snd->dly ? snd->dly : DLY[snd->role % SAS_ROLES];
+    t->p[P_SPRD] = snd->wide ? snd->wide : WIDE[snd->role % SAS_ROLES];   /* (POLY voices around the middle) */
     t->p[P_PAN] = 0;
     t->p[P_ITYPE] = 0;
     if (snd->engine == SAS_SAMPLE) {             /* the piano: its velocity (the SAMPLE engine has none of its own) */
@@ -236,11 +282,11 @@ static inline void sas_song(const sa_settings *s)
 {
     song.g[G_BPM] = s->bpm;
     song.g[G_DTIME] = 10;                         /* 1/8 dotted (params.c N_DTIME) */
-    song.g[G_DFDBK] = 40;
+    song.g[G_DFDBK] = 45;
     song.g[G_DMIX] = 100;
-    song.g[G_RSIZE] = 70;
-    song.g[G_RDAMP] = 50;
-    song.g[G_RTYPE] = 0;
+    song.g[G_RSIZE] = 92;                        /* (0.3: a big hall for the wide sounds; the drums send little) */
+    song.g[G_RDAMP] = 42;
+    song.g[G_RTYPE] = 2;                          /* HALL (params.c N_RTYPE) */
 }
 
 #endif
