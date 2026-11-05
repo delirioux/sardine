@@ -151,7 +151,8 @@ drums do not. A key change waits for SEQ. SCL again goes back.
 ## The keys
 
 The keys play the layer open, live, snapped to the scale (on HOME: LEAD); the header says what, briefly (KEYS: LEAD,
-SAW LEAD). With REC they write its steps. They never
+SAW LEAD). On LEAD, CHORD and BASS the keys light up with the notes the layer plays (a bass line folded up into
+the keys' reach). With REC they write its steps. They never
 change a setting.
 
 ## SETS

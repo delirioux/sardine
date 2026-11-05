@@ -220,6 +220,11 @@ int main(int argc, char **argv)
     sv_key(&ui, 57, true);
     CHECK(ui.msg_ms > 0 && !strncmp(ui.msg, "KEYS: BASS, ", 12), "a key: what it plays (%s)", ui.msg);
     sv_key(&ui, 57, false);
+    {
+        uint32_t seen = 0;
+        for (int k = 0; k < 60; ++k) { run_ms(16); seen |= sv_play_keys(&ui); }
+        CHECK(seen != 0, "BASS's notes light on the keys (%07x)", seen);
+    }
     int cut = g.s.live[SA_L_BASS].cut;
     sv_knob(&ui, SV_K1, -10);
     CHECK(g.s.live[SA_L_BASS].cut == cut - 20, "BASS's CUTOFF at once");

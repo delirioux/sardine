@@ -1578,6 +1578,22 @@ bool sv_key_leds(const sa_ui *u, uint32_t *full, uint32_t *dim)
     return true;
 }
 
+uint32_t sv_play_keys(const sa_ui *u)
+{
+    const sa_groove *g = u->g;
+    if (u->page != SV_PG_LAYER || u->view < SV_V_LEAD || u->view > SV_V_BASS || !g->playing) return 0;
+    int part = g->s.code[u->layer].part, n = g->nheld;
+    uint32_t m = 0;
+    for (int i = 0; i < n && i < SA_HELD; ++i) {   /* (the audio's list, read as it is: only lights) */
+        if (g->held[i].part != part) continue;
+        int k = g->held[i].note - 12 * u->oct;
+        while (k < SV_KEY_LO) k += 12;
+        while (k > SV_KEY_HI) k -= 12;
+        m |= 1u << (k - SV_KEY_LO);
+    }
+    return m;
+}
+
 void sv_tick(sa_ui *u, int ms)
 {
     sa_groove *g = u->g;

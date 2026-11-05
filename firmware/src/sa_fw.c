@@ -476,7 +476,7 @@ static void sa_input(void)
 }
 
 /* the LEDs: the page's button (FX past a layer's home page); SEQ while something waits for it (blinking once armed);
- * REC while step recording (on SETS: blinking, it does the action); PLAY green while playing; the keys held, else the chord's tones dim */
+ * REC while step recording (on SETS: blinking, it does the action); on a synth layer the notes it sounds; PLAY green while playing; the keys held, else the chord's tones dim */
 static void sa_leds(void)
 {
     static uint8_t ready;
@@ -503,8 +503,9 @@ static void sa_leds(void)
         for (k = 0; k < 27u; k++)
             for (int t = 0; t < 3; ++t)
                 if ((SV_KEY_LO + k) % 12u == sa_g.chord_pc[t]) lit |= 1u << k;
+    uint32_t plays = editing ? 0u : sv_play_keys(&sa_u);   /* the layer open: the notes it sounds, lit */
     for (k = 0; k < 27u; k++) {
-        led_put(nl, 14u + k, (int)((fm1_in.notes >> k) & 1u));
+        led_put(nl, 14u + k, (int)(((fm1_in.notes | plays) >> k) & 1u));
         led_put(nd, 14u + k, (int)((lit >> k) & 1u) || !((fm1_in.notes >> k) & 1u));
     }
     if (sa_g.playing)
