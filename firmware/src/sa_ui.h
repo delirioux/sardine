@@ -98,7 +98,8 @@ typedef struct {
     int set_slot, set_act;                /* SETS: the set picked, the action (SV_SA_*) */
     int req_act, req_slot;                /* REC on SETS: what the glue is to do (req_act -1: nothing) */
     int sback, sback_layer;               /* the page SAVE goes back to */
-    uint32_t sig_head, sig_card[4], sig_foot;
+    uint32_t sig_head, sig_card[4], sig_foot, sig_panel;
+    uint32_t bg_gen;                      /* the look the background was last drawn in (+1; 0: never) */
     bool force;
     /* the previews (the code's bar, a bit a sixteenth), worked out again when the code changes */
     sa_code pv_code[2];

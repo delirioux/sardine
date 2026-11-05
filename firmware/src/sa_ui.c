@@ -1253,6 +1253,10 @@ static void sv_draw_panel(sa_ui *u)
     case SV_PG_EDIT: if (u->view == SV_V_DRUMS) sv_panel_edit_drum(u); else sv_panel_steps(u); break;
     default: sv_panel_menu(u); break;
     }
+    uint32_t sig = sv_hashb(2166136261u, cv_px, cv_w * cv_h * 2u);   /* (the same as on the screen: not sent again) */
+    if (!u->force && sig == u->sig_panel)
+        return;
+    u->sig_panel = sig;
     cv_blit(0, SV_PANEL_Y);
 }
 
@@ -1275,8 +1279,12 @@ static void sv_background(void)
 void sv_draw(sa_ui *u)
 {
     if (u->page == SV_PG_LAYER && u->view == SV_V_DRUMS) sv_drum_sync(u);
-    if (u->force)
+    if (u->bg_gen != ux.gen * 2u + ux.style + 1u) {   /* the background only for a new look: a page change draws its
+                                                      * parts over what was there, no blank in between */
         sv_background();
+        u->bg_gen = ux.gen * 2u + ux.style + 1u;
+        u->force = true;
+    }
     sv_draw_head(u);
     sv_card c[4];
     sv_cards_of(u, c);
