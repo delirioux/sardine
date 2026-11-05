@@ -1460,6 +1460,39 @@ void sa_mute(sa_groove *g, int l, bool m)
         part_off(g, g->s.code[l].part);
 }
 
+/* ---- the drum fill (held) ---------------------------------------------------------------------------------------- */
+enum { FILL_ROLL, FILL_SNARE, FILL_BUILD, FILL_TOMS, FILL_STUTTER, FILLS };
+static const char *const FILL_NAMES[FILLS] = {"ROLL", "SNARE", "BUILD", "TOMS", "STUTTER"};
+const char *sa_fill_name(int kind) { return FILL_NAMES[clampi(kind, 0, FILLS - 1)]; }
+void sa_fill(sa_groove *g, bool down)
+{
+    if (!down && g->fill_on) g->fill_kind = (uint8_t)((g->fill_kind + 1) % FILLS);   /* (next time, the next fill) */
+    g->fill_held = down;
+    if (!down) g->fill_on = 0;                     /* (let go: the groove again, at once) */
+}
+static int row_gm(const sa_groove *g, int row, int dv)   /* the row's drum as it is, or dv when the row has none */
+{
+    const sa_code *c = &g->s.code[SA_L_DRUM0 + row];
+    return sa_dv_gm(c->type == SA_T_DRUM ? c->sound : dv);
+}
+/* a sixteenth of the fill: s from where it started (each beat its four) */
+static void fill_tick(sa_groove *g, int s)
+{
+    uint32_t len = (uint32_t)(g->sr * 0.25f);
+    int sn = row_gm(g, SA_DR_SNARE, SA_DV_SNARE), kick = sa_dv_gm(SA_DV_KICK), ramp = clampi(70 + s * 4, 70, 127);
+    if (s % 4 == 0 && g->fill_kind != FILL_STUTTER) note(g, SA_PART_DRUMS, kick, 110, len);
+    switch (g->fill_kind) {
+    case FILL_ROLL: note(g, SA_PART_DRUMS, sn, ramp, len); break;
+    case FILL_SNARE: if (s % 4 != 1) note(g, SA_PART_DRUMS, sn, s % 4 == 0 ? 120 : 96, len); break;
+    case FILL_BUILD: if (s >= 8 || s % 2 == 0) note(g, SA_PART_DRUMS, sn, ramp, len); break;
+    case FILL_TOMS: note(g, SA_PART_DRUMS, sa_dv_gm((s / 2) % 2 ? SA_DV_LOTOM : SA_DV_TOM), ramp, len); break;
+    default:                                       /* STUTTER: kick and hat on every sixteenth */
+        note(g, SA_PART_DRUMS, kick, 104, len);
+        note(g, SA_PART_DRUMS, sa_dv_gm(SA_DV_HAT), 90, len);
+        break;
+    }
+}
+
 static void do_tick(sa_groove *g)
 {
     if (++g->tick >= SA_TPB) {
@@ -1469,6 +1502,16 @@ static void do_tick(sa_groove *g)
     }
     int t = g->tick;
     float tf = tick_frames(g);
+    if (t % 24 == 0 && g->fill_held && !g->fill_on) {   /* the fill: from the beat after ENV went down */
+        g->fill_on = 1;
+        g->fill_step = 0;
+        msg(g, FILL_NAMES[g->fill_kind % FILLS]);
+    }
+    if (g->fill_on && t % SA_TPS == 0) {
+        fill_tick(g, g->fill_step);
+        g->fill_step = (uint8_t)(g->fill_step + 1);
+        if (g->fill_step >= 16) g->fill_step = 0;   /* (held past a bar: it goes round) */
+    }
     uint32_t delay = 0;
     if (t % 12 == 6 && g->s.feel)                  /* FEEL: the off sixteenths late */
         delay = (uint32_t)(tf * 6.0f * (float)g->s.feel / 100.0f * 0.66f);
@@ -1477,6 +1520,7 @@ static void do_tick(sa_groove *g)
         if (b->tick != t) continue;
         const sa_code *c = &g->s.code[b->layer];
         if (c->type == SA_T_NONE || g->s.live[b->layer].mute) continue;
+        if (c->type == SA_T_DRUM && g->fill_on) continue;   /* (the fill plays in place of the drums) */
         int part = c->type == SA_T_DRUM ? SA_PART_DRUMS : c->part;
         uint32_t len = c->type == SA_T_DRUM ? (uint32_t)(g->sr * (c->sound == SA_DV_CRASH ? 1.0f :
                                                                   c->sound == SA_DV_OPEN ? 0.4f : 0.3f))

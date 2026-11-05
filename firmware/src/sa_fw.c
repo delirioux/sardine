@@ -499,6 +499,8 @@ static void sa_leds(void)
     bool pend = sa_pending(&sa_g) > 0;
     led_put(nl, panel.btn[B_SEQ], pend && (!sa_g.drop_armed || (fm1_ms / 125u) % 2u));   /* SEQ: what waits */
     led_put(nl, panel.btn[B_REC], sa_u.rec || (sa_u.page == SV_PG_SETS && (fm1_ms / 500u) % 2u));
+    led_put(nl, panel.btn[B_ENV], sa_g.fill_held && (sa_g.fill_on || (fm1_ms / 125u) % 2u));   /* (the fill: lit; waiting
+                                                                                                 * for the beat: blinking) */
     led_put(nl, panel.btn[B_OCTDN], sa_u.oct < 0);                  /* the keys' octave moved down, or up */
     led_put(nl, panel.btn[B_OCTUP], sa_u.oct > 0);
     uint32_t efull = 0, edim = 0;

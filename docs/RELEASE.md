@@ -4,6 +4,7 @@ Sardine 0.7: live club mixing for the FM-1.
   through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, ARP, PAN, 3D, PUMP, GATE, MOD; DRUMS: MIX, KIT, MOD), HOME back to them all
 - EDIT: a pattern editor, KNOB 1 the step, KNOB 2 ready fills (drum fills, lines in the key, chord rhythms), REC:
   the keys write the steps
+- ENV held: a drum fill from the next beat, a different one each time
 - GLO: a MIXER, the four layers' volumes and mutes
 - SELECT is the tempo, ALGORITHM the pattern; SEQ drops what waits on the one; REC records steps on the keys
 - DRUMS: seven rows on channels of their own (KICK SNARE CLAP HATS TOMS RIM METAL), each drum switched at once;

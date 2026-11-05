@@ -1626,6 +1626,10 @@ void sv_button(sa_ui *u, int b, bool down)
         }
         return;
     }
+    if (b == SV_B_ENV) {                           /* the drum fill: held, from the next beat */
+        sa_fill(g, down);
+        return;
+    }
     if (!down)
         return;
     switch (b) {

@@ -26,6 +26,8 @@
  *   EDIT       a layer's pattern editor: KNOB 1 the step, KNOB 2 FILL (CURR, the pattern as it was, or a ready fill:
  *              a line, a drum fill), KNOB 3 its LENGTH (a drum: its HIT); REC: a key writes the step (a drum: the 16
  *              lowest keys its steps, lit); again: back
+ *   ENV        held: a drum fill from the next beat, in place of the drums, a different one each time (ROLL SNARE
+ *              BUILD TOMS STUTTER); let go: the groove again
  *   GLO        the MIXER (LEAD CHORD BASS DRUMS: their VOLUME; FX: their MUTE), again: back
  *   HOME       HOME; held: MENU (colour, look)
  *   keys       the layer open, live (HOME: LEAD), snapped to the scale; REC: its steps. Music and steps only

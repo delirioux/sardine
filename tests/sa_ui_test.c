@@ -472,6 +472,17 @@ int main(int argc, char **argv)
     press(SV_B_EDIT);
     press(SV_B_HOME);
     bars(1);
+    /* ENV held: a drum fill from the next beat, the drums' own notes out; let go: back */
+    {
+        int before = part_on[SA_PART_DRUMS];
+        sv_button(&ui, SV_B_ENV, true);
+        bars(1);
+        CHECK(g.fill_on && part_on[SA_PART_DRUMS] - before > 16, "ENV held: a fill plays (%d drum hits in a bar)",
+              part_on[SA_PART_DRUMS] - before);
+        int k0 = g.fill_kind;
+        sv_button(&ui, SV_B_ENV, false);
+        CHECK(!g.fill_on && g.fill_kind == (k0 + 1) % 5, "let go: the groove, the next fill next time");
+    }
     /* the MIXER on GLO: the four volumes, FX: their mutes */
     press(SV_B_GLO);
     CHECK(ui.page == SV_PG_MIXER && sv_page_button(&ui) == SV_B_GLO, "GLO: MIXER");
