@@ -1314,7 +1314,7 @@ void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p)
     case 0: code_drum(&s->code[l++], SA_DV_CLAVE, pat_find(SA_T_DRUM, "CLAVE")); break;
     case 1: code_drum(&s->code[l++], SA_DV_RIM, pat_find(SA_T_DRUM, "SYNCO")); break;
     case 2: code_drum(&s->code[l++], SA_DV_CONGA, pat_find(SA_T_DRUM, "TRESILLO")); break;
-    case 3: code_drum(&s->code[l++], SA_DV_RIDE, pat_find(SA_T_DRUM, "8THS")); break;
+    case 3: code_drum(&s->code[l++], SA_DV_TOM, pat_find(SA_T_DRUM, "SYNCO")); break;   /* (no ride: only when picked) */
     default: break;
     }
     /* BASS always; CHORD stabs or a pad (sometimes gated, sweeping); LEAD now and then, mostly OFF */

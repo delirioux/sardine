@@ -25,7 +25,7 @@ second colour, until SEQ drops them in on the one.
 - Key, scale and ten chord progressions; every synth layer follows the chord
 - Every start a fresh groove (other sounds, patterns, kit, key); eight sets keep the ones you want, LAST the last one
 
-Version 0.8: [install it on the FM-1](https://delirioux.github.io/sardine/install/) or
+Version 0.8.1: [install it on the FM-1](https://delirioux.github.io/sardine/install/) or
 [try it in the browser](https://delirioux.github.io/sardine/try/). The `dev` branch's test build:
 [install](https://delirioux.github.io/sardine/dev/install/), [try](https://delirioux.github.io/sardine/dev/try/). The [manual](docs/MANUAL.md) has every screen.
 
