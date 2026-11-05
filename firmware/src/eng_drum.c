@@ -87,10 +87,18 @@ static const int8_t DRUM_GM[47][2] = {
 };
 /* the drum of a note (DVT_*, or a model kit's lane: DV_KTYPE) and its semitones; KICK picks the kick; a model kit
  * plays its own piece on the note's lane */
+/* (Sardine) a lane's own variation over the KIT knob, per part: kit 0 the KIT's, 1 STD, 2.. the model kits (DK_80 ..);
+ * semitones, TONE and DECAY added to the knobs'. All 0: as Felucca plays it */
+typedef struct { uint8_t kit; int8_t semi, tone, decay; } drum_lane_ov_t;
+static drum_lane_ov_t drum_lane_ov[NPART][DV_NLANE];
+static uint32_t drum_gm_part;                     /* (the part drum_gm is asked for: drum_note_on sets it) */
 static uint32_t drum_gm(const int16_t *p, uint32_t note, int32_t *st)
 {
     uint32_t n = note >= 35u && note <= 81u ? note : 36u + (note + 120u - 36u) % 12u, t = (uint32_t)DRUM_GM[n - 35u][0];
     uint32_t kit = drum_kit_plays(p[P_E0]);           /* STD, the model kits */
+    uint32_t ov = drum_lane_ov[drum_gm_part % NPART][DV_TYPE_LANE[t]].kit;
+    if (ov == 1u) kit = DK_STD;
+    else if (ov >= 2u && DK_80 + ov - 2u < DK_COUNT) kit = DK_80 + ov - 2u;
     *st = DRUM_GM[n - 35u][1];
     if (kit >= DK_80)
         return DV_KTYPE(kit - DK_80 + 1u, DV_TYPE_LANE[t]);
@@ -216,6 +224,7 @@ static void drum_note_on(track_t *t, voice_t *v)
     int32_t st;
     if (!K || i >= NVOICE)
         return;
+    drum_gm_part = (uint32_t)(t - trk) % NPART;
     role = drum_gm(t->p, v->note, &st);
     lane = drum_lane(v->note);
     L = &K[(uint32_t)v->s[0] & (DV_NLANE - 1u)];
@@ -279,11 +288,12 @@ static void drum_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const 
         n = CTL;
     r = L->role;
     dv_default(&k, r);                                   /* the knobs move every lane from its design (64) */
-    k.decay = (uint8_t)clamp(k.decay + p[P_E3] - 64, 0, 127);
-    k.tone = (uint8_t)clamp(k.tone + p[P_E2] - 64, 0, 127);
+    const drum_lane_ov_t *ov = &drum_lane_ov[(uint32_t)(t - trk) % NPART][(uint32_t)v->s[0] & (DV_NLANE - 1u)];
+    k.decay = (uint8_t)clamp(k.decay + p[P_E3] - 64 + ov->decay, 0, 127);
+    k.tone = (uint8_t)clamp(k.tone + p[P_E2] - 64 + ov->tone, 0, 127);
     k.extra = (uint8_t)clamp(k.extra + p[P_E4] - 64, 0, 127);
     k.accent = (uint8_t)clamp(acc >> 9, 0, 127);         /* (Q16 -> 0..127) */
-    k.tune = (int16_t)(L->st * 16 + (p[P_E1] - 64) * 3);   /* +-12 semitones */
+    k.tune = (int16_t)((L->st + ov->semi) * 16 + (p[P_E1] - 64) * 3);   /* +-12 semitones */
     if (((const uint32_t *)&k)[0] != ((const uint32_t *)&L->key)[0] ||
         ((const uint32_t *)&k)[1] != ((const uint32_t *)&L->key)[1]) {
         dv_setup(&L->c, &k);                             /* (a parameter moved) */

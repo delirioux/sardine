@@ -379,6 +379,17 @@ static void sa_apply(void)
                 sas_synth(&trk[c->part], sas_of(c->sound), &sa_base[c->part], &s->live[l], s, &now);
             }
         }
+        {   /* each drum row's variation onto its channel(s) of the drum engine (eng_drum.c drum_lane_ov) */
+            static const drum_lane_ov_t VAR[SA_DVARS] = {{0, 0, 0, 0}, {0, 0, 10, -28}, {0, 0, -8, 30}, {0, 3, 6, -6},
+                                                          {0, -3, -6, 6}, {2, 0, 0, 0}, {3, 0, 0, 0}, {7, 0, 0, 0}};
+            static const uint8_t LANE[SA_DROWS] = {0, 1, 2, 3, 5, 6, 7};    /* (HATS: the open hat's channel 4 too) */
+            for (int r = 0; r < SA_DROWS; ++r) {
+                const sa_code *c = &s->code[SA_L_DRUM0 + r];
+                drum_lane_ov_t ov = VAR[c->type == SA_T_DRUM ? c->amode % SA_DVARS : 0];
+                drum_lane_ov[SA_PART_DRUMS][LANE[r]] = ov;
+                if (r == SA_DR_HATS) drum_lane_ov[SA_PART_DRUMS][4] = ov;
+            }
+        }
         sas_drums(&trk[SA_PART_DRUMS], s);
         sas_song(s);
         fm1_irq_on();

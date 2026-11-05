@@ -378,11 +378,16 @@ int main(int argc, char **argv)
     sv_knob(&ui, SV_K1, 3);
     CHECK(ui.layer == SA_L_DRUM0 + SA_DR_HATS && g.s.code[ui.layer].sound == SA_DV_HAT, "DRUM: the HATS row, a HAT");
     sv_knob(&ui, SV_K2, 1);
-    CHECK(g.s.code[ui.layer].sound == SA_DV_OPEN && g.ed[ui.layer].sound == SA_DV_OPEN && !sa_pending(&g),
+    CHECK(g.s.code[ui.layer].sound == SA_DV_HAT && g.s.code[ui.layer].amode == 1 && !strcmp(ui.msg, "HAT TIGHT"),
+          "INSTR: HAT TIGHT, a variation (%s)", ui.msg);
+    shot("13b_drums_variation");
+    sv_knob(&ui, SV_K2, SA_DVARS - 1);
+    CHECK(g.s.code[ui.layer].sound == SA_DV_OPEN && g.s.code[ui.layer].amode == 0 && !sa_pending(&g),
           "INSTR: the open hat, at once");
-    sv_knob(&ui, SV_K2, 5);
-    CHECK(g.s.code[ui.layer].sound == SA_DV_SHAKER, "INSTR stops at the row's last (%d)", g.s.code[ui.layer].sound);
-    sv_knob(&ui, SV_K2, -5);
+    sv_knob(&ui, SV_K2, 40);
+    CHECK(g.s.code[ui.layer].sound == SA_DV_SHAKER && g.s.code[ui.layer].amode == SA_DVARS - 1,
+          "INSTR stops at the row's last: SHAKER DEEP (%d %d)", g.s.code[ui.layer].sound, g.s.code[ui.layer].amode);
+    sv_knob(&ui, SV_K2, -40);
     sv_knob(&ui, SV_K4, 10);
     CHECK(g.s.live[ui.layer].env == 70, "ACCENT");
     press(SV_B_REC);
@@ -397,7 +402,7 @@ int main(int argc, char **argv)
     /* a row OFF: ALGORITHM gives it a pattern */
     sv_knob(&ui, SV_K1, 1);
     CHECK(ui.layer == SA_L_DRUM0 + SA_DR_TOMS && g.s.code[ui.layer].pat == SA_PAT_OFF, "TOMS: OFF");
-    sv_knob(&ui, SV_K2, 2);
+    sv_knob(&ui, SV_K2, 2 * SA_DVARS);
     sv_knob(&ui, SV_K_ALGO, 11);
     CHECK(g.ed[ui.layer].pat != SA_PAT_OFF && g.s.code[ui.layer].sound == SA_DV_CONGA, "a conga, a pattern waiting");
     shot("15_drums_on");

@@ -78,6 +78,10 @@ enum { SA_DR_KICK, SA_DR_SNARE, SA_DR_CLAP, SA_DR_HATS, SA_DR_TOMS, SA_DR_RIM, S
 int sa_dv_row(int dv);                              /* the row a drum voice plays on */
 int sa_row_voices(int row, uint8_t *out);           /* a row's drum voices (its INSTR list) */
 const char *sa_row_name(int row);
+/* a drum row's variation (its code's amode, 0.7): the kit's own drum (0), TIGHT ROOM HIGH LOW (it, reshaped), or another
+ * drum machine's (80 10 DEEP); the glue sets the drum engine's lane by it */
+#define SA_DVARS 8
+const char *sa_dvar_name(int v);                    /* "", "TIGHT" .. */
 
 /* a layer's sound: at once */
 typedef struct {

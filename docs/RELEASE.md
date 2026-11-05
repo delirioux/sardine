@@ -8,7 +8,7 @@ Sardine 0.7: live club mixing for the FM-1.
   back in on the 1; LFO held: SWEEP, the filter closing over two bars
 - GLO: a MIXER, the four layers' volumes and mutes
 - SELECT is the tempo, ALGORITHM the pattern; SEQ drops what waits on the one; REC records steps on the keys
-- DRUMS: seven rows on channels of their own (KICK SNARE CLAP HATS TOMS RIM METAL), each drum switched at once;
+- DRUMS: seven rows on channels of their own (KICK SNARE CLAP HATS TOMS RIM METAL), each drum switched at once, in eight variations (TIGHT ROOM HIGH LOW, 80 10 DEEP);
   VOLUME and ACCENT per row, CHANCE beside the modifiers; the kit's TUNE, TONE and DECAY on its KIT page
 - PUMP per layer: its depth (set by the sound's type), release, and the kick or every beat
 - 3D: a synth layer placed around you for headphones (angle, height, distance), fixed or moving (ORBIT, RANDOM,

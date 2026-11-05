@@ -150,6 +150,11 @@ Seven rows, always there, each on a drum channel of its own, so no two ever cut 
 | RIM | RIM, CLAVE |
 | METAL | RIDE, CRASH, COWBELL |
 
+Every drum comes in eight variations, all on the INSTR knob: as the kit has it, **TIGHT** (short and bright), **ROOM**
+(long and darker), **HIGH**, **LOW**, and the same drum from three other drum machines (**80**, **10**, **DEEP**),
+whatever the kit: CLAP, CLAP TIGHT, CLAP ROOM .. CLAP DEEP, then (on HATS) OPEN HAT, OPEN HAT TIGHT and so on. The
+header says the whole name as it turns.
+
 Each row shows its drum and its bar (the second colour: waiting for SEQ); a row OFF is dimmed. The home page: **DRUM**
 (KNOB 1, the row), **INSTR** (its drum, at once), **VOLUME** and **ACCENT** (how hard the accented steps hit against
 the rest; 50: as written). ALGORITHM turns the row's pattern, OFF first: a pattern turns the row on, OFF turns it off;

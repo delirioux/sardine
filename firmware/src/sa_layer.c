@@ -70,6 +70,8 @@ static const uint8_t ROW_DEF[SA_DROWS] = {SA_DV_KICK, SA_DV_SNARE, SA_DV_CLAP, S
                                           SA_DV_RIDE};
 static const char *const ROW_NAMES[SA_DROWS] = {"KICK", "SNARE", "CLAP", "HATS", "TOMS", "RIM", "METAL"};
 int sa_dv_row(int dv) { return DV_ROW[clampi(dv, 0, SA_DVS - 1)]; }
+static const char *const DVAR_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "80", "10", "DEEP"};
+const char *sa_dvar_name(int v) { return DVAR_NAMES[clampi(v, 0, SA_DVARS - 1)]; }
 const char *sa_row_name(int row) { return ROW_NAMES[clampi(row, 0, SA_DROWS - 1)]; }
 int sa_row_voices(int row, uint8_t *out)
 {
@@ -1090,7 +1092,8 @@ void sa_settings_fix(sa_settings *s)
         c->ooct = (uint8_t)clampi(c->ooct, 1, 6);
         for (int i = 0; i < 16; ++i)
             c->sl[i] = (uint8_t)clampi(c->sl[i], 1, 16);
-        c->amode = (uint8_t)(c->amode < SA_AR_MODES ? c->amode : 0);
+        c->amode = (uint8_t)(c->amode < (c->type == SA_T_DRUM ? SA_DVARS : SA_AR_MODES) ? c->amode : 0);   /* (a drum: its
+                                                                                                   * variation) */
         c->arate = (uint8_t)clampi(c->arate, 0, SA_RATES - 1);
         c->arange = (uint8_t)clampi(c->arange, 1, 4);
         c->agate = (uint8_t)clampi(c->agate, 10, 100);

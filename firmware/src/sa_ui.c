@@ -163,6 +163,15 @@ static const char *sv_layer_name(const sa_ui *u, int l)
     const sa_groove *g = u->g;
     const sa_code *c = g->ed[l].type != SA_T_NONE ? &g->ed[l] : &g->s.code[l];
     if (c->type == SA_T_NONE) return "-";
+    if (c->type == SA_T_DRUM && c->amode % SA_DVARS) {   /* a drum's variation: CLAP TIGHT */
+        static char nb[4][24];
+        static int at;
+        char *b = nb[at++ & 3];
+        sv_cpy(b, sa_dv_name(c->sound), 24);
+        sv_cat(b, " ", 24);
+        sv_cat(b, sa_dvar_name(c->amode % SA_DVARS), 24);
+        return b;
+    }
     return sas_name(c->type, c->sound);
 }
 
@@ -174,17 +183,20 @@ static int sv_drum_rows(const sa_ui *u, int *rows)
     return SA_DROWS;
 }
 static int sv_drow_count(const sa_ui *u) { (void)u; return SA_DROWS; }
+static void sv_msg(sa_ui *u, const char *m);
 /* a row's INSTR, turned: another drum of its channel, at once */
 static void sv_instr_turn(sa_ui *u, int d)
 {
     sa_groove *g = u->g;
     int l = u->layer;
-    uint8_t list[SA_DVS];
+    uint8_t list[SA_DVS];                          /* (each drum of the row, in its eight variations) */
     int n = sa_row_voices(l - SA_L_DRUM0, list), at = 0;
-    for (int i = 0; i < n; ++i) if (list[i] == g->ed[l].sound) at = i;
-    at = sv_clampi(at + d, 0, n - 1);
-    g->ed[l].sound = g->s.code[l].sound = list[at];
+    for (int i = 0; i < n; ++i) if (list[i] == g->ed[l].sound) at = i * SA_DVARS + g->ed[l].amode % SA_DVARS;
+    at = sv_clampi(at + d, 0, n * SA_DVARS - 1);
+    g->ed[l].sound = g->s.code[l].sound = list[at / SA_DVARS];
+    g->ed[l].amode = g->s.code[l].amode = (uint8_t)(at % SA_DVARS);
     g->sound_sig++;
+    sv_msg(u, sv_layer_name(u, l));
 }
 static void sv_drum_sync(sa_ui *u)               /* the row picked: its slot */
 {
@@ -381,6 +393,7 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         if (u->view == SV_V_DRUMS) {
             sv_card_txt(&c[0], "DRUM", sa_row_name(l - SA_L_DRUM0), (l - SA_L_DRUM0) * 1000 / (SA_DROWS - 1), false);
             sv_card_txt(&c[1], "INSTR", sv_layer_name(u, l), -1, false);
+            c[1].name = true;
             sv_card_num(&c[2], "VOLUME", v->level, 0, 100);
             sv_card_num(&c[3], "ACCENT", v->env, 0, 100);
         } else {
@@ -489,6 +502,7 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         if (u->view == SV_V_DRUMS) {
             sv_card_txt(&c[1], "KIT", sa_kit_name(s->kit), s->kit * 1000 / (SA_KITS - 1), false);
             sv_card_txt(&c[2], "INSTR", sv_layer_name(u, l), -1, false);
+            c[2].name = true;
         } else {
             static const char *const ROLE[SAS_ROLES] = {"BASS", "KEYS", "PADS", "LEADS", "FX"};
             int role = sas_of(lc->sound)->role % SAS_ROLES;
