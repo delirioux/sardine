@@ -1221,8 +1221,9 @@ void sv_knob(sa_ui *u, int k, int d)
             u->set_slot = sv_clampi(u->set_slot + d, 0, SV_SLOTS - 1);
             return;
         }
-        int v = u->page == SV_PG_LAYER || u->page == SV_PG_MAIN ? u->view : SV_V_HOME;
-        if (sv_clampi(v + d, 0, SV_VIEWS - 1) != v || u->page != SV_PG_LAYER) sv_view(u, v + d);
+        bool here = u->page == SV_PG_LAYER || u->page == SV_PG_MAIN;
+        int v = here ? u->view : SV_V_HOME, to = sv_clampi(v + d, 0, SV_VIEWS - 1);
+        if (to != v || !here) sv_view(u, to);     /* (at either end: nothing, no redraw) */
         return;
     }
     if (k == SV_K_ALGO) {

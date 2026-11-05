@@ -201,6 +201,10 @@ int main(int argc, char **argv)
     CHECK(g.s.reverb == 60 && g.s.delay == 60, "SPACE: reverb and delay (%d %d)", g.s.reverb, g.s.delay);
     sv_knob(&ui, SV_K3, 5);
     CHECK(g.s.pump == 45, "PUMP (%d)", g.s.pump);
+    /* PRESETS at the ends: nothing to redraw */
+    sv_draw(&ui);
+    sv_knob(&ui, SV_K_PRESETS, -1);
+    CHECK(ui.page == SV_PG_MAIN && !ui.force, "PRESETS down on HOME: no redraw");
     /* PRESETS: HOME LEAD CHORD BASS DRUMS, each on its home page */
     sv_knob(&ui, SV_K_PRESETS, 1);
     CHECK(ui.page == SV_PG_LAYER && ui.view == SV_V_LEAD && ui.layer == SA_L_LEAD && ui.fx == 0, "PRESETS: LEAD");
