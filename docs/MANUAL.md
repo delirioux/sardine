@@ -182,9 +182,12 @@ to STYLE (below), GLO once more back. SOLO is a live move: not kept with the gro
 ## The drum fill
 
 Hold **ENV**: from the next beat the drums give way to a fill (ENV blinks until the beat, then stays lit), for as
-long as you hold it; let go and the groove is back at once. Each time a different one, by turns: ROLL (the snare in
-sixteenths, rising), SNARE, BUILD (eighths, then sixteenths), TOMS and STUTTER (kick and hat on every sixteenth). A
-kick marks each beat (STUTTER: every sixteenth). The fills play the SNARE row's drum; the synth layers play on.
+long as you hold it; let go and the groove is back at once, with a crash on the next beat. A fill is a bar: started
+on beat 3 it plays from its third beat, so it always peaks on the bar's last sixteenth. Each time another, by turns:
+ROLL (the snare in sixteenths, rising, 32nds at the end), TOMS (a run from the high tom down), BUILD (eighths, then
+sixteenths, then 32nds, an open hat on top), STUTTER (kick and hat on every sixteenth, claps), FLAM (flammed
+backbeats over ghost notes), SYNCO (3-3-2 accents, toms to end), CLAPS (claps building to 32nds) and GHOST (ghost
+notes and rim around a flammed snare). They play the SNARE row's drum; the synth layers play on.
 
 ## BREAK and SWEEP
 

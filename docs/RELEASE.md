@@ -4,7 +4,7 @@ Sardine 0.7: live club mixing for the FM-1.
   through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, ARP, PAN, 3D, PUMP, GATE, MOD; DRUMS: MIX, KIT, MOD), HOME back to them all
 - EDIT: a pattern editor, KNOB 1 the step, KNOB 2 ready fills (drum fills, lines in the key, chord rhythms), REC:
   the keys write the steps
-- ENV held: a drum fill from the next beat, a different one each time; ARP held: BREAK, the drums and bass out,
+- ENV held: a drum fill from the next beat, eight bar-long fills by turns, peaking on the bar's end, a crash after; ARP held: BREAK, the drums and bass out,
   back in on the 1; LFO held: SWEEP, the filter closing over two bars
 - STYLE: twenty styles (NIGHT, FILTER, DEEP, TECH, MINIMAL, TECHNO, HARD, GABBER, ACID, TRANCE, PROG, DISCO, AFRO,
   GARAGE, BREAKS, DUB, AMBIENT, ELECTRO, HAPPY, LOFI), a fresh groove in one on SEQ; INTRO and ARC

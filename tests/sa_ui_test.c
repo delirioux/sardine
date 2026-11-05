@@ -499,7 +499,7 @@ int main(int argc, char **argv)
               part_on[SA_PART_DRUMS] - before);
         int k0 = g.fill_kind;
         sv_button(&ui, SV_B_ENV, false);
-        CHECK(!g.fill_on && g.fill_kind == (k0 + 1) % 5, "let go: the groove, the next fill next time");
+        CHECK(!g.fill_on && g.fill_kind == (k0 + 1) % 8 && g.crash_next, "let go: the groove, the next fill next time");
     }
     /* ARP held: BREAK, the drums and the bass out at once; let go: in on the next 1 */
     {

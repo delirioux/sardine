@@ -1434,7 +1434,7 @@ static void bar_line(sa_groove *g)
         g->hits_last[l] = g->hits[l];
         g->hits[l] = 0;
     }
-    if (g->arr_fill && !g->fill_held) g->fill_on = 0;   /* (ARC's roll: over on the 1) */
+    if (g->arr_fill && !g->fill_held) g->fill_on = 0;   /* (ARC's roll: over on the 1, its crash there) */
     arrange(g);
     if (g->brk_on && !g->brk_held) {               /* BREAK let go: everything back on this 1 */
         g->brk_on = false;
@@ -1481,12 +1481,72 @@ void sa_mute(sa_groove *g, int l, bool m)
 }
 
 /* ---- the drum fill (held) ---------------------------------------------------------------------------------------- */
-enum { FILL_ROLL, FILL_SNARE, FILL_BUILD, FILL_TOMS, FILL_STUTTER, FILLS };
-static const char *const FILL_NAMES[FILLS] = {"ROLL", "SNARE", "BUILD", "TOMS", "STUTTER"};
+/* the fills: a bar each, a sixteenth a step, up to three hits a step (General MIDI notes: 36 kick, 38 snare, 37 rim,
+ * 39 clap, 42 46 the hats, 41 43 45 47 48 50 the toms low to high, 49 crash); a hit's flag: 1 a second one a 32nd
+ * later, 2 a flam (a soft one a moment before). Started on a beat, a fill plays from that beat of its bar, so it
+ * always peaks on the bar's last sixteenth */
+enum { FILL_ROLL, FILL_TOMS, FILL_BUILD, FILL_STUTTER, FILL_FLAM, FILL_SYNCO, FILL_CLAPS, FILL_GHOST, FILLS };
+static const char *const FILL_NAMES[FILLS] = {"ROLL", "TOMS", "BUILD", "STUTTER", "FLAM", "SYNCO", "CLAPS", "GHOST"};
+typedef struct { uint8_t n, v, f; } fhit;
+typedef struct { fhit h[16][3]; } fprog;
+#define K(v) {36, v, 0}
+#define S(v) {38, v, 0}
+#define SD(v) {38, v, 1}
+#define SF(v) {38, v, 2}
+#define T(n, v) {n, v, 0}
+#define C(v) {39, v, 0}
+#define CD(v) {39, v, 1}
+#define HH(v) {42, v, 0}
+#define OH(v) {46, v, 0}
+#define R(v) {37, v, 0}
+#define NO {0, 0, 0}
+static const fprog FILL_PROG[FILLS] = {
+    {{{K(110), S(60), NO}, {S(64), NO, NO}, {S(68), NO, NO}, {S(72), NO, NO}, {K(100), S(76), NO}, {S(80), NO, NO},
+      {S(84), NO, NO}, {S(88), NO, NO}, {K(110), S(92), NO}, {S(96), NO, NO}, {S(100), NO, NO}, {S(104), NO, NO},
+      {K(110), SD(108), NO}, {SD(114), NO, NO}, {SD(120), NO, NO}, {SD(127), K(120), NO}}},
+    {{{K(110), S(118), NO}, {S(50), NO, NO}, {T(50, 104), NO, NO}, {T(50, 88), NO, NO}, {K(100), T(48, 106), NO},
+      {T(48, 90), NO, NO}, {T(47, 108), NO, NO}, {T(47, 92), NO, NO}, {K(110), T(45, 110), NO}, {T(45, 94), NO, NO},
+      {T(43, 112), NO, NO}, {T(43, 96), NO, NO}, {K(110), T(41, 118), NO}, {T(41, 100), NO, NO}, {SD(124), NO, NO},
+      {SD(127), K(120), NO}}},
+    {{{K(110), S(72), NO}, {NO, NO, NO}, {S(76), NO, NO}, {NO, NO, NO}, {K(100), S(82), NO}, {NO, NO, NO},
+      {S(88), NO, NO}, {NO, NO, NO}, {K(110), S(94), NO}, {S(98), NO, NO}, {S(102), NO, NO}, {S(106), NO, NO},
+      {K(110), SD(112), NO}, {SD(118), NO, NO}, {SD(124), NO, NO}, {SD(127), OH(110), K(120)}}},
+    {{{K(120), HH(100), NO}, {K(70), HH(70), NO}, {K(90), HH(84), NO}, {K(70), HH(70), NO}, {K(120), HH(100), C(110)},
+      {K(70), HH(70), NO}, {K(90), HH(84), NO}, {K(70), HH(70), NO}, {K(120), HH(100), NO}, {HH(70), NO, NO},
+      {K(90), HH(84), NO}, {HH(70), NO, NO}, {K(120), HH(104), C(118)}, {K(80), HH(80), NO}, {K(110), C(100), NO},
+      {K(127), C(124), OH(100)}}},
+    {{{K(110), HH(80), NO}, {NO, NO, NO}, {HH(70), S(42), NO}, {NO, NO, NO}, {SF(120), HH(80), NO}, {NO, NO, NO},
+      {K(100), HH(70), NO}, {S(44), NO, NO}, {K(110), HH(80), NO}, {NO, NO, NO}, {HH(70), S(46), NO}, {K(96), NO, NO},
+      {SF(124), HH(84), NO}, {S(48), NO, NO}, {SF(116), K(100), NO}, {SF(127), K(120), NO}}},
+    {{{K(120), S(110), NO}, {NO, NO, NO}, {S(50), NO, NO}, {K(110), S(104), NO}, {NO, NO, NO}, {S(52), NO, NO},
+      {K(112), S(110), NO}, {NO, NO, NO}, {K(116), S(112), NO}, {NO, NO, NO}, {S(54), NO, NO}, {K(114), S(114), NO},
+      {NO, NO, NO}, {S(60), NO, NO}, {T(45, 118), K(116), NO}, {T(41, 124), SD(120), NO}}},
+    {{{K(110), C(90), NO}, {NO, NO, NO}, {C(80), NO, NO}, {NO, NO, NO}, {K(100), C(96), NO}, {NO, NO, NO},
+      {C(88), NO, NO}, {NO, NO, NO}, {K(110), C(100), NO}, {C(80), NO, NO}, {C(96), NO, NO}, {C(84), NO, NO},
+      {K(110), CD(108), NO}, {CD(114), NO, NO}, {CD(120), NO, NO}, {CD(127), OH(110), K(120)}}},
+    {{{K(110), HH(84), NO}, {S(40), NO, NO}, {HH(70), R(70), NO}, {S(44), NO, NO}, {S(118), HH(84), NO},
+      {S(42), NO, NO}, {HH(70), K(96), NO}, {S(46), NO, NO}, {K(110), HH(84), NO}, {S(44), R(64), NO},
+      {HH(70), S(48), NO}, {K(100), S(52), NO}, {SF(120), HH(84), NO}, {S(56), NO, NO}, {S(62), R(80), NO},
+      {SF(127), OH(104), K(118)}}},
+};
+#undef K
+#undef S
+#undef SD
+#undef SF
+#undef T
+#undef C
+#undef CD
+#undef HH
+#undef OH
+#undef R
+#undef NO
 const char *sa_fill_name(int kind) { return FILL_NAMES[clampi(kind, 0, FILLS - 1)]; }
 void sa_fill(sa_groove *g, bool down)
 {
-    if (!down && g->fill_on) g->fill_kind = (uint8_t)((g->fill_kind + 1) % FILLS);   /* (next time, the next fill) */
+    if (!down && g->fill_on) {
+        g->fill_kind = (uint8_t)((g->fill_kind + 1) % FILLS);   /* (next time, the next fill) */
+        g->crash_next = 1;                         /* and a crash on the next beat */
+    }
     g->fill_held = down;
     if (!down) g->fill_on = 0;                     /* (let go: the groove again, at once) */
 }
@@ -1536,27 +1596,40 @@ static void arrange(sa_groove *g)
         if (p == len - 1) g->arr_fill = true;
     }
 }
-static int row_gm(const sa_groove *g, int row, int dv)   /* the row's drum as it is, or dv when the row has none */
+/* a drum note of a fill: the snare's and the clap's as their rows play them (their INSTR), the others as written */
+static void fill_hit(sa_groove *g, const fhit *h, uint32_t len)
 {
-    const sa_code *c = &g->s.code[SA_L_DRUM0 + row];
-    return sa_dv_gm(c->type == SA_T_DRUM ? c->sound : dv);
+    int n = h->n;
+    if (!n) return;
+    if (n == 38 && g->s.code[SA_L_DRUM0 + SA_DR_SNARE].type == SA_T_DRUM) n = sa_dv_gm(g->s.code[SA_L_DRUM0 + SA_DR_SNARE].sound);
+    float sixteenth = tick_frames(g) * (float)SA_TPS;
+    if (h->f == 2 && g->npend < SA_PEND) {         /* a flam: the soft one first, then this a moment later */
+        note(g, SA_PART_DRUMS, n, h->v / 3, len);
+        g->pend[g->npend].at = g->clock + (uint32_t)(g->sr * 0.022f);
+        g->pend[g->npend].part = SA_PART_DRUMS;
+        g->pend[g->npend].note = (uint8_t)n;
+        g->pend[g->npend].vel = h->v;
+        g->pend[g->npend].layer = SA_L_DRUM0;
+        g->pend[g->npend].len = len;
+        g->npend++;
+        return;
+    }
+    note(g, SA_PART_DRUMS, n, h->v, len);
+    if (h->f == 1 && g->npend < SA_PEND) {         /* a 32nd: the second one half a sixteenth later */
+        g->pend[g->npend].at = g->clock + (uint32_t)(sixteenth * 0.5f);
+        g->pend[g->npend].part = SA_PART_DRUMS;
+        g->pend[g->npend].note = (uint8_t)n;
+        g->pend[g->npend].vel = (uint8_t)(h->v > 12 ? h->v - 12 : h->v);
+        g->pend[g->npend].layer = SA_L_DRUM0;
+        g->pend[g->npend].len = len;
+        g->npend++;
+    }
 }
-/* a sixteenth of the fill: s from where it started (each beat its four) */
 static void fill_tick(sa_groove *g, int s)
 {
+    const fprog *p = &FILL_PROG[g->fill_kind % FILLS];
     uint32_t len = (uint32_t)(g->sr * 0.25f);
-    int sn = row_gm(g, SA_DR_SNARE, SA_DV_SNARE), kick = sa_dv_gm(SA_DV_KICK), ramp = clampi(70 + s * 4, 70, 127);
-    if (s % 4 == 0 && g->fill_kind != FILL_STUTTER) note(g, SA_PART_DRUMS, kick, 110, len);
-    switch (g->fill_kind) {
-    case FILL_ROLL: note(g, SA_PART_DRUMS, sn, ramp, len); break;
-    case FILL_SNARE: if (s % 4 != 1) note(g, SA_PART_DRUMS, sn, s % 4 == 0 ? 120 : 96, len); break;
-    case FILL_BUILD: if (s >= 8 || s % 2 == 0) note(g, SA_PART_DRUMS, sn, ramp, len); break;
-    case FILL_TOMS: note(g, SA_PART_DRUMS, sa_dv_gm((s / 2) % 2 ? SA_DV_LOTOM : SA_DV_TOM), ramp, len); break;
-    default:                                       /* STUTTER: kick and hat on every sixteenth */
-        note(g, SA_PART_DRUMS, kick, 104, len);
-        note(g, SA_PART_DRUMS, sa_dv_gm(SA_DV_HAT), 90, len);
-        break;
-    }
+    for (int k = 0; k < 3; ++k) fill_hit(g, &p->h[s & 15][k], len);
 }
 
 static void do_tick(sa_groove *g)
@@ -1571,11 +1644,17 @@ static void do_tick(sa_groove *g)
     if (t == 48 && g->arr_fill && !g->fill_on) {   /* ARC: a roll on the last half bar */
         g->fill_on = 1;
         g->fill_step = 8;
-        g->fill_kind = 0;
+        g->fill_kind = FILL_ROLL;
+        g->crash_next = 1;
     }
-    if (t % 24 == 0 && g->fill_held && !g->fill_on) {   /* the fill: from the beat after ENV went down */
+    if (t % 24 == 0 && g->crash_next && !g->fill_on && !g->brk_on && !g->arr_brk) {   /* the crash: the beat after a fill */
+        g->crash_next = 0;
+        note(g, SA_PART_DRUMS, 49, 118, (uint32_t)g->sr);
+    }
+    if (t % 24 == 0 && g->fill_held && !g->fill_on) {   /* the fill: from the beat after ENV went down, at that beat
+                                                      * of its bar (it peaks on the bar's end) */
         g->fill_on = 1;
-        g->fill_step = 0;
+        g->fill_step = (uint8_t)(t / SA_TPS);
         msg(g, FILL_NAMES[g->fill_kind % FILLS]);
     }
     if (g->fill_on && t % SA_TPS == 0 && !g->brk_on) {
