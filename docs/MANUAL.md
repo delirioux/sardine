@@ -63,8 +63,9 @@ gets a B made from its A when it loads. PART goes back to A when a set comes in.
 
 ## LEAD, CHORD, BASS
 
-At the top of a layer's pages its sound as it plays, a wave (a flat line when it is silent), beside its pattern (the
-second colour under it: what SEQ drops). A layer opens on its home page: **CUTOFF**, **RESO**, **DRIVE**, **ENV** (the filter envelope, 50: the sound's own),
+At the top of a layer's pages its pattern and its bar, the step playing lit (under it, in the second colour: what SEQ
+drops). Its home page shows the sound's name and, across the bottom, the scope: the sound as it plays, a wave (a flat
+line when it is silent). A layer opens on its home page: **CUTOFF**, **RESO**, **DRIVE**, **ENV** (the filter envelope, 50: the sound's own),
 at once. ALGORITHM turns its pattern: OFF, then the patterns of its kind (BASS the bass lines, CHORD stabs and pads,
 LEAD lead lines and the bass lines). FX turns through its pages:
 

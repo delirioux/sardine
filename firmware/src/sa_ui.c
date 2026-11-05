@@ -1025,6 +1025,21 @@ static const sa_code *sv_with_b(sa_code *tmp, const sa_code *c, uint8_t b)
     return tmp;
 }
 
+/* a code's bar (a bit a sixteenth), worked out again when it changed (slot 0: what plays, 1: what waits) */
+static uint16_t sv_pv(sa_ui *u, int slot, const sa_code *c, int l)
+{
+    if (u->force || u->pv_layer != l || memcmp(&u->pv_code[slot], c, sizeof *c)) {
+        if (u->pv_layer != l) memset(u->pv_code, 0xFF, sizeof u->pv_code);
+        u->pv_layer = l;
+        SV_LOCK();
+        u->pv_bits[slot] = c->type == SA_T_NONE ? 0 : sa_preview(u->g, c, l, 0);
+        SV_UNLOCK();
+        u->pv_code[slot] = *c;
+    }
+    return u->pv_bits[slot];
+}
+
+/* a layer's top: its pattern's name and bar (the step playing lit); what SEQ drops below it, in the accent */
 static void sv_layer_top(sa_ui *u, int l)
 {
     sa_groove *g = u->g;
@@ -1036,24 +1051,30 @@ static void sv_layer_top(sa_ui *u, int l)
     }
     bool pend = sa_layer_pending(g, l), mute = g->s.live[l].mute;
     bool off = lv->type == SA_T_NONE || (lv->pat == SA_PAT_OFF && !lv->own);
+    int now = sv_now(g);
     char t[24];
-    int32_t x0 = 80, w = 152, cy = 16, h = 12;
-    uint16_t c = mute || off ? T_DIM : pend ? T_ACCENT : T_THEME;
-    cv_rect(x0, cy, w, 1, ux_mix(T_SURF, T_LINE, 60));
-    if (u->wave_n > 1 && !mute) {
-        int32_t py = cy - u->wave[0] * h / 120;
-        for (int i = 1; i < u->wave_n; ++i) {
-            int32_t x = x0 + i * (w - 1) / (u->wave_n - 1), y = cy - u->wave[i] * h / 120;
-            cv_line_t(x0 + (i - 1) * (w - 1) / (u->wave_n - 1), py, x, y, c, 2);
-            py = y;
-        }
-    }
     sa_pat_label(lv, t, sizeof t);
-    cv_free_text(10, 4, &AF_S, mute ? "MUTED" : off ? "OFF" : t, mute ? T_ACCENT : off ? T_DIM : T_MID, T_SURF, 66);
+    cv_free_text(10, 4, &AF_S, mute ? "MUTED" : off ? "OFF" : t, mute ? T_ACCENT : off ? T_DIM : T_TEXT, T_SURF, 66);
+    sv_strip(80, 5, 152, 9, off ? 0 : sv_pv(u, 0, lv, l), now, T_THEME, mute || off);
     if (pend) {
+        bool gone = e->type == SA_T_NONE || (e->pat == SA_PAT_OFF && !e->own);
         if (e->type == SA_T_NONE) sv_cpy(t, "GOES", sizeof t);
         else sa_pat_label(e, t, sizeof t);
-        cv_free_text(10, 18, &AF_S, t, T_ACCENT, T_SURF, 66);
+        cv_free_text(10, 19, &AF_S, gone ? "OFF" : t, T_ACCENT, T_SURF, 66);
+        sv_strip(80, 20, 152, 9, gone ? 0 : sv_pv(u, 1, e, l), now, T_ACCENT, gone);
+    }
+}
+
+/* the scope: the layer's sound now, a cycle or two, across the bottom */
+static void sv_scope(sa_ui *u, int32_t x0, int32_t cy, int32_t w, int32_t h, uint16_t c)
+{
+    cv_rect(x0, cy, w, 1, ux_mix(T_SURF, T_LINE, 60));
+    if (u->wave_n < 2) return;
+    int32_t py = cy - u->wave[0] * h / 120;
+    for (int i = 1; i < u->wave_n; ++i) {
+        int32_t x = x0 + i * (w - 1) / (u->wave_n - 1), y = cy - u->wave[i] * h / 120;
+        cv_line_t(x0 + (i - 1) * (w - 1) / (u->wave_n - 1), py, x, y, c, 2);
+        py = y;
     }
 }
 
@@ -1157,9 +1178,9 @@ static void sv_panel_mix(sa_ui *u)
 static void sv_panel_synth_home(sa_ui *u)
 {
     const sa_code *lc = sv_live(u);
-    cv_free_text(10, 42, &AF_M, sas_of(lc->sound)->name, T_THEME, T_SURF, 220);
-    sv_label(10, 72, "ALGORITHM: THE PATTERN", T_MID);
-    sv_label(10, 88, "FX: VOLUME, SOUND AND MORE", T_DIM);
+    bool mute = u->g->s.live[u->layer].mute, off = lc->pat == SA_PAT_OFF && !lc->own;
+    cv_free_text(10, 40, &AF_M, sas_of(lc->sound)->name, mute || off ? T_DIM : T_THEME, T_SURF, 220);
+    sv_scope(u, 8, 92, 224, 26, mute || off ? T_DIM : T_THEME);   /* (the bottom, the whole width) */
 }
 
 /* DRUMS: every row (its drum, its bar, the bar playing through it; OFF dimmed), KNOB 1's pick lit */
