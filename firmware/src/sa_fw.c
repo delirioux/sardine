@@ -242,6 +242,7 @@ static void sa_set_do(int act, int k)
     case SV_SA_NEW:
         if (act == SV_SA_NEW) {
             sa_random(&sa_next, sa_pref.boots * 7919u + fm1_ms * 31u + sa_u.frame, &sa_pl);
+            sas_fix(&sa_next);
             sv_cpy(m, "A NEW GROOVE", sizeof m);
         } else if (k == sa_wait_slot) {
             if (sa_wait_clear) { sv_msg(&sa_u, "THAT SET IS EMPTY"); return; }
@@ -426,6 +427,7 @@ static void sa_fw_init(void)
     sa_pref.boots++;                                         /* each start its own groove (the count kept) */
     sa_prefs_save();
     sa_random(&sa_g.s, sa_pref.boots, &sa_pl);
+    sas_fix(&sa_g.s);                                        /* (the pump by the sounds' types) */
     sa_g.s.look = sa_pref.look;
     sa_g.s.palette = (uint8_t)(settings.palette % NPALETTES);
     sa_edit_reset(&sa_g);

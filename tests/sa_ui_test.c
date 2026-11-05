@@ -265,6 +265,25 @@ int main(int argc, char **argv)
     sv_knob(&ui, SV_K4, -1);
     CHECK(!g.s.d3[SA_L_BASS].on, "3D OFF");
     press(SV_B_FX);
+    CHECK(sv_page_now(&ui) == SVP_PUMP && g.s.pl[SA_L_BASS].depth == 50, "FX: PUMP, BASS at 50 %% (%d)",
+          g.s.pl[SA_L_BASS].depth);
+    sv_knob(&ui, SV_K3, 1);
+    sv_knob(&ui, SV_K2, 6);
+    CHECK(g.s.pl[SA_L_BASS].src == SA_PS_BEAT && g.s.pl[SA_L_BASS].rel == 80, "SOURCE BEAT, RELEASE 80");
+    bars(1);
+    shot("07c_bass_pump");
+    {
+        int mb = 0, mc = 0;
+        g.s.pl[SA_L_CHORD].on = 0;
+        for (int k = 0; k < 120; ++k) {
+            run_ms(16);
+            if (g.duck[SA_L_BASS] > mb) mb = g.duck[SA_L_BASS];
+            if (g.duck[SA_L_CHORD] > mc) mc = g.duck[SA_L_CHORD];
+        }
+        CHECK(mb > 5 && mc == 0, "BASS pumps on the beat, CHORD with its pump off stays up (%d %d)", mb, mc);
+        g.s.pl[SA_L_CHORD].on = 1;
+    }
+    press(SV_B_FX);
     CHECK(sv_page_now(&ui) == SVP_GATE, "FX: GATE");
     press(SV_B_FX);
     CHECK(sv_page_now(&ui) == SVP_MOD, "FX: MOD");

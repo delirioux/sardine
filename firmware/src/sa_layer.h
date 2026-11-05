@@ -111,6 +111,12 @@ typedef struct { uint8_t on, az; int8_t el; uint8_t dist; } sa_3d;
 #define SA_AZ_STEPS 72
 int sa_sin5(int k);                                 /* sin(k * 5 degrees) * 127 */
 
+/* a synth layer's pump (0.7): DEPTH (0..100 % of HOME's PUMP), RELEASE (0 tight .. 100 breathing; 50: back over 0.7 of
+ * a beat), SOURCE (the kick layer's hits, or every beat), ON. At once. on 2: not set yet, the glue sets DEPTH by the
+ * sound's type (sas_fix) */
+enum { SA_PS_KICK, SA_PS_BEAT, SA_PSRCS };
+typedef struct { uint8_t depth, rel, src, on; } sa_pumpl;
+
 /* the key and the chords: code too */
 typedef struct {
     uint8_t key, scale, prog, bars;                 /* 0..11 (C..B), SA_SC_*, the progression, 1 2 4 bars a chord */
@@ -131,6 +137,7 @@ typedef struct {
     sa_gate gate[SA_LAYERS];                        /* 0.5 */
     sa_pan pan[SA_LAYERS];                          /* 0.5 */
     sa_3d d3[SA_SYNTHS];                            /* 0.7: LEAD CHORD BASS */
+    sa_pumpl pl[SA_SYNTHS];                         /* 0.7 */
 } sa_settings;
 
 typedef struct {
@@ -172,7 +179,7 @@ typedef struct {
     uint8_t sound_sig;                              /* bumped when the code changed (the glue loads the sounds) */
     uint32_t kick_clock;                            /* the last kick a layer played (the pump) */
     bool kicked;
-    uint8_t duck;                                   /* 0..127: how far the synth layers are ducked now (each block) */
+    uint8_t duck[SA_SYNTHS];                        /* 0..127: how far each synth part is ducked now (each block) */
     float gate_gain[SA_SYNTHS];                     /* each synth part's gate, 0..1, as it fades */
     uint8_t gate_off[SA_SYNTHS];                    /* 0..127: how far each synth part's gate has it down now */
     int8_t pan_now[SA_SYNTHS];                      /* each synth part's pan now, -64..63 (the glue puts it in) */

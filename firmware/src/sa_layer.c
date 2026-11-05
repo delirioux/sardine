@@ -937,6 +937,13 @@ void sa_defaults(sa_settings *s)
         s->pan[l].width = 60;
         s->pan[l].rate = SA_PRATE_BAR;
     }
+    for (int p = 0; p < SA_SYNTHS; ++p) {          /* LEAD 10 %, CHORD 80 %, BASS 50 % until the glue sets it by type */
+        static const uint8_t DEP[SA_SYNTHS] = {10, 80, 50};
+        s->pl[p].depth = DEP[p];
+        s->pl[p].rel = 50;
+        s->pl[p].src = SA_PS_KICK;
+        s->pl[p].on = 2;
+    }
     code_synth(&s->code[SA_L_LEAD], SA_DEF_BASS, SA_PAT_OFF, SA_L_LEAD);
     code_synth(&s->code[SA_L_CHORD], SA_DEF_STAB, 13, SA_L_CHORD);   /* STAB 2 */
     code_synth(&s->code[SA_L_BASS], SA_DEF_BASS, 1, SA_L_BASS);      /* ROLLER */
@@ -1059,6 +1066,13 @@ void sa_settings_fix(sa_settings *s)
         pn->pos = (int8_t)clampi(pn->pos, -50, 50);
         pn->width = (uint8_t)clampi(pn->width, 0, 100);
         pn->rate = (uint8_t)(pn->rate % SA_PRATES);
+    }
+    for (int p = 0; p < SA_SYNTHS; ++p) {
+        sa_pumpl *q = &s->pl[p];
+        q->depth = (uint8_t)clampi(q->depth, 0, 100);
+        q->rel = (uint8_t)clampi(q->rel, 0, 100);
+        q->src = (uint8_t)(q->src % SA_PSRCS);
+        if (q->on > 2) q->on = 1;
     }
     for (int p = 0; p < SA_SYNTHS; ++p) {
         sa_3d *d = &s->d3[p];
@@ -1439,25 +1453,35 @@ static void do_tick(sa_groove *g)
 /* the pump: down fast on the kick (6 ms), back over 70 % of a beat, as deep as PUMP says */
 static void pump_block(sa_groove *g)
 {
-    float d = 0.0f;
-    if (g->playing && g->kicked && g->s.pump) {
-        float depth = (float)g->s.pump / 100.0f * 0.85f;
-        float t = (float)(g->clock - g->kick_clock) / g->sr, beat = 60.0f / (float)clampi(g->s.bpm, 60, 200);
-        if (t < 0.006f) {
-            d = depth * t / 0.006f;
-        } else {
-            float k = (t - 0.006f) / (0.7f * beat);
-            if (k < 1.0f) d = depth * (1.0f - k) * (1.0f - k);
+    float beat = 60.0f / (float)clampi(g->s.bpm, 60, 200), master = (float)g->s.pump / 100.0f * 0.85f;
+    for (int p = 0; p < SA_SYNTHS; ++p) {
+        const sa_pumpl *pl = &g->s.pl[p];
+        float d = 0.0f, t = -1.0f;
+        if (g->playing && pl->on && pl->depth && g->s.pump) {
+            if (pl->src == SA_PS_BEAT) {
+                uint32_t fpb = (uint32_t)(g->sr * beat);
+                t = fpb ? (float)(g->clock % fpb) / g->sr : -1.0f;
+            } else if (g->kicked) {
+                t = (float)(g->clock - g->kick_clock) / g->sr;
+            }
         }
+        if (t >= 0.0f) {
+            float depth = master * (float)pl->depth / 100.0f, back = (0.25f + (float)pl->rel * 0.009f) * beat;
+            if (t < 0.006f) {
+                d = depth * t / 0.006f;
+            } else {
+                float k = (t - 0.006f) / back;
+                if (k < 1.0f) d = depth * (1.0f - k) * (1.0f - k);
+            }
+        }
+        g->duck[p] = (uint8_t)(d * 127.0f + 0.5f);
     }
-    g->duck = (uint8_t)(d * 127.0f + 0.5f);
 }
 
 void sa_process(sa_groove *g, int frames)
 {
     if (!g->playing) {
-        g->duck = 0;
-        for (int p = 0; p < SA_SYNTHS; ++p) { g->gate_gain[p] = 1.0f; g->gate_off[p] = 0; }
+        for (int p = 0; p < SA_SYNTHS; ++p) { g->duck[p] = 0; g->gate_gain[p] = 1.0f; g->gate_off[p] = 0; }
         pan_block(g);
         return;
     }

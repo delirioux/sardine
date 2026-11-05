@@ -36,7 +36,7 @@ The footer shows the layer, a dot for each of its pages (the one open lit) and w
 
 Every layer playing: LEAD, CHORD and BASS with their sound and their bar, DRUMS a thin bar for each drum; an OFF layer
 shows its sound dimmed and OFF, a muted one is crossed out. The knobs act at once: **FILTER** (the whole mix darker to the left, OPEN at the top), **FEEL**
-(the swing of the off sixteenths), **PUMP** (how deep the synth layers duck under the kick) and **SPACE** (the room:
+(the swing of the off sixteenths), **PUMP** (how deep the synth layers duck under the kick; each layer's own share on its PUMP page) and **SPACE** (the room:
 reverb and delay together; at 70 each sound has its own).
 
 ## LEAD, CHORD, BASS
@@ -51,6 +51,7 @@ LEAD lead lines and the bass lines). FX turns through its pages:
 | ARP (CHORD only) | MODE (OFF, UP, DOWN, UP-DOWN, DOWN-UP, CONVERGE, DIVERGE, RANDOM, THUMB, PINKY, STRUM) | RATE | RANGE | GATE | waits for SEQ |
 | PAN | MODE (FIXED, SWEEP, PING-PONG, RANDOM) | PAN | WIDTH | RATE (SWEEP) | at once |
 | 3D | ANGLE (around you) | HEIGHT | DIST | 3D ON / OFF | at once |
+| PUMP | DEPTH (of HOME's PUMP) | RELEASE | SOURCE (KICK, BEAT) | PUMP ON / OFF | at once |
 | GATE | a ready gate (or OFF) | DEPTH | WIDTH | SMOOTH | waits for SEQ |
 | MOD | MOD 1 | MOD 2 | MOD 3 | MOD 4 | waits for SEQ |
 
@@ -74,6 +75,15 @@ layer (the PAN page rests), behind and below sound darker and a little softer, a
 wetter, and the layer narrows to a point. These are cues the ear reads, not a measured head model: left, right and
 far come across best; front against back and up against down are subtler and differ from one listener to the next.
 On speakers it is panning and tone.
+
+<p align="center">
+<img src="screens/pump.png" alt="PUMP" width="200">
+</p>
+
+**PUMP** is how this layer ducks: HOME's PUMP is the whole mix's amount, DEPTH this layer's share of it. A sound's
+type sets its DEPTH when you pick it: PADS 100 %, KEYS 80 %, BASS 50 %, LEADS 10 %, FX 0. RELEASE is how fast it comes
+back (50: over most of a beat), SOURCE whether it follows the kick layer's hits (KICK: mute the kick and it stops) or
+every beat (BEAT). The drums never duck.
 
 The arpeggiator is CHORD's: OFF until you turn MODE. It plays the chord of the bar over the notes the pattern holds,
 so it is always in key, and swings with FEEL. GATE cuts a held chord to a rhythm by its volume, without a new attack.

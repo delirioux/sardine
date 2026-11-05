@@ -204,6 +204,7 @@ static int sv_pages(const sa_ui *u, int *p)
     if (u->view == SV_V_CHORD) p[n++] = SVP_ARP;
     p[n++] = SVP_PAN;
     p[n++] = SVP_3D;
+    p[n++] = SVP_PUMP;
     p[n++] = SVP_GATE;
     p[n++] = SVP_MOD;
     return n;
@@ -215,8 +216,8 @@ static int sv_page_now(const sa_ui *u)
 }
 static const char *sv_page_name(int pg)
 {
-    static const char *const N[] = {"HOME", "SOUND", "ARP", "PAN", "GATE", "MOD", "MIX", "KIT", "3D"};
-    return N[sv_clampi(pg, 0, 8)];
+    static const char *const N[] = {"HOME", "SOUND", "ARP", "PAN", "GATE", "MOD", "MIX", "KIT", "3D", "PUMP"};
+    return N[sv_clampi(pg, 0, 9)];
 }
 /* REC on a synth layer, off GATE: the steps take the cards and the panel */
 static bool sv_steps_on(const sa_ui *u) { return u->rec && sv_synth_view(u) && sv_page_now(u) != SVP_GATE; }
@@ -409,6 +410,16 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         sv_card_txt(&c[1], "HEIGHT", t, (d3->el + 50) * 10, false);
         sv_card_num(&c[2], "DIST", d3->dist, 0, 100);
         sv_card_txt(&c[3], "3D", d3->on ? "ON" : "OFF", -1, false);
+        break;
+    }
+    case SVP_PUMP: {
+        const sa_pumpl *q = &s->pl[sv_clampi(lc->part, 0, SA_SYNTHS - 1)];
+        sv_fmt_int(t, q->depth);
+        sv_cat(t, " %", sizeof t);
+        sv_card_txt(&c[0], "DEPTH", t, q->depth * 10, false);
+        sv_card_num(&c[1], "RELEASE", q->rel, 0, 100);
+        sv_card_txt(&c[2], "SOURCE", q->src == SA_PS_BEAT ? "BEAT" : "KICK", -1, false);
+        sv_card_txt(&c[3], "PUMP", q->on ? "ON" : "OFF", -1, false);
         break;
     }
     case SVP_MOD:
@@ -967,6 +978,26 @@ static void sv_panel_3d(sa_ui *u)
     sv_label(140, 108, d->on ? "HEADPHONES" : "3D OFF: KNOB 4", T_DIM);
 }
 
+/* PUMP: the layer's gain over a beat, down on the kick (or the beat) and back over RELEASE */
+static void sv_panel_pump(sa_ui *u)
+{
+    const sa_groove *g = u->g;
+    const sa_pumpl *q = &g->s.pl[sv_clampi(sv_live(u)->part, 0, SA_SYNTHS - 1)];
+    float depth = q->on ? (float)g->s.pump / 100.0f * 0.85f * (float)q->depth / 100.0f : 0.0f;
+    float back = 0.25f + (float)q->rel * 0.009f;
+    int32_t x0 = 12, w = 216, y0 = 40, h = 52, py = -1;
+    for (int32_t x = 0; x < w; ++x) {
+        float t = (float)x / (float)w, dd;
+        if (t < 0.02f) dd = depth * t / 0.02f;
+        else { float k = (t - 0.02f) / back; dd = k < 1.0f ? depth * (1.0f - k) * (1.0f - k) : 0.0f; }
+        int32_t y = y0 + (int32_t)(dd * (float)h);
+        if (py >= 0) cv_line_t(x0 + x - 1, py, x0 + x, y, q->on ? T_ACCENT : T_DIM, 2);
+        py = y;
+    }
+    cv_rect(x0, y0 - 2, 2, h + 4, T_THEME);
+    sv_label(10, 100, q->src == SA_PS_BEAT ? "ON EVERY BEAT" : "UNDER THE KICK LAYER'S HITS", T_DIM);
+}
+
 static void sv_panel_mix(sa_ui *u)
 {
     const sa_live *v = &u->g->s.live[sv_clampi(u->layer, 0, SA_LAYERS - 1)];
@@ -1040,6 +1071,7 @@ static void sv_panel_layer(sa_ui *u)
     case SVP_ARP: sv_panel_arp(u); break;
     case SVP_PAN: sv_panel_pan(u); break;
     case SVP_3D: sv_panel_3d(u); break;
+    case SVP_PUMP: sv_panel_pump(u); break;
     case SVP_GATE: sv_panel_gate(u); break;
     case SVP_MOD: sv_panel_mod(u); break;
     case SVP_MIX: sv_panel_mix(u); break;
@@ -1231,6 +1263,10 @@ static void sv_sound_turn(sa_ui *u, int knob, int d)
         at = sv_clampi(at + d, 0, n - 1);
         if (n && list[at] != cur) sa_sound_now(g, l, list[at]);
     }
+    if (g->s.code[l].sound != cur && g->s.code[l].part < SA_SYNTHS) {   /* another sound: its type's pump */
+        g->s.pl[g->s.code[l].part].depth = sas_pump_of(g->s.code[l].sound);
+        g->s.pl[g->s.code[l].part].on = 1;
+    }
 }
 
 void sv_knob(sa_ui *u, int k, int d)
@@ -1340,6 +1376,15 @@ void sv_knob(sa_ui *u, int k, int d)
         else if (i == 1) d3->el = (int8_t)sv_clampi(d3->el + d * 5, -50, 50);
         else if (i == 2) SV_ADJ(d3->dist, 5, 0, 100);
         d3->on = i == 3 ? (uint8_t)(d > 0) : 1;
+        break;
+    }
+    case SVP_PUMP: {
+        sa_pumpl *q = &s->pl[sv_clampi(e->part, 0, SA_SYNTHS - 1)];
+        if (i == 0) SV_ADJ(q->depth, 5, 0, 100);
+        else if (i == 1) SV_ADJ(q->rel, 5, 0, 100);
+        else if (i == 2) q->src = (uint8_t)(d > 0 ? SA_PS_BEAT : SA_PS_KICK);
+        else q->on = (uint8_t)(d > 0);
+        if (i < 2) q->on = 1;
         break;
     }
     case SVP_GATE: {

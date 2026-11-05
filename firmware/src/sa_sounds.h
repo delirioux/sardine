@@ -248,6 +248,12 @@ static inline void sas_pool_make(sa_pool *p)
 /* a groove into the fixed layers (a set of 0.6, a record from anywhere): each synth layer to the part of its role
  * (BASS to BASS; KEYS and PADS to CHORD; LEADS and FX to LEAD; a clash: the part left), then the engine's fix (the
  * layers into their slots); a layer left OFF without a sound of its role gets the first of its list */
+/* a synth layer's PUMP DEPTH by its sound's type: PADS 100 %, KEYS 80 %, BASS 50 %, LEADS 10 %, FX 0 */
+static inline uint8_t sas_pump_of(int sound)
+{
+    static const uint8_t D[SAS_ROLES] = {50, 80, 100, 10, 0};   /* (SAS_R_BASS KEYS PAD LEAD FX) */
+    return D[sas_of(sound)->role % SAS_ROLES];
+}
 static inline void sas_fix(sa_settings *s)
 {
     static const int8_t PART_OF[SAS_ROLES] = {SA_L_BASS, SA_L_CHORD, SA_L_CHORD, SA_L_LEAD, SA_L_LEAD};
@@ -270,12 +276,22 @@ static inline void sas_fix(sa_settings *s)
     bool had[3] = {false, false, false};
     for (int l = 0; l < SA_LAYERS; ++l)
         if (s->code[l].type == SA_T_SYNTH && s->code[l].part < 3) had[s->code[l].part] = true;
+    for (int l = 0; l < SA_LAYERS; ++l)               /* 0.6's PUMP OFF: the layer's own pump off */
+        if (s->code[l].type == SA_T_SYNTH && s->code[l].part < 3 && s->live[l].nopump) {
+            s->pl[s->code[l].part].on = 0;
+            s->live[l].nopump = 0;
+        }
     sa_settings_fix(s);
     static const char *const DEF[3] = {"SAW LEAD", "DUB CHORD", "TECH BASS"};
     for (int p = 0; p < 3; ++p)
         if (!had[p]) {
             int k = sas_find(DEF[p]);
             s->code[p].sound = (uint8_t)(k < 0 ? 0 : k);
+        }
+    for (int p = 0; p < 3; ++p)                        /* a groove without its own pump: DEPTH by type */
+        if (s->pl[p].on == 2) {
+            s->pl[p].depth = sas_pump_of(s->code[p].sound);
+            s->pl[p].on = 1;
         }
 }
 
@@ -369,13 +385,8 @@ static inline void sas_synth(track_t *t, const sas_sound *snd, const sas_base *b
 /* the block's pump and gate into the synth parts (the audio ISR, after the layers): a layer with PUMP off stays up */
 static inline void sas_block(const sa_groove *g)
 {
-    uint8_t duck[SA_SYNTHS] = {0, 0, 0};
-    for (int l = 0; l < SA_LAYERS; ++l) {
-        const sa_code *c = &g->s.code[l];
-        if (c->type == SA_T_SYNTH && c->part < SA_SYNTHS && !g->s.live[l].nopump) duck[c->part] = g->duck;
-    }
     for (int p = 0; p < SA_SYNTHS; ++p) {         /* the pump and the gate together: the gains multiply */
-        int up = (127 - duck[p]) * (127 - g->gate_off[p]) / 127;
+        int up = (127 - g->duck[p]) * (127 - g->gate_off[p]) / 127;
         trk[p].ex_off = (uint8_t)(127 - up);
         trk[p].p[P_PAN] = g->pan_now[p];          /* the layer's panning */
     }
