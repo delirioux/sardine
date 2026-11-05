@@ -25,8 +25,9 @@ second colour, until SEQ drops them in on the one.
 - Key, scale and ten chord progressions; every synth layer follows the chord
 - Every start a fresh groove (other sounds, patterns, kit, key); eight sets keep the ones you want, LAST the last one
 
-Version 0.7 is a test build on the `dev` branch, not released yet: [install it on the FM-1](https://delirioux.github.io/sardine/dev/install/)
-or [try it in the browser](https://delirioux.github.io/sardine/dev/try/). The [manual](docs/MANUAL.md) has every screen.
+Version 0.8: [install it on the FM-1](https://delirioux.github.io/sardine/install/) or
+[try it in the browser](https://delirioux.github.io/sardine/try/). The `dev` branch's test build:
+[install](https://delirioux.github.io/sardine/dev/install/), [try](https://delirioux.github.io/sardine/dev/try/). The [manual](docs/MANUAL.md) has every screen.
 
 Sardine runs on [Felucca](https://github.com/hugelton/Felucca), Leo Kuroshita's firmware for the FM-1, by way of Sill
 and [Tuna](https://github.com/delirioux/tuna). See [CREDITS.md](CREDITS.md) and [LICENSING.md](LICENSING.md).
