@@ -50,6 +50,7 @@ LEAD lead lines and the bass lines). FX turns through its pages:
 | SOUND | TYPE (BASS KEYS PADS LEADS FX) | SOUND | PUMP ON / OFF | | at once |
 | ARP (CHORD only) | MODE (OFF, UP, DOWN, UP-DOWN, DOWN-UP, CONVERGE, DIVERGE, RANDOM, THUMB, PINKY, STRUM) | RATE | RANGE | GATE | waits for SEQ |
 | PAN | MODE (FIXED, SWEEP, PING-PONG, RANDOM) | PAN | WIDTH | RATE (SWEEP) | at once |
+| 3D | ANGLE (around you) | HEIGHT | DIST | 3D ON / OFF | at once |
 | GATE | a ready gate (or OFF) | DEPTH | WIDTH | SMOOTH | waits for SEQ |
 | MOD | MOD 1 | MOD 2 | MOD 3 | MOD 4 | waits for SEQ |
 | MIX | MUTE | LEVEL (fades it in and out) | | | at once |
@@ -64,6 +65,17 @@ LEAD lead lines and the bass lines). FX turns through its pages:
 <img src="screens/mod.png" alt="MOD" width="200">
 <img src="screens/mix.png" alt="MIX" width="200">
 </p>
+
+<p align="center">
+<img src="screens/3d.png" alt="3D" width="200">
+</p>
+
+**3D** places the layer around you, for headphones: from above (FRONT up) the dot is the layer, near you or far; beside
+it, from the side, its height. Turning ANGLE, HEIGHT or DIST turns it on; KNOB 4 turns it off. On, the angle pans the
+layer (the PAN page rests), behind and below sound darker and a little softer, above brighter, far quieter, darker and
+wetter, and the layer narrows to a point. These are cues the ear reads, not a measured head model: left, right and
+far come across best; front against back and up against down are subtler and differ from one listener to the next.
+On speakers it is panning and tone.
 
 The arpeggiator is CHORD's: OFF until you turn MODE. It plays the chord of the bar over the notes the pattern holds,
 so it is always in key, and swings with FEEL. GATE cuts a held chord to a rhythm by its volume, without a new attack.

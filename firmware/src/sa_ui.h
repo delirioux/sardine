@@ -12,7 +12,8 @@
  *   PRESETS    HOME, LEAD, CHORD, BASS, DRUMS
  *   ALGORITHM  the pattern of the layer (OFF first; a drum: OFF, then REMOVE; + ADD: which drum). Waits for SEQ
  *   KNOB 1..4  HOME: FILTER FEEL PUMP SPACE. A synth layer's pages: its home CUTOFF RESO DRIVE ENV (at once);
- *              SOUND (TYPE, SOUND, PUMP: at once); ARP on CHORD (MODE RATE RANGE GATE); PAN (at once); GATE; MOD (the
+ *              SOUND (TYPE, SOUND, PUMP: at once); ARP on CHORD (MODE RATE RANGE GATE); PAN (at once); 3D (ANGLE HEIGHT
+ *              DISTANCE, ON: at once, headphones); GATE; MOD (the
  *              four modifiers); MIX (MUTE, LEVEL: at once). DRUMS: DRUM LEVEL ACCENT CHANCE; KIT (KIT TUNE TONE DECAY);
  *              MOD; MIX
  *   FX         a layer: its next page (the last: back to its home)
@@ -40,7 +41,7 @@ enum {
 };
 enum { SV_PG_MAIN, SV_PG_LAYER, SV_PG_KEY, SV_PG_MENU, SV_PG_SETS, SV_PAGES };
 enum { SV_V_HOME, SV_V_LEAD, SV_V_CHORD, SV_V_BASS, SV_V_DRUMS, SV_VIEWS };       /* what PRESETS turns through */
-enum { SVP_HOME, SVP_SOUND, SVP_ARP, SVP_PAN, SVP_GATE, SVP_MOD, SVP_MIX, SVP_KIT };  /* a layer's pages (FX) */
+enum { SVP_HOME, SVP_SOUND, SVP_ARP, SVP_PAN, SVP_GATE, SVP_MOD, SVP_MIX, SVP_KIT, SVP_3D };  /* a layer's pages (FX) */
 #define SV_KEY_LO 53                      /* F3: the FM-1's lowest key */
 #define SV_KEY_HI 79                      /* G5 */
 

@@ -359,7 +359,7 @@ static void sa_apply(void)
         for (int l = 0; l < SA_LAYERS; ++l) {
             const sa_code *c = &s->code[l];
             if (c->type == SA_T_SYNTH && c->part < SA_SYNTHS && sa_loaded[c->part] == c->sound)
-                sas_synth(&trk[c->part], sas_of(c->sound), &sa_base[c->part], &s->live[l], s);
+                sas_synth(&trk[c->part], sas_of(c->sound), &sa_base[c->part], &s->live[l], s, &s->d3[c->part]);
         }
         sas_drums(&trk[SA_PART_DRUMS], s);
         sas_song(s);

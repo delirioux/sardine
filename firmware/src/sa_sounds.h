@@ -322,11 +322,15 @@ static inline void sas_drums(track_t *t, const sa_settings *s)
 typedef struct { int16_t bright, fenv, dist; } sas_base;
 
 /* a synth layer's part from its sound and its cards (main loop, the audio held off) */
-static inline void sas_synth(track_t *t, const sas_sound *snd, const sas_base *b, const sa_live *v, const sa_settings *s)
+static inline void sas_synth(track_t *t, const sas_sound *snd, const sas_base *b, const sa_live *v, const sa_settings *s,
+                             const sa_3d *d)
 {
-    t->p[P_LEVEL] = sas_clamp((108 + snd->trim) * v->level / 80, 0, 127);   /* (MIX's LEVEL: 80 as it is) */
+    /* 3D: behind (back 0..127) darker and a little softer; above brighter, below darker; far quieter, darker, wetter */
+    int back = d->on ? (127 - sa_sin5(d->az + 18)) / 2 : 0, far = d->on ? d->dist : 0, up = d->on ? d->el : 0;
+    int lvl = 100 - back * 20 / 127 - far * 55 / 100, dark = 100 - back * 40 / 127 - far * 35 / 100 + up * 40 / 100;
+    t->p[P_LEVEL] = sas_clamp((108 + snd->trim) * v->level / 80 * lvl / 100, 0, 127);   /* (MIX's LEVEL: 80 as it is) */
     if (snd->bright >= 0) {
-        int f = v->cut * (20 + s->filter * 80 / 100) / 100;                      /* 0..100 */
+        int f = v->cut * (20 + s->filter * 80 / 100) / 100 * dark / 100;          /* 0..100 */
         int base = b->bright < 24 ? 24 : b->bright;
         t->p[P_E0 + snd->bright] = sas_clamp(base * f / 100, 0, 127);
     }
@@ -343,9 +347,11 @@ static inline void sas_synth(track_t *t, const sas_sound *snd, const sas_base *b
     static const uint8_t REV[SAS_ROLES] = {6, 30, 55, 35, 45}, DLY[SAS_ROLES] = {0, 20, 15, 30, 25},
                          WIDE[SAS_ROLES] = {0, 40, 80, 20, 60};
     /* SPACE's REVERB DELAY WIDTH: 70 the sound's own, 0 none, 100 about half as much again */
-    t->p[P_REV] = sas_clamp((snd->rev ? snd->rev : REV[snd->role % SAS_ROLES]) * s->reverb / 70, 0, 127);
+    t->p[P_REV] = sas_clamp((snd->rev ? snd->rev : REV[snd->role % SAS_ROLES]) * s->reverb / 70 * (100 + far * 2) / 100 +
+                            far * 30 / 100, 0, 127);
     t->p[P_DLY] = sas_clamp((snd->dly ? snd->dly : DLY[snd->role % SAS_ROLES]) * s->delay / 70, 0, 127);
-    t->p[P_SPRD] = sas_clamp((snd->wide ? snd->wide : WIDE[snd->role % SAS_ROLES]) * s->width / 70, 0, 127);
+    t->p[P_SPRD] = sas_clamp((snd->wide ? snd->wide : WIDE[snd->role % SAS_ROLES]) * s->width / 70 * (d->on ? 35 : 100) / 100,
+                             0, 127);   /* (3D: a point, not spread) */
     /* the pump: the matrix's slot 2, EXPR -> AMP (sas_block sets t->ex_off to the duck: the gain is 1 - duck) */
     t->p[P_M2SRC] = MS_EXPR;
     t->p[P_M2DST] = MD_AMP;

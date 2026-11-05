@@ -847,6 +847,14 @@ static void pan_note(sa_groove *g, int l)
     }
 }
 /* every block: FIXED and SWEEP (a triangle from one side to the other and back over RATE) */
+int sa_sin5(int k)
+{
+    static const uint8_t Q[19] = {0, 11, 22, 33, 43, 54, 64, 73, 82, 90, 97, 104, 110, 115, 119, 123, 125, 127, 127};
+    k %= SA_AZ_STEPS;
+    if (k < 0) k += SA_AZ_STEPS;
+    return k <= 18 ? Q[k] : k <= 36 ? Q[36 - k] : k <= 54 ? -Q[k - 36] : -Q[SA_AZ_STEPS - k];
+}
+
 static void pan_block(sa_groove *g)
 {
     static const uint8_t RATE_Q[SA_PRATES] = {1, 2, 4, 8, 16};     /* in quarter bars */
@@ -854,7 +862,9 @@ static void pan_block(sa_groove *g)
         const sa_code *c = &g->s.code[l];
         const sa_pan *p = &g->s.pan[l];
         if (c->type != SA_T_SYNTH || c->part >= SA_SYNTHS) continue;
-        if (p->mode == SA_PAN_FIXED) {
+        if (g->s.d3[c->part].on) {                 /* 3D: the angle pans it */
+            g->pan_now[c->part] = (int8_t)(sa_sin5(g->s.d3[c->part].az) * 63 / 127);
+        } else if (p->mode == SA_PAN_FIXED) {
             g->pan_now[c->part] = (int8_t)pan_val(p->pos, 0);
         } else if (p->mode == SA_PAN_SWEEP) {
             float len = (float)(SA_TPB / 4 * RATE_Q[p->rate % SA_PRATES]);
@@ -1049,6 +1059,13 @@ void sa_settings_fix(sa_settings *s)
         pn->pos = (int8_t)clampi(pn->pos, -50, 50);
         pn->width = (uint8_t)clampi(pn->width, 0, 100);
         pn->rate = (uint8_t)(pn->rate % SA_PRATES);
+    }
+    for (int p = 0; p < SA_SYNTHS; ++p) {
+        sa_3d *d = &s->d3[p];
+        d->on = (uint8_t)(d->on ? 1 : 0);
+        d->az %= SA_AZ_STEPS;
+        d->el = (int8_t)clampi(d->el, -50, 50);
+        d->dist = (uint8_t)clampi(d->dist, 0, 100);
     }
     canon(s);
 }

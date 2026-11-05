@@ -104,6 +104,13 @@ typedef struct {
     uint8_t width, rate;                            /* 0..100 how far it moves; SA_PRATE_* (SWEEP) */
 } sa_pan;
 
+/* a synth layer's place around you (0.7, headphones): ANGLE (az, 5-degree steps: 0 in front, 18 right, 36 behind, 54
+ * left), HEIGHT (-50 below .. 50 above), DISTANCE (0 close .. 100 far). At once. On, the angle pans the layer (the PAN
+ * page rests); behind and below darker, above brighter, far quieter, darker and wetter */
+typedef struct { uint8_t on, az; int8_t el; uint8_t dist; } sa_3d;
+#define SA_AZ_STEPS 72
+int sa_sin5(int k);                                 /* sin(k * 5 degrees) * 127 */
+
 /* the key and the chords: code too */
 typedef struct {
     uint8_t key, scale, prog, bars;                 /* 0..11 (C..B), SA_SC_*, the progression, 1 2 4 bars a chord */
@@ -123,6 +130,7 @@ typedef struct {
     uint8_t pump, reverb, delay, width;
     sa_gate gate[SA_LAYERS];                        /* 0.5 */
     sa_pan pan[SA_LAYERS];                          /* 0.5 */
+    sa_3d d3[SA_SYNTHS];                            /* 0.7: LEAD CHORD BASS */
 } sa_settings;
 
 typedef struct {

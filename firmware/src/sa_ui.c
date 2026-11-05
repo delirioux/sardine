@@ -204,6 +204,7 @@ static int sv_pages(const sa_ui *u, int *p)
     p[n++] = SVP_SOUND;
     if (u->view == SV_V_CHORD) p[n++] = SVP_ARP;
     p[n++] = SVP_PAN;
+    p[n++] = SVP_3D;
     p[n++] = SVP_GATE;
     p[n++] = SVP_MOD;
     p[n++] = SVP_MIX;
@@ -216,8 +217,8 @@ static int sv_page_now(const sa_ui *u)
 }
 static const char *sv_page_name(int pg)
 {
-    static const char *const N[] = {"HOME", "SOUND", "ARP", "PAN", "GATE", "MOD", "MIX", "KIT"};
-    return N[sv_clampi(pg, 0, 7)];
+    static const char *const N[] = {"HOME", "SOUND", "ARP", "PAN", "GATE", "MOD", "MIX", "KIT", "3D"};
+    return N[sv_clampi(pg, 0, 8)];
 }
 /* REC on a synth layer, off GATE: the steps take the cards and the panel */
 static bool sv_steps_on(const sa_ui *u) { return u->rec && sv_synth_view(u) && sv_page_now(u) != SVP_GATE; }
@@ -413,6 +414,22 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         c[2].pend = ge->width != gl->width;
         sv_card_num(&c[3], "SMOOTH", ge->smooth, 0, 100);
         c[3].pend = ge->smooth != gl->smooth;
+        break;
+    }
+    case SVP_3D: {
+        const sa_3d *d3 = &s->d3[sv_clampi(lc->part, 0, SA_SYNTHS - 1)];
+        int deg = d3->az * 5;
+        if (deg == 0) sv_cpy(t, "FRONT", sizeof t);
+        else if (deg == 180) sv_cpy(t, "BACK", sizeof t);
+        else { char a[8]; sv_cpy(t, deg < 180 ? "R " : "L ", sizeof t); sv_fmt_int(a, deg < 180 ? deg : 360 - deg);
+               sv_cat(t, a, sizeof t); }
+        sv_card_txt(&c[0], "ANGLE", t, d3->az * 1000 / (SA_AZ_STEPS - 1), false);
+        if (d3->el == 0) sv_cpy(t, "LEVEL", sizeof t);
+        else { char a[8]; sv_cpy(t, d3->el > 0 ? "UP " : "DOWN ", sizeof t); sv_fmt_int(a, d3->el > 0 ? d3->el : -d3->el);
+               sv_cat(t, a, sizeof t); }
+        sv_card_txt(&c[1], "HEIGHT", t, (d3->el + 50) * 10, false);
+        sv_card_num(&c[2], "DIST", d3->dist, 0, 100);
+        sv_card_txt(&c[3], "3D", d3->on ? "ON" : "OFF", -1, false);
         break;
     }
     case SVP_MOD:
@@ -923,6 +940,39 @@ static void sv_panel_mod(sa_ui *u)
     sv_label(120, 98, "SEQ DROPS THEM", T_DIM);
 }
 
+/* 3D: you from above (FRONT up), the layer a dot around you, near the centre or far; beside it, from the side, its
+ * height */
+static void sv_ring(int32_t cx, int32_t cy, int32_t r, uint16_t c)
+{
+    for (int k = 0; k < SA_AZ_STEPS; k += 3)
+        cv_line_t(cx + sa_sin5(k) * r / 127, cy - sa_sin5(k + 18) * r / 127, cx + sa_sin5(k + 3) * r / 127,
+                  cy - sa_sin5(k + 21) * r / 127, c, 1);
+}
+static void sv_panel_3d(sa_ui *u)
+{
+    const sa_3d *d = &u->g->s.d3[sv_clampi(sv_live(u)->part, 0, SA_SYNTHS - 1)];
+    uint16_t dot = d->on ? T_ACCENT : T_DIM;
+    int32_t cx = 74, cy = 78, R = 36;
+    sv_ring(cx, cy, R, T_MID);
+    sv_ring(cx, cy, R * 55 / 100, ux_mix(T_SURF, T_LINE, 60));
+    sv_label(cx - 14, 34, "FRONT", T_DIM);
+    cv_rrect(cx - 5, cy - 5, 10, 10, 5, T_MID, T_SURF);               /* you */
+    cv_rect(cx - 1, cy - 9, 2, 4, T_MID);                             /* your nose: the front */
+    int32_t rr = 8 + d->dist * (R - 8) / 100;
+    int32_t x = cx + sa_sin5(d->az) * rr / 127, y = cy - sa_sin5(d->az + 18) * rr / 127;
+    int32_t sz = 8 + d->el * 4 / 50;                                  /* (above: a bigger dot, below: smaller) */
+    cv_rrect(x - sz / 2, y - sz / 2, sz, sz, sz / 2, dot, T_SURF);
+    /* the side view: you, the height */
+    int32_t sx = 186, sy = 78;
+    cv_rect(sx - 30, sy, 60, 1, T_LINE);
+    cv_rrect(sx - 5, sy - 5, 10, 10, 5, T_MID, T_SURF);
+    sv_label(sx - 22, 34, d->el > 0 ? "ABOVE" : d->el < 0 ? "BELOW" : "LEVEL", T_DIM);
+    int32_t hy = sy - d->el * 30 / 50, hx = sx + 22;
+    cv_line_t(sx, sy, hx, hy, ux_mix(T_SURF, dot, 50), 1);
+    cv_rrect(hx - 4, hy - 4, 8, 8, 4, dot, T_SURF);
+    sv_label(140, 108, d->on ? "HEADPHONES" : "3D OFF: KNOB 4", T_DIM);
+}
+
 static void sv_panel_mix(sa_ui *u)
 {
     const sa_live *v = &u->g->s.live[sv_clampi(u->layer, 0, SA_LAYERS - 1)];
@@ -1004,6 +1054,7 @@ static void sv_panel_layer(sa_ui *u)
     case SVP_SOUND: sv_panel_sound(u); break;
     case SVP_ARP: sv_panel_arp(u); break;
     case SVP_PAN: sv_panel_pan(u); break;
+    case SVP_3D: sv_panel_3d(u); break;
     case SVP_GATE: sv_panel_gate(u); break;
     case SVP_MOD: sv_panel_mod(u); break;
     case SVP_MIX: sv_panel_mix(u); break;
@@ -1300,6 +1351,14 @@ void sv_knob(sa_ui *u, int k, int d)
         else if (i == 1) p->pos = (int8_t)sv_clampi(p->pos + d * 2, -50, 50);
         else if (i == 2) SV_ADJ(p->width, 5, 0, 100);
         else p->rate = (uint8_t)sv_clampi(p->rate + d, 0, SA_PRATES - 1);
+        break;
+    }
+    case SVP_3D: {                                 /* (turning ANGLE HEIGHT DISTANCE turns it on) */
+        sa_3d *d3 = &s->d3[sv_clampi(e->part, 0, SA_SYNTHS - 1)];
+        if (i == 0) d3->az = (uint8_t)sv_wrap(d3->az + d, SA_AZ_STEPS);
+        else if (i == 1) d3->el = (int8_t)sv_clampi(d3->el + d * 5, -50, 50);
+        else if (i == 2) SV_ADJ(d3->dist, 5, 0, 100);
+        d3->on = i == 3 ? (uint8_t)(d > 0) : 1;
         break;
     }
     case SVP_GATE: {

@@ -247,6 +247,20 @@ int main(int argc, char **argv)
     CHECK(sv_page_now(&ui) == SVP_PAN, "FX: PAN (no ARP on BASS)");
     shot("07_bass_pan");
     press(SV_B_FX);
+    CHECK(sv_page_now(&ui) == SVP_3D, "FX: 3D");
+    sv_knob(&ui, SV_K1, 27);
+    sv_knob(&ui, SV_K2, 4);
+    sv_knob(&ui, SV_K3, 10);
+    CHECK(g.s.d3[SA_L_BASS].on && g.s.d3[SA_L_BASS].az == 27 && g.s.d3[SA_L_BASS].el == 20 && g.s.d3[SA_L_BASS].dist == 50,
+          "3D: ANGLE HEIGHT DISTANCE, on (%d %d %d %d)", g.s.d3[SA_L_BASS].on, g.s.d3[SA_L_BASS].az,
+          g.s.d3[SA_L_BASS].el, g.s.d3[SA_L_BASS].dist);
+    run_ms(50);
+    CHECK(g.pan_now[SA_L_BASS] > 30, "3D: behind on the right pans right (%d)", g.pan_now[SA_L_BASS]);
+    shot("07b_bass_3d");
+    all_palettes("bass_3d");
+    sv_knob(&ui, SV_K4, -1);
+    CHECK(!g.s.d3[SA_L_BASS].on, "3D OFF");
+    press(SV_B_FX);
     CHECK(sv_page_now(&ui) == SVP_GATE, "FX: GATE");
     press(SV_B_FX);
     CHECK(sv_page_now(&ui) == SVP_MOD, "FX: MOD");
