@@ -1581,7 +1581,11 @@ bool sv_key_leds(const sa_ui *u, uint32_t *full, uint32_t *dim)
 uint32_t sv_play_keys(const sa_ui *u)
 {
     const sa_groove *g = u->g;
-    if (u->page != SV_PG_LAYER || u->view < SV_V_LEAD || u->view > SV_V_BASS || !g->playing) return 0;
+    if (u->page != SV_PG_LAYER || !g->playing || u->layer < 0) return 0;
+    if (u->view == SV_V_DRUMS) {                   /* the drum's hit on this sixteenth: its step key */
+        int now = sv_now(g);
+        return now >= 0 && ((g->hits[u->layer] >> now) & 1u) ? 1u << now : 0u;
+    }
     int part = g->s.code[u->layer].part, n = g->nheld;
     uint32_t m = 0;
     for (int i = 0; i < n && i < SA_HELD; ++i) {   /* (the audio's list, read as it is: only lights) */
@@ -1592,6 +1596,13 @@ uint32_t sv_play_keys(const sa_ui *u)
         m |= 1u << (k - SV_KEY_LO);
     }
     return m;
+}
+
+uint32_t sv_play_dim(const sa_ui *u)
+{
+    if (u->page != SV_PG_LAYER || u->view != SV_V_DRUMS || u->layer < 0) return 0;
+    if (!u->g->playing) return 0;
+    return (uint32_t)(u->g->hits_last[u->layer] | u->g->hits[u->layer]);   /* (what it played, this bar and the last) */
 }
 
 void sv_tick(sa_ui *u, int ms)

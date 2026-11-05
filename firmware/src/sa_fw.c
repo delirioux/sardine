@@ -498,8 +498,8 @@ static void sa_leds(void)
     bool editing = sv_key_leds(&sa_u, &efull, &edim);   /* DRUMS, STEPS: the keys show what they edit */
     for (k = 0; k < NB; k++)
         led_put(nd, panel.btn[k], 1);
-    uint32_t lit = 0;
-    if (sa_g.playing && !editing)
+    uint32_t lit = editing ? 0u : sv_play_dim(&sa_u);   /* DRUMS: the drum's steps dim; else the chord's tones */
+    if (sa_g.playing && !editing && !lit)
         for (k = 0; k < 27u; k++)
             for (int t = 0; t < 3; ++t)
                 if ((SV_KEY_LO + k) % 12u == sa_g.chord_pc[t]) lit |= 1u << k;

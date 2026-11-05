@@ -339,6 +339,12 @@ int main(int argc, char **argv)
     /* DRUMS: KNOB 1 the drum, the keys its steps under REC, + ADD a drum */
     sv_knob(&ui, SV_K_PRESETS, 4);
     CHECK(ui.view == SV_V_DRUMS && ui.layer == SA_L_DRUM0, "DRUMS: the first drum");
+    {
+        uint32_t seen = 0;
+        for (int k = 0; k < 120; ++k) { run_ms(16); seen |= sv_play_keys(&ui); }
+        CHECK((seen & 0x1111u) == 0x1111u && sv_play_dim(&ui) == 0x1111u, "the kick's hits on its step keys (%04x %04x)",
+              seen, sv_play_dim(&ui));
+    }
     shot("13_drums");
     all_palettes("drums");
     sv_knob(&ui, SV_K1, 1);
