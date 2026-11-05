@@ -261,6 +261,8 @@ static int sv_sounds_of(int role, uint8_t *out)
 }
 
 static uint16_t sv_ed_bits(sa_ui *u, int l);         /* (below: the copy's bar of a layer) */
+static int sv_fills(const sa_ui *u);                 /* (below: EDIT's FILLs) */
+static const char *sv_fill_name(const sa_ui *u, int f);
 static int sv_now(const sa_groove *g) { return g->playing && g->tick >= 0 ? g->tick / SA_TPS : -1; }
 
 static void sv_cards_of(sa_ui *u, sv_card *c)
@@ -327,8 +329,8 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         bool on = e->type == SA_T_DRUM && ((sv_ed_bits(u, l) >> st) & 1u);
         sv_fmt_int(t, st + 1);
         sv_card_txt(&c[0], "STEP", t, st * 1000 / 15, false);
-        sv_card_txt(&c[1], "HIT", on ? "ON" : "OFF", -1, false);
-        sv_card_off(&c[2]);
+        sv_card_txt(&c[1], "FILL", sv_fill_name(u, u->fill), u->fill * 1000 / (sv_fills(u) - 1), u->fill > 0);
+        sv_card_txt(&c[2], "HIT", on ? "ON" : "OFF", -1, false);
         sv_card_off(&c[3]);
         return;
     }
@@ -359,6 +361,11 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
             sv_card_txt(&c[2], "NOTE", "-", -1, false);
         }
         sv_card_off(&c[3]);
+        if (u->page == SV_PG_EDIT) {               /* EDIT: STEP FILL LENGTH NOTE */
+            c[3] = c[2];
+            c[2] = c[1];
+            sv_card_txt(&c[1], "FILL", sv_fill_name(u, u->fill), u->fill * 1000 / (sv_fills(u) - 1), u->fill > 0);
+        }
         return;
     }
     switch (sv_page_now(u)) {
@@ -1173,7 +1180,7 @@ static void sv_panel_edit_drum(sa_ui *u)
         cv_rrect(x, 36, 12, 44, 3, c, T_SURF);
         if (k % 4 == 0) cv_rect(x, 86, 12, 2, T_DIM);
     }
-    sv_label(10, 98, u->rec ? "REC: A KEY, A HIT HERE, THEN ON" : "REC: WRITE WITH THE KEYS", u->rec ? T_ACCENT : T_DIM);
+    sv_label(10, 98, u->rec ? "KEYS: THE 16 LOWEST ARE THE STEPS" : "REC: THE STEPS ON THE KEYS", u->rec ? T_ACCENT : T_DIM);
 }
 
 static void sv_draw_panel(sa_ui *u)
@@ -1295,6 +1302,83 @@ void sv_init(sa_ui *u, sa_groove *g)
         u->key_sent[k] = -1;
     memset(u->main_code, 0xFF, sizeof u->main_code);
     sv_apply_style(u);
+}
+
+/* EDIT's FILLs: ready steps the pattern becomes (in the copy, waits for SEQ). A drum: hits over the bar as it was
+ * (OR: its own kept) or in place of it; a line: notes on scale degrees (7: the octave up); CHORD: the chord's steps */
+typedef struct { const char *name; uint16_t mask; uint8_t keep; } sv_dfill;
+static const sv_dfill SV_DFILL[] = {
+    {"ROLL", 0xF000, 1},                  /* the last beat in sixteenths */
+    {"BUILD", 0xF511, 0},                 /* 1 5 9 11 13 14 15 16: closing in */
+    {"SNARE", 0xE110, 0},                 /* 5 9 13 14 15 16 */
+    {"BREAK", 0x00FF, 2},                 /* the first half only */
+    {"STUTTER", 0x0F00, 1},               /* the third beat in sixteenths */
+    {"GALLOP", 0xDDDD, 0},                /* 1 3 4 per beat */
+    {"FLAM", 0x8000, 1},                  /* one more on the last sixteenth */
+    {"DOUBLE", 0xFFFF, 3},                /* every hit twice: on the next sixteenth too */
+};
+#define SV_NDFILL ((int)(sizeof SV_DFILL / sizeof SV_DFILL[0]))
+typedef struct { const char *name; uint8_t n; struct { uint8_t st, len; int8_t deg; } s[16]; } sv_mfill;
+static const sv_mfill SV_MFILL[] = {
+    {"ROOT 8THS", 8, {{0, 2, 0}, {2, 2, 0}, {4, 2, 0}, {6, 2, 0}, {8, 2, 0}, {10, 2, 0}, {12, 2, 0}, {14, 2, 0}}},
+    {"ARP UP", 8, {{0, 2, 0}, {2, 2, 2}, {4, 2, 4}, {6, 2, 7}, {8, 2, 0}, {10, 2, 2}, {12, 2, 4}, {14, 2, 7}}},
+    {"ARP DOWN", 8, {{0, 2, 7}, {2, 2, 4}, {4, 2, 2}, {6, 2, 0}, {8, 2, 7}, {10, 2, 4}, {12, 2, 2}, {14, 2, 0}}},
+    {"OCTAVES", 8, {{0, 2, 0}, {2, 2, 7}, {4, 2, 0}, {6, 2, 7}, {8, 2, 0}, {10, 2, 7}, {12, 2, 0}, {14, 2, 7}}},
+    {"WALK", 4, {{0, 4, 0}, {4, 4, 1}, {8, 4, 2}, {12, 4, 4}}},
+    {"RIFF", 6, {{0, 2, 0}, {3, 1, 0}, {6, 2, 2}, {8, 2, 4}, {11, 1, 3}, {14, 2, 2}}},
+    {"CALL", 4, {{0, 3, 4}, {4, 2, 2}, {6, 2, 0}, {12, 3, 1}}},
+    {"PULSE 16", 16, {{0, 1, 0}, {1, 1, 0}, {2, 1, 0}, {3, 1, 0}, {4, 1, 0}, {5, 1, 0}, {6, 1, 0}, {7, 1, 0},
+                     {8, 1, 0}, {9, 1, 0}, {10, 1, 0}, {11, 1, 0}, {12, 1, 0}, {13, 1, 0}, {14, 1, 0}, {15, 1, 0}}},
+};
+#define SV_NMFILL ((int)(sizeof SV_MFILL / sizeof SV_MFILL[0]))
+typedef struct { const char *name; uint16_t mask; uint8_t len; } sv_cfill;
+static const sv_cfill SV_CFILL[] = {
+    {"STABS", 0x0408, 2}, {"OFFBEATS", 0x4444, 2}, {"PUSH", 0x4001, 3}, {"PULSE", 0x1111, 2}, {"8THS", 0x5555, 1},
+    {"16THS", 0xFFFF, 1}, {"DOTTED", 0x1249, 2}, {"HOLD", 0x0001, 16},
+};
+#define SV_NCFILL ((int)(sizeof SV_CFILL / sizeof SV_CFILL[0]))
+static int sv_fills(const sa_ui *u) { return 1 + (u->view == SV_V_DRUMS ? SV_NDFILL : u->view == SV_V_CHORD ? SV_NCFILL : SV_NMFILL); }
+static const char *sv_fill_name(const sa_ui *u, int f)
+{
+    if (f <= 0) return "CURR";
+    return u->view == SV_V_DRUMS ? SV_DFILL[(f - 1) % SV_NDFILL].name : u->view == SV_V_CHORD ? SV_CFILL[(f - 1) % SV_NCFILL].name
+                                                                    : SV_MFILL[(f - 1) % SV_NMFILL].name;
+}
+static void sv_fill_apply(sa_ui *u)
+{
+    sa_groove *g = u->g;
+    int l = u->layer;
+    sa_code *e = &g->ed[l];
+    *e = u->fill_orig;                             /* (CURR: as it was) */
+    if (u->fill <= 0) return;
+    sa_code o = u->fill_orig;
+    sa_own_make(g, &o);                            /* (its steps as they were) */
+    if (u->view == SV_V_DRUMS) {
+        const sv_dfill *f = &SV_DFILL[(u->fill - 1) % SV_NDFILL];
+        uint16_t h = o.hits;
+        if (f->keep == 1) h |= f->mask;
+        else if (f->keep == 2) h &= f->mask;
+        else if (f->keep == 3) h |= (uint16_t)(h << 1);
+        else h = f->mask;
+        o.hits = h;
+        o.acc &= h;
+    } else if (u->view == SV_V_CHORD) {
+        const sv_cfill *f = &SV_CFILL[(u->fill - 1) % SV_NCFILL];
+        for (int k = 0; k < 16; ++k) { o.sn[k] = SA_NO_NOTE; o.sl[k] = f->len; }
+        o.chord = f->mask;
+        o.acc = 0;
+    } else {
+        const sv_mfill *f = &SV_MFILL[(u->fill - 1) % SV_NMFILL];
+        int base = 12 * ((u->view == SV_V_BASS ? 2 : 5) + 1);   /* (above the key's C: bass in 2, lead in 5) */
+        for (int k = 0; k < 16; ++k) { o.sn[k] = SA_NO_NOTE; o.sl[k] = 1; }
+        o.chord = o.acc = 0;
+        for (int i = 0; i < f->n; ++i) {
+            o.sn[f->s[i].st] = (int8_t)(base + sa_degree(&g->ed_harm, f->s[i].deg));
+            o.sl[f->s[i].st] = f->s[i].len;
+        }
+    }
+    o.own = 1;
+    *e = o;
 }
 
 /* ALGORITHM on a layer: its pattern (OFF first; in the copy, waits for SEQ) */
@@ -1431,18 +1515,23 @@ void sv_knob(sa_ui *u, int k, int d)
     sa_code *e = &g->ed[l];
     u->changed = true;
 #define SV_ADJ(f, step, lo, hi) (f) = (uint8_t)sv_clampi((f) + d * (step), (lo), (hi))
-    if (u->page == SV_PG_EDIT && u->view == SV_V_DRUMS) {   /* EDIT, a drum: KNOB 1 the step, KNOB 2 its hit */
+    if (u->page == SV_PG_EDIT && i == 1) {         /* EDIT: FILL (CURR, the ready fills) */
+        u->fill = sv_clampi(u->fill + d, 0, sv_fills(u) - 1);
+        sv_fill_apply(u);
+        return;
+    }
+    if (u->page == SV_PG_EDIT && u->view == SV_V_DRUMS) {   /* EDIT, a drum: KNOB 1 the step, KNOB 3 its hit */
         if (i == 0) u->scur = sv_wrap(u->scur + d, 16);
-        else if (i == 1 && g->ed[l].type == SA_T_DRUM) {
+        else if (i == 2 && g->ed[l].type == SA_T_DRUM) {
             int st = sv_clampi(u->scur, 0, 15);
             bool on = (sv_ed_bits(u, l) >> st) & 1u;
             if (on != (d > 0)) sa_step_drum(g, l, st);
         }
         return;
     }
-    if (sv_steps_on(u)) {                          /* REC: KNOB 1 the step, KNOB 2 its length */
+    if (sv_steps_on(u)) {                          /* REC: KNOB 1 the step, KNOB 2 its length (EDIT: KNOB 3) */
         if (i == 0) u->scur = sv_wrap(u->scur + d, 16);
-        else if (i == 1) sa_step_len(g, l, sv_clampi(u->scur, 0, 15), d);
+        else if (i == (u->page == SV_PG_EDIT ? 2 : 1)) sa_step_len(g, l, sv_clampi(u->scur, 0, 15), d);
         return;
     }
     switch (sv_page_now(u)) {
@@ -1569,7 +1658,14 @@ void sv_button(sa_ui *u, int b, bool down)
         break;
     case SV_B_EDIT:                                /* a layer's pattern editor, again: back to its page */
         if (u->page == SV_PG_EDIT) { u->page = SV_PG_LAYER; u->rec = false; u->force = true; }
-        else if (u->page == SV_PG_LAYER && u->layer >= 0) { u->page = SV_PG_EDIT; u->rec = false; u->scur = 0; u->force = true; }
+        else if (u->page == SV_PG_LAYER && u->layer >= 0) {
+            u->page = SV_PG_EDIT;
+            u->rec = false;
+            u->scur = 0;
+            u->fill = 0;
+            u->fill_orig = u->g->ed[u->layer];     /* (CURR: the pattern as it is now) */
+            u->force = true;
+        }
         break;
     case SV_B_GLO:                                 /* the MIXER, again: back */
         if (u->page == SV_PG_MIXER) {
@@ -1631,13 +1727,14 @@ void sv_key(sa_ui *u, int note, bool down)
         return;
     int k = note - SV_KEY_LO;
     bool lay = sv_on_layer(u) && u->layer >= 0;
-    if (lay && u->rec && u->page == SV_PG_EDIT && u->view == SV_V_DRUMS) {   /* EDIT, REC: a hit at the step, then on */
+    if (lay && u->rec && u->page == SV_PG_EDIT && u->view == SV_V_DRUMS && k < 16) {   /* EDIT, REC: the 16 lowest keys
+                                                                                       * are the steps (lit) */
         if (!down || u->g->ed[u->layer].type != SA_T_DRUM) return;
-        int st = sv_clampi(u->scur, 0, 15);
+        int st = k;
         bool was = (sv_ed_bits(u, u->layer) >> st) & 1u;
         sa_step_drum(u->g, u->layer, st);
         if (!was) sa_key_drum(u->g, k, u->g->ed[u->layer].sound, true), sa_key_drum(u->g, k, u->g->ed[u->layer].sound, false);
-        u->scur = (st + 1) % 16;
+        u->scur = st;
         u->changed = true;
         return;
     }
@@ -1702,7 +1799,6 @@ bool sv_key_leds(const sa_ui *u, uint32_t *full, uint32_t *dim)
 {
     *full = *dim = 0;
     if (!u->rec || !sv_on_layer(u) || u->layer < 0) return false;
-    if (u->page == SV_PG_EDIT && u->view == SV_V_DRUMS) return false;   /* (EDIT, a drum: the keys write at the step) */
     const sa_groove *g = u->g;
     int l = u->layer;
     if (u->view == SV_V_DRUMS) {

@@ -249,6 +249,7 @@ int sa_synth_free_part(const sa_groove *g, int except);   /* a part no other syn
 int sa_synth_count(const sa_groove *g);             /* synth layers in the copy */
 bool sa_used(const sa_groove *g, int l);            /* a layer that plays or will (in either copy) */
 int sa_snap(const sa_harm *h, int note);
+int sa_degree(const sa_harm *h, int deg);          /* a scale degree (0 the root, 7 the octave up) in semitones */
 /* a whole bar of one layer's code, for the screen: a bit per sixteenth (bar 0) */
 uint16_t sa_preview(const sa_groove *g, const sa_code *c, int layer, int bar);
 /* the own pattern (in the copy, the edits wait for REC): made from the ready pattern on the first edit */

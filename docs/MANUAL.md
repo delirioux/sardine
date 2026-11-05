@@ -113,11 +113,17 @@ pattern the layer's own (MY STEPS); like a pattern, the steps wait for SEQ, and 
 <img src="screens/edit_drum.png" alt="EDIT, a drum" width="200">
 </p>
 
-**EDIT** on a layer opens its pattern editor: its 16 steps, the step **KNOB 1** is on framed. With **REC** on, a key
-writes there and the frame moves on to the next step: on LEAD and BASS the key's note (snapped to the scale; the same
-note again takes it off, **KNOB 2** its length), on CHORD the chord, on DRUMS a hit of the row picked, on or off
-(**KNOB 2** sets it on or off too). Without REC the keys play the layer, lit with what it plays. Like a pattern, the
-steps wait for SEQ. EDIT again goes back.
+**EDIT** on a layer opens its pattern editor: its 16 steps, the step **KNOB 1** is on framed. **KNOB 2** is **FILL**:
+CURR (the pattern as it was when you opened EDIT) and ready fills that rewrite the steps; turn back to CURR and the
+pattern is as it was. On DRUMS: ROLL (the last beat in sixteenths), BUILD, SNARE, BREAK (the first half only), STUTTER,
+GALLOP, FLAM and DOUBLE, over the drum's own hits or in place of them. On LEAD and BASS ready lines in the key: ROOT
+8THS, ARP UP, ARP DOWN, OCTAVES, WALK, RIFF, CALL, PULSE 16. On CHORD the chord's rhythm: STABS, OFFBEATS, PUSH,
+PULSE, 8THS, 16THS, DOTTED, HOLD. **KNOB 3** is the step's LENGTH (on DRUMS its HIT, on or off).
+
+With **REC** on, LEAD, BASS and CHORD: a key writes at the framed step (the note snapped to the scale, the same note
+again takes it off; on CHORD the chord) and the frame moves on. DRUMS: the 16 lowest keys are the steps, glowing dim,
+the hits set full; a key turns its step on or off, the keys above play the drum. Without REC the keys play the layer,
+lit with what it plays. Like a pattern, the steps wait for SEQ. EDIT again goes back.
 
 ## DRUMS
 

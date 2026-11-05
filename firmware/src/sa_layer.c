@@ -521,6 +521,12 @@ uint16_t sa_preview(const sa_groove *g, const sa_code *c, int layer, int bar)
 }
 
 /* ---- the chords ---------------------------------------------------------------------------------------------- */
+int sa_degree(const sa_harm *h, int deg)
+{
+    int o = deg >= 0 ? deg / 7 : -((6 - deg) / 7);
+    return 12 * o + SCALE[h->scale % SA_SCALES][deg - 7 * o];
+}
+
 int sa_snap(const sa_harm *h, int note)
 {
     const uint8_t *sc = SCALE[clampi(h->scale, 0, SA_SCALES - 1)];

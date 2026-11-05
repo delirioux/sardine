@@ -440,6 +440,10 @@ int main(int argc, char **argv)
     sv_key(&ui, 60, true);
     sv_key(&ui, 60, false);
     CHECK(ui.rec && g.ed[SA_L_BASS].own && g.ed[SA_L_BASS].sn[5] != SA_NO_NOTE && ui.scur == 6, "EDIT, REC: a note on step 6");
+    sv_knob(&ui, SV_K2, 2);
+    CHECK(!strcmp(sv_fill_name(&ui, ui.fill), "ARP UP") && g.ed[SA_L_BASS].sn[0] != SA_NO_NOTE &&
+          g.ed[SA_L_BASS].sn[2] > g.ed[SA_L_BASS].sn[0], "FILL: ARP UP, a line up the scale");
+    shot("18f_edit_fill");
     shot("18d_edit_bass");
     press(SV_B_SEQ);
     press(SV_B_EDIT);
@@ -447,12 +451,22 @@ int main(int argc, char **argv)
     to_view(SV_V_DRUMS);
     press(SV_B_EDIT);
     sv_knob(&ui, SV_K1, 2);
+    sv_knob(&ui, SV_K3, 1);
+    CHECK((sv_ed_bits(&ui, ui.layer) >> 2) & 1u, "EDIT, a drum: KNOB 3 a hit on step 3");
     sv_knob(&ui, SV_K2, 1);
-    CHECK((sv_ed_bits(&ui, ui.layer) >> 2) & 1u, "EDIT, a drum: KNOB 2 a hit on step 3");
+    CHECK((sv_ed_bits(&ui, ui.layer) & 0xF000u) == 0xF000u && !strcmp(sv_fill_name(&ui, ui.fill), "ROLL"),
+          "FILL: ROLL, the last beat in sixteenths (%04x)", sv_ed_bits(&ui, ui.layer));
+    sv_knob(&ui, SV_K2, -1);
+    CHECK(ui.fill == 0 && !memcmp(&g.ed[ui.layer], &ui.fill_orig, sizeof ui.fill_orig), "FILL back to CURR: as it was");
+    sv_knob(&ui, SV_K3, 1);
     press(SV_B_REC);
-    sv_key(&ui, 70, true);
-    sv_key(&ui, 70, false);
-    CHECK(((sv_ed_bits(&ui, ui.layer) >> 2) & 1u) == 0 && ui.scur == 3, "EDIT, REC: a key toggles the step, then on");
+    {
+        uint32_t fl, dl;
+        CHECK(sv_key_leds(&ui, &fl, &dl) && dl == 0xFFFFu, "EDIT, REC, a drum: the 16 step keys lit");
+    }
+    sv_key(&ui, SV_KEY_LO + 2, true);
+    sv_key(&ui, SV_KEY_LO + 2, false);
+    CHECK(((sv_ed_bits(&ui, ui.layer) >> 2) & 1u) == 0, "EDIT, REC: the third key, step 3 off");
     shot("18e_edit_drum");
     press(SV_B_SEQ);
     press(SV_B_EDIT);

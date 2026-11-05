@@ -23,8 +23,9 @@
  *   PLAY       start / stop
  *   SCL        the KEY page (KEY SCALE CHORDS BARS), again: back
  *   SAVE       SETS (eight sets and LAST), again: back
- *   EDIT       a layer's pattern editor: KNOB 1 the step, REC: a key writes it there (a synth layer: its note,
- *              KNOB 2 its length; a drum: a hit on or off), then the next; again: back
+ *   EDIT       a layer's pattern editor: KNOB 1 the step, KNOB 2 FILL (CURR, the pattern as it was, or a ready fill:
+ *              a line, a drum fill), KNOB 3 its LENGTH (a drum: its HIT); REC: a key writes the step (a drum: the 16
+ *              lowest keys its steps, lit); again: back
  *   GLO        the MIXER (LEAD CHORD BASS DRUMS: their VOLUME; FX: their MUTE), again: back
  *   HOME       HOME; held: MENU (colour, look)
  *   keys       the layer open, live (HOME: LEAD), snapped to the scale; REC: its steps. Music and steps only
@@ -70,7 +71,9 @@ typedef struct {
     int back;                             /* the page KEY goes back to */
     int mback;                            /* the page the MIXER goes back to */
     bool mixmute;                         /* the MIXER's knobs: MUTE (FX turns them over) */
-    int scur;                             /* REC on a synth layer: the step the keys write */
+    int scur;                             /* REC on a synth layer, EDIT: the step the keys write */
+    int fill;                             /* EDIT: KNOB 2's FILL (0 CURR: the pattern as it was) */
+    sa_code fill_orig;                    /* EDIT: the pattern as it was when EDIT opened (CURR) */
     int hot, hot_ms;                      /* the knob just turned (its card lit); 9: the chip */
     char msg[32];
     int msg_ms;
