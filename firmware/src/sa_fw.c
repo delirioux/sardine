@@ -336,7 +336,14 @@ static void sa_load_synth(uint32_t part, int sound)
 
 static void sa_apply(void)
 {
+    static sa_settings swept;                                /* (SWEEP held: the settings with the filter closing) */
     const sa_settings *s = &sa_g.s;
+    int sw = (int)(sa_g.sweep * 50.0f);                      /* (in 2 % steps: the parts set again as it moves) */
+    if (sw > 0) {
+        swept = sa_g.s;
+        swept.filter = (uint8_t)(swept.filter * (100 - sw * 2 * 85 / 100) / 100);
+        s = &swept;
+    }
     if (!sa_drums_ready) {
         undo_depth++;
         set_engine_of(&trk[SA_PART_DRUMS], SAS_DRUM);
@@ -355,6 +362,7 @@ static void sa_apply(void)
     }
     uint32_t sig = sv_hashb(2166136261u, s, sizeof *s);
     sig = sv_hashb(sig, sa_g.az_now, sizeof sa_g.az_now);
+    sig = sv_hashb(sig, &sw, sizeof sw);
     sig = sv_hashb(sig, sa_g.el_now, sizeof sa_g.el_now);
     for (int p = 0; p < SA_SYNTHS; ++p) sig = sv_hashb(sig, &sa_loaded[p], sizeof sa_loaded[p]);
     if (sig != sa_applied_sig || !sig) {
@@ -501,6 +509,9 @@ static void sa_leds(void)
     led_put(nl, panel.btn[B_REC], sa_u.rec || (sa_u.page == SV_PG_SETS && (fm1_ms / 500u) % 2u));
     led_put(nl, panel.btn[B_ENV], sa_g.fill_held && (sa_g.fill_on || (fm1_ms / 125u) % 2u));   /* (the fill: lit; waiting
                                                                                                  * for the beat: blinking) */
+    led_put(nl, panel.btn[B_ARP], sa_g.brk_on && (sa_g.brk_held || (fm1_ms / 125u) % 2u));   /* BREAK (let go: blinking
+                                                                                               * until the 1) */
+    led_put(nl, panel.btn[B_LFO], sa_g.sweep_held);                                       /* SWEEP */
     led_put(nl, panel.btn[B_OCTDN], sa_u.oct < 0);                  /* the keys' octave moved down, or up */
     led_put(nl, panel.btn[B_OCTUP], sa_u.oct > 0);
     uint32_t efull = 0, edim = 0;

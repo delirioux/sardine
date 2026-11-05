@@ -23,6 +23,8 @@ into one of eight sets (SAVE, below).
 | SAVE | the sets, again: back |
 | EDIT | the layer's pattern editor, again: back |
 | ENV | held: a drum fill (below) |
+| ARP | held: BREAK (below) |
+| LFO | held: SWEEP (below) |
 | GLO | the MIXER, again: back |
 | PLAY | start, stop |
 | OCT- OCT+ | the keys' octave (the one it moved to lit) |
@@ -173,6 +175,13 @@ Hold **ENV**: from the next beat the drums give way to a fill (ENV blinks until 
 long as you hold it; let go and the groove is back at once. Each time a different one, by turns: ROLL (the snare in
 sixteenths, rising), SNARE, BUILD (eighths, then sixteenths), TOMS and STUTTER (kick and hat on every sixteenth). A
 kick marks each beat (STUTTER: every sixteenth). The fills play the SNARE row's drum; the synth layers play on.
+
+## BREAK and SWEEP
+
+Hold **ARP** for a **BREAK**: the drums and the bass drop out at once, LEAD and CHORD play on. Let go and ARP blinks
+until the next 1, where everything comes back in: the drop. Hold **LFO** for a **SWEEP**: the whole mix's filter closes
+over two bars (as far as FILTER at about 15); let go and it is open again at once. Together with the fill on ENV: the
+build, the fill and the drop.
 
 ## The modifiers
 

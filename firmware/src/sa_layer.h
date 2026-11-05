@@ -197,6 +197,9 @@ typedef struct {
     int8_t pan_now[SA_SYNTHS];                      /* each synth part's pan now, -64..63 (the glue puts it in) */
     bool fill_held;                                 /* ENV held: a drum fill from the next beat, as long as it is held */
     uint8_t fill_on, fill_kind, fill_step;          /* playing it; which (ROLL SNARE BUILD TOMS STUTTER, by turns) */
+    bool brk_held, brk_on;                          /* ARP held: BREAK, the drums and the bass out; back on the next 1 */
+    bool sweep_held;                                /* LFO held: SWEEP, the mix's filter closing over two bars */
+    float sweep;                                    /* 0..1: how far it has closed (let go: open at once) */
     uint8_t az_now[SA_SYNTHS];                      /* 3D: each synth part's angle and height now (moving: ORBIT RANDOM FLY) */
     int8_t el_now[SA_SYNTHS];
     uint8_t pan_side[SA_LAYERS];                    /* PING-PONG: the side the next note goes to */
@@ -237,6 +240,8 @@ void sa_sound_now(sa_groove *g, int l, int sound);  /* a synth layer's sound, at
 void sa_fill(sa_groove *g, bool down);              /* the drum fill button: held from the next beat, a fill in place of
                                                      * the drums; let go: the groove again */
 const char *sa_fill_name(int kind);
+void sa_break(sa_groove *g, bool down);             /* BREAK: held, the drums and the bass out at once; let go: in on the 1 */
+void sa_sweep(sa_groove *g, bool down);             /* SWEEP: held, the filter closes over two bars; let go: open at once */
 /* a whole groove in (a set loaded, a fresh one): playing, on the next bar line; stopped, at once. What waits for REC
  * goes, the colour and the look stay. s is read on the bar line: the caller keeps it until then */
 void sa_set_arm(sa_groove *g, const sa_settings *s);

@@ -1630,6 +1630,15 @@ void sv_button(sa_ui *u, int b, bool down)
         sa_fill(g, down);
         return;
     }
+    if (b == SV_B_ARP) {                           /* BREAK: held, the drums and the bass out; back on the 1 */
+        sa_break(g, down);
+        return;
+    }
+    if (b == SV_B_LFO) {                           /* SWEEP: held, the filter closes; let go: open */
+        sa_sweep(g, down);
+        if (down) sv_msg(u, "SWEEP");
+        return;
+    }
     if (!down)
         return;
     switch (b) {

@@ -483,6 +483,24 @@ int main(int argc, char **argv)
         sv_button(&ui, SV_B_ENV, false);
         CHECK(!g.fill_on && g.fill_kind == (k0 + 1) % 5, "let go: the groove, the next fill next time");
     }
+    /* ARP held: BREAK, the drums and the bass out at once; let go: in on the next 1 */
+    {
+        int d0 = part_on[SA_PART_DRUMS], b0 = part_on[SA_L_BASS], c0 = part_on[SA_L_CHORD];
+        sv_button(&ui, SV_B_ARP, true);
+        bars(1);
+        CHECK(g.brk_on && part_on[SA_PART_DRUMS] == d0 && part_on[SA_L_BASS] == b0 && part_on[SA_L_CHORD] > c0,
+              "BREAK: no drums, no bass, the chord on");
+        sv_button(&ui, SV_B_ARP, false);
+        CHECK(g.brk_on, "let go: still out until the 1");
+        bars(1);
+        CHECK(!g.brk_on && part_on[SA_PART_DRUMS] > d0, "on the 1: the drop");
+    }
+    /* LFO held: SWEEP, the filter closing; let go: open */
+    sv_button(&ui, SV_B_LFO, true);
+    bars(1);
+    CHECK(g.sweep > 0.3f && g.sweep < 0.8f, "SWEEP: half closed after a bar (%d %%)", (int)(g.sweep * 100.0f));
+    sv_button(&ui, SV_B_LFO, false);
+    CHECK(g.sweep == 0.0f, "let go: open");
     /* the MIXER on GLO: the four volumes, FX: their mutes */
     press(SV_B_GLO);
     CHECK(ui.page == SV_PG_MIXER && sv_page_button(&ui) == SV_B_GLO, "GLO: MIXER");

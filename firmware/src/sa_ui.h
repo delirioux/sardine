@@ -28,6 +28,8 @@
  *              lowest keys its steps, lit); again: back
  *   ENV        held: a drum fill from the next beat, in place of the drums, a different one each time (ROLL SNARE
  *              BUILD TOMS STUTTER); let go: the groove again
+ *   ARP        held: BREAK, the drums and the bass out at once; let go: back in on the next 1
+ *   LFO        held: SWEEP, the whole mix's filter closing over two bars; let go: open at once
  *   GLO        the MIXER (LEAD CHORD BASS DRUMS: their VOLUME; FX: their MUTE), again: back
  *   HOME       HOME; held: MENU (colour, look)
  *   keys       the layer open, live (HOME: LEAD), snapped to the scale; REC: its steps. Music and steps only
