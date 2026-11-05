@@ -498,9 +498,10 @@ typedef struct { int16_t bright, fenv, dist; } sas_base;
 static inline void sas_synth(track_t *t, const sas_sound *snd, const sas_base *b, const sa_live *v, const sa_settings *s,
                              const sa_3d *d)
 {
-    /* 3D: behind (back 0..127) darker and a little softer; above brighter, below darker; far quieter, darker, wetter */
+    /* 3D: behind (back 0..127) a touch darker and softer (0.7.1: it was -20 % level and the filter down 40 %, which
+     * all but lost it); above brighter, below darker; far quieter, darker, wetter */
     int back = d->on ? (127 - sa_sin5(d->az + 18)) / 2 : 0, far = d->on ? d->dist : 0, up = d->on ? d->el : 0;
-    int lvl = 100 - back * 20 / 127 - far * 55 / 100, dark = 100 - back * 40 / 127 - far * 35 / 100 + up * 40 / 100;
+    int lvl = 100 - back * 6 / 127 - far * 55 / 100, dark = 100 - back * 14 / 127 - far * 35 / 100 + up * 40 / 100;
     t->p[P_LEVEL] = sas_clamp((108 + snd->trim) * v->level / 80 * lvl / 100, 0, 127);   /* (MIX's LEVEL: 80 as it is) */
     if (snd->bright >= 0) {
         int f = v->cut * (20 + s->filter * 80 / 100) / 100 * dark / 100;          /* 0..100 */

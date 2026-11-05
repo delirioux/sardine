@@ -81,7 +81,7 @@ LEAD lead lines and the bass lines). FX turns through its pages:
 it, from the side, its height; the dot moves as the layer does. **MODE**: FIXED (where ANGLE says), ORBIT (round you
 over RATE, a quarter bar to four bars), RANDOM (each note somewhere else round you) and FLY (an orbit rising and
 falling about HEIGHT). Turning ANGLE, HEIGHT or DIST from OFF turns it on, FIXED. On, the angle pans the layer (the PAN
-page rests), behind and below sound darker and a little softer, above brighter, far quieter, darker and wetter, and
+page rests), behind sounds a touch darker and softer, below darker, above brighter, far quieter, darker and wetter, and
 the layer narrows to a point. These are cues the ear reads, not a measured head model: left, right and far come across
 best; front against back and up against down are subtler and differ from one listener to the next. On speakers it is
 panning and tone.
@@ -192,7 +192,9 @@ notes and rim around a flammed snare). They play the SNARE row's drum; the synth
 ## BREAK and SWEEP
 
 Hold **ARP** for a **BREAK**: the drums and the bass drop out at once, LEAD and CHORD play on. Let go and ARP blinks
-until the next 1, where everything comes back in: the drop. Hold **LFO** for a **SWEEP**: the whole mix's filter closes
+until the next 1, where everything comes back in: the drop. Held 4 bars or more, the drums come back one by one over
+two bars instead: the kick (and the bass) on the 1, then the hats, the metal, the rim, the snare on the second bar's
+1, the clap, the toms. Hold **LFO** for a **SWEEP**: the whole mix's filter closes
 over two bars (as far as FILTER at about 15), its resonance rising as it goes; let go and it is open again at once. Together with the fill on ENV: the
 build, the fill and the drop.
 
