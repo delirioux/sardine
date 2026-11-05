@@ -1533,6 +1533,17 @@ void sv_key(sa_ui *u, int note, bool down)
             return;
         }
     }
+    if (lay && u->view == SV_V_DRUMS) {            /* DRUMS: the 14 lowest keys the kit's drums, the rest the drum picked */
+        int dv = k < SA_DVS ? k : u->g->ed[u->layer].type == SA_T_DRUM ? u->g->ed[u->layer].sound : 0;
+        if (down) {
+            char m[32];
+            sv_cpy(m, "KEYS: DRUMS, ", sizeof m);
+            sv_cat(m, sa_dv_name(dv), sizeof m);
+            sv_msg(u, m);
+        }
+        sa_key_drum(u->g, k, dv, down);
+        return;
+    }
     if (down) {
         char m[32];                                /* what the keys play, briefly in the header */
         sv_cpy(m, "KEYS: ", sizeof m);
@@ -1581,10 +1592,11 @@ bool sv_key_leds(const sa_ui *u, uint32_t *full, uint32_t *dim)
 uint32_t sv_play_keys(const sa_ui *u)
 {
     const sa_groove *g = u->g;
-    if (u->page != SV_PG_LAYER || !g->playing || u->layer < 0) return 0;
-    if (u->view == SV_V_DRUMS) {                   /* the drum's hit on this sixteenth: its step key */
-        int now = sv_now(g);
-        return now >= 0 && ((g->hits[u->layer] >> now) & 1u) ? 1u << now : 0u;
+    if (u->page != SV_PG_LAYER || u->layer < 0) return 0;
+    if (u->view != SV_V_DRUMS && !g->playing) return 0;
+    if (u->view == SV_V_DRUMS) {                   /* the drum picked: its key in the kit, lit */
+        const sa_code *e = &g->ed[u->layer];
+        return e->type == SA_T_DRUM ? 1u << (e->sound % SA_DVS) : 0u;
     }
     int part = g->s.code[u->layer].part, n = g->nheld;
     uint32_t m = 0;
@@ -1600,9 +1612,11 @@ uint32_t sv_play_keys(const sa_ui *u)
 
 uint32_t sv_play_dim(const sa_ui *u)
 {
-    if (u->page != SV_PG_LAYER || u->view != SV_V_DRUMS || u->layer < 0) return 0;
-    if (!u->g->playing) return 0;
-    return (uint32_t)(u->g->hits_last[u->layer] | u->g->hits[u->layer]);   /* (what it played, this bar and the last) */
+    if (u->page != SV_PG_LAYER || u->view != SV_V_DRUMS) return 0;
+    uint32_t m = 0;                                /* the kit on the keys: the drums of the groove dim */
+    for (int l = SA_L_DRUM0; l < SA_LAYERS; ++l)
+        if (u->g->s.code[l].type == SA_T_DRUM) m |= 1u << u->g->s.code[l].sound;
+    return m;
 }
 
 void sv_tick(sa_ui *u, int ms)

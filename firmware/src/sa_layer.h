@@ -230,6 +230,7 @@ void sa_process(sa_groove *g, int frames);
 void sa_all_off(sa_groove *g);
 void sa_mute(sa_groove *g, int l, bool m);
 void sa_key(sa_groove *g, int k, int note, bool down, int layer);   /* a key on the layer (its part), snapped */
+void sa_key_drum(sa_groove *g, int k, int dv, bool down);          /* a key playing a drum voice (SA_DV_*) */
 int sa_synth_free_part(const sa_groove *g, int except);   /* a part no other synth layer of the copy holds; -1 none */
 int sa_synth_count(const sa_groove *g);             /* synth layers in the copy */
 bool sa_used(const sa_groove *g, int l);            /* a layer that plays or will (in either copy) */

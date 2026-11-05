@@ -115,8 +115,8 @@ home page: **DRUM** (which drum; the last
 one, **+ ADD**, adds one), **VOLUME**, **ACCENT** (how hard the accented steps hit against the rest; 50: as written)
 and **CHANCE** (how likely each hit plays: 100 % always, lower and it drops out at random). ALGORITHM turns the drum's
 pattern: OFF, the patterns, and left of OFF, REMOVE. On + ADD it picks the drum (KICK SNARE CLAP HAT OPEN HAT RIDE
-CRASH RIM TOM LOW TOM CONGA COWBELL CLAVE SHAKER); SEQ drops it in. With REC the 16 lowest keys are the drum's steps;
-the keys above play it.
+CRASH RIM TOM LOW TOM CONGA COWBELL CLAVE SHAKER); SEQ drops it in. Without REC the keys are the kit (the drum picked lit); with REC the 16
+lowest keys are the drum's steps, the keys above play it.
 
 FX: **MIX** (VOLUME, MUTE), **KIT** (KIT, TUNE, TONE, DECAY: the whole kit, every drum plays on it) and **MOD**
 (the drum's modifiers). The kits: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY, CLASSIC, all synthesised.
@@ -152,8 +152,9 @@ drums do not. A key change waits for SEQ. SCL again goes back.
 
 The keys play the layer open, live, snapped to the scale (on HOME: LEAD); the header says what, briefly (KEYS: LEAD,
 SAW LEAD). On LEAD, CHORD and BASS the keys light up with the notes the layer plays (a bass line folded up into
-the keys' reach). On DRUMS the 16 lowest keys show the drum picked: its steps dim, each hit lit as it plays, so you
-see which key is which step before you press REC. With REC they write its steps. They never
+the keys' reach). On DRUMS the keys are the kit: from the lowest, KICK SNARE CLAP HAT OPEN HAT RIDE CRASH RIM
+TOM LOW TOM CONGA COWBELL CLAVE SHAKER, the keys above them the drum picked. The drums of the groove glow dim, the
+drum picked lit. With REC they write its steps. They never
 change a setting.
 
 ## SETS

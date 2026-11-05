@@ -1519,13 +1519,18 @@ void sa_process(sa_groove *g, int frames)
     pan_block(g);
 }
 
+void sa_key_drum(sa_groove *g, int k, int dv, bool down) { sa_key(g, k, -1 - clampi(dv, 0, SA_DVS - 1), down, -2); }
+
 void sa_key(sa_groove *g, int k, int note_in, bool down, int layer)
 {
     if (k < 0 || k >= 27) return;
     if (down) {
         if (g->key_note[k] >= 0) emit(g, 0, g->key_part[k], g->key_note[k], 0);
         int part = -1, n = note_in, vel = 104;
-        if (layer >= 0 && layer < SA_LAYERS && g->s.code[layer].type == SA_T_DRUM) {
+        if (layer == -2) {                         /* (sa_key_drum: a drum voice, note -1 - dv) */
+            part = SA_PART_DRUMS;
+            n = sa_dv_gm(-1 - note_in);
+        } else if (layer >= 0 && layer < SA_LAYERS && g->s.code[layer].type == SA_T_DRUM) {
             part = SA_PART_DRUMS;
             n = sa_dv_gm(g->s.code[layer].sound);
         } else {
