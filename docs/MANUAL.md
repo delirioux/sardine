@@ -16,7 +16,7 @@ into one of eight sets (SAVE, below).
 | PRESETS | HOME, LEAD, CHORD, BASS, DRUMS: a layer always opens on its home page |
 | FX | the layer's next page; past the last, back to its home page |
 | SELECT | the tempo, everywhere |
-| ALGORITHM | the layer's pattern (OFF first); it waits for SEQ |
+| ALGORITHM | the layer's pattern (OFF first); it waits for SEQ. On HOME: PART A or B |
 | SEQ | drops what waits, on the next bar line (stopped: at once) |
 | REC | step recording on the layer, on and off |
 | SCL | the key and the chords, again: back |
@@ -25,7 +25,7 @@ into one of eight sets (SAVE, below).
 | ENV | held: a drum fill (below) |
 | ARP | held: BREAK (below) |
 | LFO | held: SWEEP (below) |
-| GLO | GLOBAL: the MIXER, each press its next page (MUTE, SOLO, STYLE), past the last back |
+| GLO | GLOBAL: the MIXER, each press its next page (MUTE, SOLO, STYLE, SONG), past the last back |
 | PLAY | start, stop |
 | OCT- OCT+ | the keys' octave (the one it moved to lit) |
 
