@@ -302,9 +302,10 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
     case SV_PG_MIXER:
         for (int i = 0; i < 4; ++i) {
             static const char *const N[4] = {"LEAD", "CHORD", "BASS", "DRUMS"};
-            bool m = i < 3 ? s->live[i].mute : s->dmute;
+            bool m = i < 3 ? s->live[i].mute : s->dmute, so = (g->solo >> i) & 1u;
             int v = i < 3 ? s->live[i].level : s->dvol;
-            if (u->mixmute) sv_card_txt(&c[i], N[i], m ? "MUTED" : "ON", -1, m);
+            if (u->mixmute == 2) sv_card_txt(&c[i], N[i], so ? "SOLO" : "-", -1, so);
+            else if (u->mixmute) sv_card_txt(&c[i], N[i], m ? "MUTED" : "ON", -1, m);
             else sv_card_num(&c[i], N[i], v, 0, 100);
         }
         return;
@@ -519,7 +520,7 @@ static void sv_head_title(const sa_ui *u, char *t, unsigned n)
     case SV_PG_MAIN: sv_cpy(t, u->g->playing ? u->g->chord_name : "HOME", n); break;
     case SV_PG_KEY: sv_cpy(t, "KEY", n); break;
     case SV_PG_SETS: sv_cpy(t, "SETS", n); break;
-    case SV_PG_MIXER: sv_cpy(t, u->mixmute ? "MIXER  MUTE" : "MIXER", n); break;
+    case SV_PG_MIXER: sv_cpy(t, u->mixmute == 2 ? "MIXER  SOLO" : u->mixmute ? "MIXER  MUTE" : "MIXER", n); break;
     case SV_PG_EDIT:
         sv_cpy(t, SV_VIEW_NAME[u->view], n);
         sv_cat(t, u->rec ? "  EDIT  REC" : "  EDIT", n);
@@ -603,7 +604,7 @@ static void sv_draw_foot(sa_ui *u)
     } else if (u->page == SV_PG_EDIT) {
         sv_cpy(r, u->rec ? "KEYS: WRITE" : "REC: WRITE", sizeof r);
     } else if (u->page == SV_PG_MIXER) {
-        sv_cpy(r, u->mixmute ? "FX: VOLUME" : "FX: MUTE", sizeof r);
+        sv_cpy(r, u->mixmute == 2 ? "FX: VOLUME" : u->mixmute ? "FX: SOLO" : "FX: MUTE", sizeof r);
     }
     uint32_t sig = sv_hash(sv_hash((uint32_t)(now + 1) * 7u + (uint32_t)g->playing * 3u + ux.gen * 11u +
                                    (uint32_t)u->fx * 101u + (uint32_t)np * 1009u, l), r);
@@ -1149,7 +1150,7 @@ static void sv_panel_mixer(sa_ui *u)
     int now = sv_now(g);
     for (int i = 0; i < 4; ++i) {
         int32_t x = SV_CARD_X(i) + 20, y0 = 10, h = 80;
-        bool m = i < 3 ? s->live[i].mute : s->dmute;
+        bool m = (i < 3 ? s->live[i].mute : s->dmute) || (g->solo && !((g->solo >> i) & 1u));
         int v = i < 3 ? s->live[i].level : s->dvol, f = v * h / 100;
         bool hit = false;
         if (now >= 0 && i < 3) hit = (g->hits[i] >> now) & 1u;
@@ -1158,7 +1159,9 @@ static void sv_panel_mixer(sa_ui *u)
         cv_rect(x, y0 + h - f, 14, f > 0 ? f : 1, m ? T_DIM : i == 3 ? T_THEME : T_ACCENT);
         cv_rect(x - 3, y0 + h - 80 * h / 100, 20, 1, T_MID);          /* (80: as it is) */
         cv_rrect(x + 3, y0 + h + 6, 8, 8, 4, hit && !m ? T_TEXT : sv_well(), T_SURF);
-        cv_text_in(SV_CARD_X(i), y0 + h + 18, SV_CARD_W, &AF_S, m ? "MUTED" : N[i], m ? T_ACCENT : T_MID, T_SURF);
+        bool so = (g->solo >> i) & 1u;
+        cv_text_in(SV_CARD_X(i), y0 + h + 18, SV_CARD_W, &AF_S, so ? "SOLO" : m ? "MUTED" : N[i], so || m ? T_ACCENT : T_MID,
+                   T_SURF);
     }
 }
 
@@ -1487,7 +1490,10 @@ void sv_knob(sa_ui *u, int k, int d)
         return;
     case SV_PG_MIXER:
         u->changed = true;
-        if (u->mixmute) {
+        if (u->mixmute == 2) {                     /* SOLO: right on, left off (not kept: a live move) */
+            if (d > 0) g->solo |= (uint8_t)(1u << i);
+            else g->solo &= (uint8_t)~(1u << i);
+        } else if (u->mixmute) {
             if (i < 3) sa_mute(g, i, d > 0);
             else s->dmute = (uint8_t)(d > 0);
         } else {
@@ -1686,13 +1692,13 @@ void sv_button(sa_ui *u, int b, bool down)
             else sv_view(u, SV_V_HOME);
         } else {
             u->mback = u->page == SV_PG_LAYER ? SV_PG_LAYER : SV_PG_MAIN;
-            u->mixmute = false;
+            u->mixmute = 0;
             sv_goto(u, SV_PG_MIXER);
         }
         break;
     case SV_B_FX:
         if (u->page == SV_PG_MIXER) {
-            u->mixmute = !u->mixmute;
+            u->mixmute = (u->mixmute + 1) % 3;     /* VOLUME, MUTE, SOLO */
             u->force = true;
             break;
         }

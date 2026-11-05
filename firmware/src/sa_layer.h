@@ -198,6 +198,7 @@ typedef struct {
     bool fill_held;                                 /* ENV held: a drum fill from the next beat, as long as it is held */
     uint8_t fill_on, fill_kind, fill_step;          /* playing it; which (ROLL SNARE BUILD TOMS STUTTER, by turns) */
     bool brk_held, brk_on;                          /* ARP held: BREAK, the drums and the bass out; back on the next 1 */
+    uint8_t solo;                                   /* the MIXER's SOLO: bit 0 LEAD 1 CHORD 2 BASS 3 DRUMS; none: all */
     bool sweep_held;                                /* LFO held: SWEEP, the mix's filter closing over two bars */
     float sweep;                                    /* 0..1: how far it has closed (let go: open at once) */
     uint8_t az_now[SA_SYNTHS];                      /* 3D: each synth part's angle and height now (moving: ORBIT RANDOM FLY) */

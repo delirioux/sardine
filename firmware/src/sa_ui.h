@@ -30,7 +30,7 @@
  *              BUILD TOMS STUTTER); let go: the groove again
  *   ARP        held: BREAK, the drums and the bass out at once; let go: back in on the next 1
  *   LFO        held: SWEEP, the whole mix's filter closing over two bars; let go: open at once
- *   GLO        the MIXER (LEAD CHORD BASS DRUMS: their VOLUME; FX: their MUTE), again: back
+ *   GLO        the MIXER (LEAD CHORD BASS DRUMS: their VOLUME; FX: their MUTE, again: their SOLO), again: back
  *   HOME       HOME; held: MENU (colour, look)
  *   keys       the layer open, live (HOME: LEAD), snapped to the scale; REC: its steps. Music and steps only
  *   OCT- OCT+  the keys' octave */
@@ -74,7 +74,7 @@ typedef struct {
     int drow;                             /* DRUMS: the row picked (the last one: + ADD) */
     int back;                             /* the page KEY goes back to */
     int mback;                            /* the page the MIXER goes back to */
-    bool mixmute;                         /* the MIXER's knobs: MUTE (FX turns them over) */
+    int mixmute;                          /* the MIXER's knobs: 0 VOLUME, 1 MUTE, 2 SOLO (FX turns them over) */
     int scur;                             /* REC on a synth layer, EDIT: the step the keys write */
     int fill;                             /* EDIT: KNOB 2's FILL (0 CURR: the pattern as it was) */
     sa_code fill_orig;                    /* EDIT: the pattern as it was when EDIT opened (CURR) */

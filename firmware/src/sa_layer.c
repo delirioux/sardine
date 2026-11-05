@@ -1542,6 +1542,7 @@ static void do_tick(sa_groove *g)
         if (c->type == SA_T_NONE || g->s.live[b->layer].mute) continue;
         if (c->type == SA_T_DRUM && g->fill_on) continue;   /* (the fill plays in place of the drums) */
         if (g->brk_on && (c->type == SA_T_DRUM || b->layer == SA_L_BASS)) continue;   /* BREAK: out */
+        if (g->solo && !((g->solo >> (c->type == SA_T_DRUM ? 3 : b->layer)) & 1u)) continue;   /* SOLO: the others out */
         int part = c->type == SA_T_DRUM ? SA_PART_DRUMS : c->part;
         uint32_t len = c->type == SA_T_DRUM ? (uint32_t)(g->sr * (c->sound == SA_DV_CRASH ? 1.0f :
                                                                   c->sound == SA_DV_OPEN ? 0.4f : 0.3f))

@@ -515,6 +515,17 @@ int main(int argc, char **argv)
     shot("18c_mixer_mute");
     sv_knob(&ui, SV_K2, -1);
     sv_knob(&ui, SV_K4, -1);
+    press(SV_B_FX);
+    sv_knob(&ui, SV_K3, 1);
+    {
+        int b0 = part_on[SA_L_BASS], c0 = part_on[SA_L_CHORD], d0 = part_on[SA_PART_DRUMS];
+        bars(1);
+        CHECK(ui.mixmute == 2 && g.solo == 4 && part_on[SA_L_BASS] > b0 && part_on[SA_L_CHORD] == c0 &&
+              part_on[SA_PART_DRUMS] == d0, "MIXER, FX twice: SOLO, BASS alone");
+    }
+    shot("18g_mixer_solo");
+    sv_knob(&ui, SV_K3, -1);
+    CHECK(g.solo == 0, "SOLO off: all");
     press(SV_B_GLO);
     CHECK(ui.page == SV_PG_MAIN, "GLO again: back HOME");
     g.s.dvol = 80;

@@ -167,7 +167,8 @@ CLASSIC, ROOM, VINTAGE, MINIMAL, VOLT (electro), GARAGE, DISCO, BREAKS, DUB, LOF
 
 **GLO** opens the MIXER: a fader for each layer, LEAD, CHORD, BASS and DRUMS (all the drums together), on the four
 knobs, at once (80: as it is); the dot under a fader lights as the layer plays. **FX** turns the knobs over to their
-MUTE (and back). GLO again goes back. A layer's VOLUME here is the same as on its own first FX page.
+MUTE, FX again to their **SOLO** (turn right: that layer, with any others soloed, alone; left: back), FX again
+back to the volumes. SOLO is a live move: not kept with the groove. GLO again goes back. A layer's VOLUME here is the same as on its own first FX page.
 
 ## The drum fill
 
