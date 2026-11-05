@@ -436,7 +436,7 @@ static inline void sas_style_apply(sa_settings *s, int st, uint32_t seed, const 
             if (*a == *b && (p = sas_pat(SA_T_DRUM, y->xpat)) >= 0) {
                 s->code[SA_L_DRUM0 + row].pat = (uint8_t)p;
                 if (row == SA_DR_TOMS) s->code[SA_L_DRUM0 + row].sound = SA_DV_CONGA;
-                if (row == SA_DR_METAL) s->code[SA_L_DRUM0 + row].sound = SA_DV_RIDE;
+                if (row == SA_DR_METAL) s->code[SA_L_DRUM0 + row].sound = SA_DV_CRASH;
                 if (row == SA_DR_RIM && y->xpat[0] == 'C') s->code[SA_L_DRUM0 + row].sound = SA_DV_CLAVE;
             }
         }

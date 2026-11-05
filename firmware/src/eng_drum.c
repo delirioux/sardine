@@ -101,7 +101,7 @@ static uint32_t drum_gm(const int16_t *p, uint32_t note, int32_t *st)
     uint32_t ov = drum_lane_ov[drum_gm_part % NPART][DV_TYPE_LANE[t]].kit;
     *st = DRUM_GM[n - 35u][1];
     if (ov == DRUM_OV_FM && (t == DVT_CYM || t == DVT_BELL))   /* (Sardine) the FM metals */
-        return t == DVT_BELL ? DVT_FMBELL : n == 51u || n == 59u ? DVT_FMRIDE : DVT_FMCRASH;
+        return t == DVT_BELL ? DVT_FMBELL : DVT_FMCRASH;   /* (no ride, ever: its notes the crash) */
     if (ov == 1u) kit = DK_STD;
     else if (ov >= 2u && DK_80 + ov - 2u < DK_COUNT) kit = DK_80 + ov - 2u;
     *st = DRUM_GM[n - 35u][1];

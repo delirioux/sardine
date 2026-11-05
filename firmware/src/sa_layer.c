@@ -59,7 +59,7 @@ static const char *const KIT_NAMES[SA_KITS] = {"TECH", "HOUSE", "DEEP", "HARD", 
 const char *sa_kit_name(int kit) { return KIT_NAMES[clampi(kit, 0, SA_KITS - 1)]; }
 static const char *const DV_NAMES[SA_DVS] = {"KICK", "SNARE", "CLAP", "HAT", "OPEN HAT", "RIDE", "CRASH", "RIM",
                                              "TOM", "LOW TOM", "CONGA", "COWBELL", "CLAVE", "SHAKER"};
-static const uint8_t DV_GM[SA_DVS] = {36, 38, 39, 42, 46, 51, 49, 37, 45, 41, 63, 56, 75, 70};
+static const uint8_t DV_GM[SA_DVS] = {36, 38, 39, 42, 46, 49, 49, 37, 45, 41, 63, 56, 75, 70};
 const char *sa_dv_name(int dv) { return DV_NAMES[clampi(dv, 0, SA_DVS - 1)]; }
 /* KICK SNARE CLAP HAT OPEN HAT RIDE CRASH RIM TOM LOW TOM CONGA COWBELL CLAVE SHAKER -> their rows (the drum engine's
  * channels: the shaker is a closed hat, the conga a tom, the clave a rim, ride crash and cowbell its bell) */
@@ -67,7 +67,7 @@ static const uint8_t DV_ROW[SA_DVS] = {SA_DR_KICK, SA_DR_SNARE, SA_DR_CLAP, SA_D
                                        SA_DR_METAL, SA_DR_RIM, SA_DR_TOMS, SA_DR_TOMS, SA_DR_TOMS, SA_DR_METAL,
                                        SA_DR_RIM, SA_DR_HATS};
 static const uint8_t ROW_DEF[SA_DROWS] = {SA_DV_KICK, SA_DV_SNARE, SA_DV_CLAP, SA_DV_HAT, SA_DV_TOM, SA_DV_RIM,
-                                          SA_DV_RIDE};
+                                          SA_DV_CRASH};
 static const char *const ROW_NAMES[SA_DROWS] = {"KICK", "SNARE", "CLAP", "HATS", "TOMS", "RIM", "METAL"};
 int sa_dv_row(int dv) { return DV_ROW[clampi(dv, 0, SA_DVS - 1)]; }
 static const char *const DVAR_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "80", "10", "DEEP"};
@@ -82,7 +82,7 @@ int sa_row_voices(int row, uint8_t *out)
 {
     int n = 0;
     for (int v = 0; v < SA_DVS; ++v)
-        if (DV_ROW[v] == row) out[n++] = (uint8_t)v;
+        if (DV_ROW[v] == row && v != SA_DV_RIDE) out[n++] = (uint8_t)v;   /* (no ride, ever: 0.8.2) */
     return n;
 }
 uint8_t sa_dv_gm(int dv) { return DV_GM[clampi(dv, 0, SA_DVS - 1)]; }
@@ -1103,6 +1103,8 @@ static void canon(sa_settings *s)
 void sa_settings_fix(sa_settings *s)
 {
     canon(s);                                      /* (first: the clamps below then hold for every slot) */
+    for (int l = 0; l < SA_LAYERS; ++l)            /* no ride, ever: a set that had one plays the crash */
+        if (s->code[l].type == SA_T_DRUM && s->code[l].sound == SA_DV_RIDE) s->code[l].sound = SA_DV_CRASH;
     s->phrase = (uint8_t)(s->phrase ? 1 : 0);
     s->abauto = (uint8_t)(s->abauto % SA_ABAUTOS);
     if (s->progb > SA_PROGS) s->progb = 0;
