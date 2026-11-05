@@ -18,6 +18,18 @@ const str = (p) => { const m = new Uint8Array(w.memory.buffer); let s = ""; whil
 
 w._initialize();
 w.web_nor_erase();
+// another firmware's project in the first sets' object (Felucca's slot B, type 2), its sequence high
+const crc32 = (b) => { let c = ~0; for (const x of b) { c ^= x; for (let k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ 0xEDB88320 : c >>> 1; } return ~c >>> 0; };
+{
+  const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()), base = 0x9A000;   // its copy B
+  const body = new Uint8Array(64).fill(7), h = new DataView(new ArrayBuffer(32));
+  h.setUint32(0, 0x554C4546, true); h.setUint16(4, 2, true); h.setUint16(6, 1, true);
+  h.setUint32(8, 100, true); h.setUint32(12, body.length, true); h.setUint32(16, crc32(body), true);
+  h.setUint32(20, 0xFFFFFFFF, true); h.setUint32(24, 0xFFFFFFFF, true);
+  h.setUint32(28, crc32(new Uint8Array(h.buffer, 0, 28)), true);
+  nor.set(new Uint8Array(h.buffer), base);
+  nor.set(body, base + 256);
+}
 w.web_boot();
 let peak = 0;
 const run = (sec) => {
@@ -71,6 +83,9 @@ w.web_enc(EN.K2, 1); run(0.1);  // STORE
 w.web_enc(EN.K1, 2); run(0.1);  // set 3
 press(B.REC); run(0.2);
 check("REC: STORE writes set 3", w.web_da_set_used(2) && !w.web_da_set_used(0));
+w.web_enc(EN.K1, -2); run(0.1);  // set 1 (over the old project)
+press(B.REC); run(0.2);
+w.web_enc(EN.K1, 2); run(0.1);
 const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice();
 {
   const again = await WebAssembly.instantiate(bytes, { wasi_snapshot_preview1: stub });
@@ -80,7 +95,7 @@ const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice
   w.web_boot();
   run(1);
   check("the next start: another groove", w.web_da_groove() !== groove1 && w.web_da_style() >= 5);
-  check("the next start: set 3 still there", w.web_da_set_used(2) === 1);
+  check("the next start: sets 1 and 3 still there", w.web_da_set_used(2) === 1 && w.web_da_set_used(0) === 1);
   press(B.SAVE);
   w.web_enc(EN.K1, 2); run(0.1);
   press(B.REC); run(0.2);
