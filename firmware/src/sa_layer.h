@@ -149,6 +149,7 @@ typedef struct {
     sa_3d d3[SA_SYNTHS];                            /* 0.7: LEAD CHORD BASS */
     sa_pumpl pl[SA_SYNTHS];                         /* 0.7 */
     uint8_t d3rate[SA_SYNTHS];                      /* 0.7: 3D's RATE (ORBIT, FLY) */
+    uint8_t dvol, dmute;                            /* 0.7: the MIXER's DRUMS, all the drums (80: as it is) */
 } sa_settings;
 
 typedef struct {

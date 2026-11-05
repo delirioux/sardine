@@ -336,7 +336,7 @@ static inline void sas_drums(track_t *t, const sa_settings *s)
     t->p[P_E5] = k[5];
     t->p[P_E6] = k[6];
     t->p[P_E7] = k[7];
-    t->p[P_LEVEL] = 110;
+    t->p[P_LEVEL] = s->dmute ? 0 : sas_clamp(110 * s->dvol / 80, 0, 127);   /* (the MIXER's DRUMS) */
     t->p[P_VOICE] = V_POLY;
     t->p[P_DIST] = 0;
     t->p[P_ITYPE] = 0;

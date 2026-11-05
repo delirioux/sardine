@@ -971,6 +971,7 @@ void sa_defaults(sa_settings *s)
         s->pan[l].rate = SA_PRATE_BAR;
     }
     for (int p = 0; p < SA_SYNTHS; ++p) s->d3rate[p] = SA_PRATE_2BARS;
+    s->dvol = 80;
     for (int p = 0; p < SA_SYNTHS; ++p) {          /* LEAD 10 %, CHORD 80 %, BASS 50 % until the glue sets it by type */
         static const uint8_t DEP[SA_SYNTHS] = {10, 80, 50};
         s->pl[p].depth = DEP[p];
@@ -1117,6 +1118,8 @@ void sa_settings_fix(sa_settings *s)
         sa_3d *d = &s->d3[p];
         d->on = (uint8_t)(d->on % SA_3D_MODES);
         s->d3rate[p] = (uint8_t)(s->d3rate[p] % SA_PRATES);
+        s->dvol = (uint8_t)clampi(s->dvol, 0, 100);
+        s->dmute = (uint8_t)(s->dmute ? 1 : 0);
         d->az %= SA_AZ_STEPS;
         d->el = (int8_t)clampi(d->el, -50, 50);
         d->dist = (uint8_t)clampi(d->dist, 0, 100);

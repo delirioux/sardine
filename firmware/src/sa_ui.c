@@ -292,6 +292,15 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         sv_card_off(&c[3]);
         return;
     }
+    case SV_PG_MIXER:
+        for (int i = 0; i < 4; ++i) {
+            static const char *const N[4] = {"LEAD", "CHORD", "BASS", "DRUMS"};
+            bool m = i < 3 ? s->live[i].mute : s->dmute;
+            int v = i < 3 ? s->live[i].level : s->dvol;
+            if (u->mixmute) sv_card_txt(&c[i], N[i], m ? "MUTED" : "ON", -1, m);
+            else sv_card_num(&c[i], N[i], v, 0, 100);
+        }
+        return;
     case SV_PG_MENU:
         sv_card_txt(&c[0], "COLOR", UI_PALETTES[s->palette % NPALETTES].name, -1, false);
         sv_card_txt(&c[1], "LOOK", s->look ? "LINE" : "FLAT", -1, false);
@@ -488,6 +497,7 @@ static void sv_head_title(const sa_ui *u, char *t, unsigned n)
     case SV_PG_MAIN: sv_cpy(t, u->g->playing ? u->g->chord_name : "HOME", n); break;
     case SV_PG_KEY: sv_cpy(t, "KEY", n); break;
     case SV_PG_SETS: sv_cpy(t, "SETS", n); break;
+    case SV_PG_MIXER: sv_cpy(t, u->mixmute ? "MIXER  MUTE" : "MIXER", n); break;
     case SV_PG_MENU: sv_cpy(t, "MENU", n); break;
     default:
         sv_cpy(t, SV_VIEW_NAME[u->view], n);
@@ -549,8 +559,8 @@ static void sv_draw_foot(sa_ui *u)
         np = sv_pages(u, pg);
         sv_cpy(l, SV_VIEW_NAME[u->view], sizeof l);
     } else {
-        sv_cpy(l, u->page == SV_PG_MAIN ? "HOME" : u->page == SV_PG_KEY ? "KEY" : u->page == SV_PG_SETS ? "SETS" : "MENU",
-               sizeof l);
+        sv_cpy(l, u->page == SV_PG_MAIN ? "HOME" : u->page == SV_PG_KEY ? "KEY" : u->page == SV_PG_SETS ? "SETS" :
+                  u->page == SV_PG_MIXER ? "MIXER" : "MENU", sizeof l);
     }
     if (u->page == SV_PG_SETS) {
         static const char *const ACT[SV_SA_ACTS] = {"REC: LOAD", "REC: STORE", "REC: NEW", "REC: CLEAR"};
@@ -564,6 +574,8 @@ static void sv_draw_foot(sa_ui *u)
         sv_cat(r, sv_page_name(pg[(sv_clampi(u->fx, 0, np - 1) + 1) % np]), sizeof r);
     } else if (u->page == SV_PG_MAIN) {
         sv_cpy(r, "PRESETS: LAYERS", sizeof r);
+    } else if (u->page == SV_PG_MIXER) {
+        sv_cpy(r, u->mixmute ? "FX: VOLUME" : "FX: MUTE", sizeof r);
     }
     uint32_t sig = sv_hash(sv_hash((uint32_t)(now + 1) * 7u + (uint32_t)g->playing * 3u + ux.gen * 11u +
                                    (uint32_t)u->fx * 101u + (uint32_t)np * 1009u, l), r);
@@ -1100,6 +1112,28 @@ static void sv_panel_layer(sa_ui *u)
     }
 }
 
+/* the MIXER: a fader each (LEAD CHORD BASS DRUMS), a dot lit as it plays; muted ones dark */
+static void sv_panel_mixer(sa_ui *u)
+{
+    const sa_groove *g = u->g;
+    const sa_settings *s = &g->s;
+    static const char *const N[4] = {"LEAD", "CHORD", "BASS", "DRUMS"};
+    int now = sv_now(g);
+    for (int i = 0; i < 4; ++i) {
+        int32_t x = SV_CARD_X(i) + 20, y0 = 10, h = 80;
+        bool m = i < 3 ? s->live[i].mute : s->dmute;
+        int v = i < 3 ? s->live[i].level : s->dvol, f = v * h / 100;
+        bool hit = false;
+        if (now >= 0 && i < 3) hit = (g->hits[i] >> now) & 1u;
+        for (int l = SA_L_DRUM0; i == 3 && now >= 0 && l < SA_LAYERS; ++l) hit |= (g->hits[l] >> now) & 1u;
+        cv_rect(x, y0, 14, h, sv_well());
+        cv_rect(x, y0 + h - f, 14, f > 0 ? f : 1, m ? T_DIM : i == 3 ? T_THEME : T_ACCENT);
+        cv_rect(x - 3, y0 + h - 80 * h / 100, 20, 1, T_MID);          /* (80: as it is) */
+        cv_rrect(x + 3, y0 + h + 6, 8, 8, 4, hit && !m ? T_TEXT : sv_well(), T_SURF);
+        cv_text_in(SV_CARD_X(i), y0 + h + 18, SV_CARD_W, &AF_S, m ? "MUTED" : N[i], m ? T_ACCENT : T_MID, T_SURF);
+    }
+}
+
 static void sv_draw_panel(sa_ui *u)
 {
     sv_panel_begin();
@@ -1108,6 +1142,7 @@ static void sv_draw_panel(sa_ui *u)
     case SV_PG_LAYER: sv_panel_layer(u); break;
     case SV_PG_KEY: sv_panel_key(u); break;
     case SV_PG_SETS: sv_panel_sets(u); break;
+    case SV_PG_MIXER: sv_panel_mixer(u); break;
     default: sv_panel_menu(u); break;
     }
     cv_blit(0, SV_PANEL_Y);
@@ -1157,6 +1192,7 @@ int sv_page_button(const sa_ui *u)
     case SV_PG_MAIN: return SV_B_HOME;
     case SV_PG_KEY: return SV_B_SCL;
     case SV_PG_SETS: return SV_B_SAVE;
+    case SV_PG_MIXER: return SV_B_GLO;
     case SV_PG_LAYER: return u->fx > 0 ? SV_B_FX : -1;
     default: return -1;
     }
@@ -1321,6 +1357,16 @@ void sv_knob(sa_ui *u, int k, int d)
         if (i == 0) u->set_slot = sv_clampi(u->set_slot + d, 0, SV_SLOTS - 1);
         else if (i == 1) u->set_act = sv_clampi(u->set_act + d, 0, SV_SA_ACTS - 1);
         return;
+    case SV_PG_MIXER:
+        u->changed = true;
+        if (u->mixmute) {
+            if (i < 3) sa_mute(g, i, d > 0);
+            else s->dmute = (uint8_t)(d > 0);
+        } else {
+            uint8_t *f = i < 3 ? &s->live[i].level : &s->dvol;
+            *f = (uint8_t)sv_clampi(*f + d * 2, 0, 100);
+        }
+        return;
     case SV_PG_MENU:
         if (i == 0) s->palette = (uint8_t)sv_wrap(s->palette + d, (int)NPALETTES);
         else if (i == 1) s->look = (uint8_t)!s->look;
@@ -1468,7 +1514,22 @@ void sv_button(sa_ui *u, int b, bool down)
             sv_msg(u, u->rec ? "REC: STEPS ON THE KEYS" : "REC OFF: THE KEYS PLAY");
         }
         break;
+    case SV_B_GLO:                                 /* the MIXER, again: back */
+        if (u->page == SV_PG_MIXER) {
+            if (u->mback == SV_PG_LAYER) { u->page = SV_PG_LAYER; u->force = true; }
+            else sv_view(u, SV_V_HOME);
+        } else {
+            u->mback = u->page == SV_PG_LAYER ? SV_PG_LAYER : SV_PG_MAIN;
+            u->mixmute = false;
+            sv_goto(u, SV_PG_MIXER);
+        }
+        break;
     case SV_B_FX:
+        if (u->page == SV_PG_MIXER) {
+            u->mixmute = !u->mixmute;
+            u->force = true;
+            break;
+        }
         if (u->page == SV_PG_LAYER) {
             int p[8], n = sv_pages(u, p);
             u->fx = (u->fx + 1) % n;

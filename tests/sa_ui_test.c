@@ -426,6 +426,23 @@ int main(int argc, char **argv)
     bars(1);
     shot("18_home_full");
     all_palettes("home_full");
+    /* the MIXER on GLO: the four volumes, FX: their mutes */
+    press(SV_B_GLO);
+    CHECK(ui.page == SV_PG_MIXER && sv_page_button(&ui) == SV_B_GLO, "GLO: MIXER");
+    sv_knob(&ui, SV_K4, -10);
+    CHECK(g.s.dvol == 60, "MIXER: DRUMS volume (%d)", g.s.dvol);
+    bars(1);
+    shot("18b_mixer");
+    all_palettes("mixer");
+    press(SV_B_FX);
+    sv_knob(&ui, SV_K2, 1);
+    CHECK(ui.mixmute && g.s.live[SA_L_CHORD].mute, "MIXER, FX: CHORD muted");
+    shot("18c_mixer_mute");
+    sv_knob(&ui, SV_K2, -1);
+    sv_knob(&ui, SV_K4, -1);
+    press(SV_B_GLO);
+    CHECK(ui.page == SV_PG_MAIN, "GLO again: back HOME");
+    g.s.dvol = 80;
     /* SETS */
     ui.sets[0] = (sv_set_info){1, 126, 9, SA_SC_MINOR, SA_KIT_TECH, 3, {0, 1, (uint8_t)(SAS_NSOUNDS - 1)}, 0};
     ui.sets[1] = (sv_set_info){0, 0, 0, 0, 0, 0, {0, 0, 0}, 1};

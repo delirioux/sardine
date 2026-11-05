@@ -21,6 +21,7 @@ into one of eight sets (SAVE, below).
 | REC | step recording on the layer, on and off |
 | SCL | the key and the chords, again: back |
 | SAVE | the sets, again: back |
+| GLO | the MIXER, again: back |
 | PLAY | start, stop |
 | OCT- OCT+ | the keys' octave (the one it moved to lit) |
 
@@ -134,6 +135,16 @@ FX: **MIX** (VOLUME, KIT, INSTR, MUTE), **KIT** (KIT, TUNE, TONE, DECAY: the who
 **MOD** (three modifiers, and **CHANCE**: how likely each hit plays, 100 % always; lower and hits drop out at random,
 so the pattern changes as it plays). The kits, all synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY,
 CLASSIC, ROOM, VINTAGE, MINIMAL, VOLT (electro), GARAGE, DISCO, BREAKS, DUB, LOFI, IRON (industrial), ACID.
+
+## MIXER
+
+<p align="center">
+<img src="screens/mixer.png" alt="MIXER" width="200">
+</p>
+
+**GLO** opens the MIXER: a fader for each layer, LEAD, CHORD, BASS and DRUMS (all the drums together), on the four
+knobs, at once (80: as it is); the dot under a fader lights as the layer plays. **FX** turns the knobs over to their
+MUTE (and back). GLO again goes back. A layer's VOLUME here is the same as on its own first FX page.
 
 ## The modifiers
 
