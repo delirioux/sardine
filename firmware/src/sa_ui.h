@@ -12,7 +12,7 @@
  *   PRESETS    HOME, LEAD, CHORD, BASS, DRUMS
  *   ALGORITHM  the pattern of the layer (OFF first; a drum: OFF, then REMOVE; + ADD: which drum). Waits for SEQ
  *   KNOB 1..4  HOME: FILTER FEEL PUMP SPACE. A synth layer's pages: its home CUTOFF RESO DRIVE ENV (at once);
- *              SOUND (TYPE, SOUND, PUMP: at once); ARP on CHORD (MODE RATE RANGE GATE); PAN (at once); 3D (MODE: OFF FIXED
+ *              SOUND (TYPE, SOUND, PUMP: at once); ARP (MODE RATE RANGE GATE); PAN (at once); 3D (MODE: OFF FIXED
  *              ORBIT RANDOM FLY, ANGLE or RATE, HEIGHT, DISTANCE: at once, headphones); PUMP (DEPTH RELEASE SOURCE ON, at once); GATE; MOD (the
  *              four modifiers); MIX (MUTE, LEVEL: at once). DRUMS: DRUM LEVEL ACCENT CHANCE; KIT (KIT TUNE TONE DECAY);
  *              MOD; MIX

@@ -203,7 +203,7 @@ static int sv_pages(const sa_ui *u, int *p)
         p[n++] = SVP_MOD;
         return n;
     }
-    if (u->view == SV_V_CHORD) p[n++] = SVP_ARP;
+    p[n++] = SVP_ARP;                              /* (every synth layer's, OFF at first) */
     p[n++] = SVP_PAN;
     p[n++] = SVP_3D;
     p[n++] = SVP_PUMP;

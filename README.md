@@ -18,7 +18,7 @@ second colour, until SEQ drops them in on the one.
 - 24 drum patterns and 29 synth patterns, straight, broken and triplet; FEEL swings them all together
 - The synth layers pump under the kick (PUMP), with REVERB, DELAY and WIDTH for the space they sit in
 - GATE: a held pad cut to a rhythm (twelve ready gates, edited on the keys); PAN: fixed, sweeping, ping-pong or random
-- CHORD's arpeggiator, off until you want it: ten modes, triplet rates, up to four octaves, always in the key
+- An arpeggiator on every synth layer, off until you want it: ten modes, triplet rates, up to four octaves, always in the key
 - Key, scale and ten chord progressions; every synth layer follows the chord
 - Every start a fresh groove (other sounds, patterns, kit, key); eight sets keep the ones you want, LAST the last one
 

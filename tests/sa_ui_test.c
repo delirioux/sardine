@@ -254,7 +254,9 @@ int main(int argc, char **argv)
     sv_knob(&ui, SV_K1, -10);
     CHECK(g.s.live[SA_L_BASS].level == 60, "VOLUME (%d)", g.s.live[SA_L_BASS].level);
     press(SV_B_FX);
-    CHECK(sv_page_now(&ui) == SVP_PAN, "FX: PAN (no ARP on BASS)");
+    CHECK(sv_page_now(&ui) == SVP_ARP && g.ed[SA_L_BASS].amode == SA_AR_OFF, "FX: ARP on BASS too, OFF");
+    press(SV_B_FX);
+    CHECK(sv_page_now(&ui) == SVP_PAN, "FX: PAN");
     shot("07_bass_pan");
     press(SV_B_FX);
     CHECK(sv_page_now(&ui) == SVP_3D, "FX: 3D");

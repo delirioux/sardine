@@ -48,7 +48,7 @@ LEAD lead lines and the bass lines). FX turns through its pages:
 | Page | KNOB 1 | KNOB 2 | KNOB 3 | KNOB 4 | |
 | --- | --- | --- | --- | --- | --- |
 | MIX (the first) | VOLUME (fades it in and out) | TYPE (BASS KEYS PADS LEADS FX) | INSTR (the sound, by name; the header says it whole) | MUTE | at once |
-| ARP (CHORD only) | MODE (OFF, UP, DOWN, UP-DOWN, DOWN-UP, CONVERGE, DIVERGE, RANDOM, THUMB, PINKY, STRUM) | RATE | RANGE | GATE | waits for SEQ |
+| ARP | MODE (OFF, UP, DOWN, UP-DOWN, DOWN-UP, CONVERGE, DIVERGE, RANDOM, THUMB, PINKY, STRUM) | RATE | RANGE | GATE | waits for SEQ |
 | PAN | MODE (FIXED, SWEEP, PING-PONG, RANDOM) | PAN | WIDTH | RATE (SWEEP) | at once |
 | 3D | MODE (OFF FIXED ORBIT RANDOM FLY) | ANGLE (FIXED) or RATE (ORBIT, FLY) | HEIGHT | DIST | at once |
 | PUMP | DEPTH (of HOME's PUMP) | RELEASE | SOURCE (KICK, BEAT) | PUMP ON / OFF | at once |
@@ -87,7 +87,7 @@ type sets its DEPTH when you pick it: PADS 100 %, KEYS 80 %, BASS 50 %, LEADS 10
 back (50: over most of a beat), SOURCE whether it follows the kick layer's hits (KICK: mute the kick and it stops) or
 every beat (BEAT). The drums never duck.
 
-The arpeggiator is CHORD's: OFF until you turn MODE. It plays the chord of the bar over the notes the pattern holds,
+Every synth layer has an arpeggiator: OFF until you turn MODE. It plays the chord of the bar over the notes the pattern holds,
 so it is always in key, and swings with FEEL. GATE cuts a held chord to a rhythm by its volume, without a new attack.
 
 ## Steps (REC)
