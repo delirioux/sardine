@@ -96,13 +96,13 @@ static int32_t sv_icon_mid(int32_t x, int32_t cy, uint32_t size, uint32_t id, ui
 }
 
 /* ---- the cards ---------------------------------------------------------------------------------------------- */
-typedef struct { char label[12], val[20]; int ratio; bool pend, off; } sv_card;
+typedef struct { char label[12], val[20]; int ratio; bool pend, off, name; } sv_card;   /* name: a sound's name (cut if long) */
 static void sv_card_num(sv_card *c, const char *label, int v, int lo, int hi)
 {
     sv_cpy(c->label, label, sizeof c->label);
     sv_fmt_int(c->val, v);
     c->ratio = hi > lo ? (v - lo) * 1000 / (hi - lo) : -1;
-    c->pend = c->off = false;
+    c->pend = c->off = c->name = false;
 }
 static void sv_card_txt(sv_card *c, const char *label, const char *val, int ratio, bool pend)
 {
@@ -110,7 +110,7 @@ static void sv_card_txt(sv_card *c, const char *label, const char *val, int rati
     sv_cpy(c->val, val, sizeof c->val);
     c->ratio = ratio;
     c->pend = pend;
-    c->off = false;
+    c->off = c->name = false;
 }
 static void sv_card_off(sv_card *c)
 {
@@ -138,7 +138,8 @@ static void sv_draw_card(sa_ui *u, int i, const sv_card *c)
     } else {
         cv_text_fit(5, 3, &AF_S, c->label, lc, T_SURF, SV_CARD_W - 8);
         const aafont_t *vf = text_w(&AF_M, c->val) <= SV_CARD_W - 8 ? &AF_M : &AF_S;
-        cv_text_fit(5, vf == &AF_M ? 17 : 19, vf, c->val, vc, T_SURF, SV_CARD_W - 8);
+        if (c->name) cv_free_text(5, vf == &AF_M ? 17 : 19, vf, c->val, vc, T_SURF, SV_CARD_W - 8);
+        else cv_text_fit(5, vf == &AF_M ? 17 : 19, vf, c->val, vc, T_SURF, SV_CARD_W - 8);
         if (c->ratio >= 0) {
             int32_t w = SV_CARD_W - 10, r = sv_clampi(c->ratio, 0, 1000) * w / 1000;
             cv_rect(5, 37, w, 3, T_LINE);
@@ -452,7 +453,8 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
             sv_cat(t, "/", sizeof t);
             sv_fmt_int(a, n);
             sv_cat(t, a, sizeof t);
-            sv_card_txt(&c[2], "INSTR", t, n > 1 ? at * 1000 / (n - 1) : -1, false);   /* (its name on the panel) */
+            sv_card_txt(&c[2], "INSTR", sas_of(lc->sound)->name, n > 1 ? at * 1000 / (n - 1) : -1, false);
+            c[2].name = true;                      /* (its name; the full one on the panel and in the header) */
         }
         sv_card_txt(&c[3], "MUTE", v->mute ? "ON" : "OFF", -1, false);
         break;
@@ -1242,6 +1244,13 @@ static void sv_sound_turn(sa_ui *u, int knob, int d)
         for (int i = 0; i < n; ++i) if (list[i] == cur) at = i;
         at = sv_clampi(at + d, 0, n - 1);
         if (n && list[at] != cur) sa_sound_now(g, l, list[at]);
+    }
+    if (g->s.code[l].sound != cur) {               /* another sound: its name, briefly, in the header */
+        char m[32];
+        sv_cpy(m, SV_VIEW_NAME[u->view], sizeof m);
+        sv_cat(m, ": ", sizeof m);
+        sv_cat(m, sas_of(g->s.code[l].sound)->name, sizeof m);
+        sv_msg(u, m);
     }
     if (g->s.code[l].sound != cur && g->s.code[l].part < SA_SYNTHS) {   /* another sound: its type's pump */
         g->s.pl[g->s.code[l].part].depth = sas_pump_of(g->s.code[l].sound);

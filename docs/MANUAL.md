@@ -47,7 +47,7 @@ LEAD lead lines and the bass lines). FX turns through its pages:
 
 | Page | KNOB 1 | KNOB 2 | KNOB 3 | KNOB 4 | |
 | --- | --- | --- | --- | --- | --- |
-| MIX (the first) | VOLUME (fades it in and out) | TYPE (BASS KEYS PADS LEADS FX) | INSTR (the sound) | MUTE | at once |
+| MIX (the first) | VOLUME (fades it in and out) | TYPE (BASS KEYS PADS LEADS FX) | INSTR (the sound, by name; the header says it whole) | MUTE | at once |
 | ARP (CHORD only) | MODE (OFF, UP, DOWN, UP-DOWN, DOWN-UP, CONVERGE, DIVERGE, RANDOM, THUMB, PINKY, STRUM) | RATE | RANGE | GATE | waits for SEQ |
 | PAN | MODE (FIXED, SWEEP, PING-PONG, RANDOM) | PAN | WIDTH | RATE (SWEEP) | at once |
 | 3D | ANGLE (around you) | HEIGHT | DIST | 3D ON / OFF | at once |
