@@ -265,7 +265,9 @@ delay. The room every layer plays in is a big hall; the drums send little into i
 <img src="screens/menu.png" alt="MENU" width="200">
 </p>
 
-HOME held: the colour (SHOAL by default, and Felucca's) and the look (FLAT, LINE).
+HOME held: the colour (SHOAL by default, and Felucca's) and the look (FLAT, LINE). Below them the **CPU**: the audio's load
+now (its average over a tenth of a second; above 85 % it turns the second colour), its PEAK since the start, and how
+many voices the load guard had to let go (SHED), if any.
 
 ## MIDI out
 

@@ -617,6 +617,15 @@ static void sa_frame(void)
     song.playing = sa_g.playing;
     sa_leds();
     sa_u.batt = (int)batt_shown();
+    {   /* MENU's CPU: the audio's load (audio.c), read twice a second */
+        static uint32_t cpu_at;
+        if (now - cpu_at >= 500u) {
+            cpu_at = now;
+            sa_u.cpu = (int)(song.cpu_q8 * 100u / 256u);
+            sa_u.cpu_peak = (int)(audio_max_us * 100u / (HALF_FRAMES * 1000000u / FS));
+            sa_u.shed = (int)shed_count;
+        }
+    }
     sv_tick(&sa_u, dt > 100u ? 100 : (int)dt);
     if (first) {
         sv_draw_all(&sa_u);

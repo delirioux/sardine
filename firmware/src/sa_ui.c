@@ -909,11 +909,24 @@ static void sv_panel_sets(sa_ui *u)
 
 static void sv_panel_menu(sa_ui *u)
 {
-    (void)u;
     cv_text_on(30, 16, &AF_M, "SARDINE " SA_VERSION, T_TEXT, T_SURF);
     cv_text_on(30, 42, &AF_S, "LIVE CLUB MIXING FOR THE FM-1", T_MID, T_SURF);
     cv_text_on(30, 60, &AF_S, "ON FELUCCA, AFTER TUNA", T_MID, T_SURF);
-    cv_text_on(30, 80, &AF_S, "GPL-3.0, HOME CLOSES", T_DIM, T_SURF);
+    cv_text_on(30, 76, &AF_S, "GPL-3.0, HOME CLOSES", T_DIM, T_SURF);
+    {   /* the CPU: the audio's load, its average over a tenth of a second, and its worst since the start */
+        char t[24], a[8];
+        cv_rect(30, 92, 180, 1, T_LINE);
+        cv_text_on(30, 99, &AF_M, "CPU", T_TEXT, T_SURF);
+        sv_fmt_int(t, sv_clampi(u->cpu, 0, 100));
+        sv_cat(t, " %", sizeof t);
+        cv_text_r(210, 99, &AF_M, t, u->cpu >= 85 ? T_ACCENT : T_THEME, T_SURF);
+        sv_cpy(t, "PEAK ", sizeof t);
+        sv_fmt_int(a, sv_clampi(u->cpu_peak, 0, 999));
+        sv_cat(t, a, sizeof t);
+        sv_cat(t, " %", sizeof t);
+        if (u->shed) { sv_cat(t, ", SHED ", sizeof t); sv_fmt_int(a, u->shed); sv_cat(t, a, sizeof t); }
+        cv_text_on(80, 103, &AF_S, t, T_DIM, T_SURF);
+    }
 }
 
 /* the copy's bar of a layer, worked out again when it changed */

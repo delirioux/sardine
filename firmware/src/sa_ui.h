@@ -88,6 +88,7 @@ typedef struct {
     int key_sent[27];
     uint32_t frame;
     int batt;
+    int cpu, cpu_peak, shed;              /* MENU: the audio's load now (its average) and its worst, in %; voices shed */
     bool changed;                         /* a setting changed: the glue applies it (and keeps the look) */
     sv_set_info sets[SV_SLOTS];           /* what each set holds, and LAST (the glue fills it) */
     int set_slot, set_act;                /* SETS: the set picked, the action (SV_SA_*) */

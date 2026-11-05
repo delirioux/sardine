@@ -569,6 +569,8 @@ int main(int argc, char **argv)
     run_ms(700);
     sv_button(&ui, SV_B_HOME, false);
     CHECK(ui.page == SV_PG_MENU, "HOME held: MENU");
+    ui.cpu = 42;
+    ui.cpu_peak = 67;
     shot("20_menu");
     press(SV_B_HOME);
     press(SV_B_PLAY);
