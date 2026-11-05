@@ -98,7 +98,8 @@ static void sa_audio_post(int32_t *out, uint32_t n)
 #define SA_PREF_MAGIC 0x31504153u                            /* "SAP1" */
 #define SA_SET_MAGIC 0x31534153u                             /* "SAS1" */
 #define SA_REC_MAGIC 0x32524153u                             /* "SAR2": 0.2..0.5's groove, moved into set 1 once */
-typedef struct { uint32_t magic, boots; uint8_t look, pad[3]; } sa_prefs;
+typedef struct { uint32_t magic, boots; uint8_t look, pad[3]; sv_song song; } sa_prefs;   /* (song: appended) */
+#define SA_PREFS_OLD 12u                                     /* (0.7's: no song) */
 typedef struct { uint32_t magic; uint16_t size, ver; sa_settings s; } sa_record;
 #define SA_SET_PER 3u                                        /* sets to an object */
 #define SA_SET_STRIDE 1280u                                  /* the room a set has (sa_settings may grow into it) */
@@ -234,6 +235,7 @@ static void sa_prefs_save(void)
 #if FELUCCA_FLASH
     sa_pref.magic = SA_PREF_MAGIC;
     sa_pref.look = sa_g.s.look;
+    sa_pref.song = sa_u.song;
     if (flash_ok && st_save(OBJ_PROJECT0, &sa_pref, sizeof sa_pref) == 0)
         sa_pref_look = sa_pref.look;
 #endif
@@ -246,8 +248,8 @@ static void sa_prefs_load(void)
     if (!flash_ok)
         return;
     int n = st_load(OBJ_PROJECT0, &sa_wait, sizeof sa_wait);
-    if (n >= (int)sizeof(sa_prefs) && sa_wait.magic == SA_PREF_MAGIC) {
-        memcpy(&sa_pref, &sa_wait, sizeof sa_pref);
+    if (n >= (int)SA_PREFS_OLD && sa_wait.magic == SA_PREF_MAGIC) {
+        memcpy(&sa_pref, &sa_wait, (uint32_t)n < sizeof sa_pref ? (uint32_t)n : sizeof sa_pref);
     } else if (n >= (int)(sizeof sa_wait - sizeof sa_wait.s) && sa_wait.magic == SA_REC_MAGIC &&
                !sa_set_read(0, &sa_next)) {
         uint32_t k = sa_wait.size < sizeof sa_next ? sa_wait.size : sizeof sa_next;
@@ -526,8 +528,95 @@ static void sa_fw_init(void)
     sa_edit_reset(&sa_g);
     sa_set_sound(&sa_g, sa_sound, 0);
     sv_init(&sa_u, &sa_g);
+    {   /* SONG as kept (none kept, or all END: sets 1..4, sv_init's) */
+        bool any = false;
+        for (int k = 0; k < SV_STEPS; ++k) any |= sa_pref.song.set[k] != 0;
+        if (any) {
+            sa_u.song = sa_pref.song;
+            for (int k = 0; k < SV_STEPS; ++k) {
+                if (sa_u.song.set[k] > SV_SETS) sa_u.song.set[k] = 0;
+                sa_u.song.bars[k] %= SV_SONG_BARS;
+            }
+            sa_u.song.on = 0;                                /* (SONG starts OFF: a start plays its own groove) */
+        }
+    }
     sa_sets_scan();
     sa_apply();
+}
+
+/* ---- SONG: the steps' sets in turn, each armed a bar before its bar line ---- */
+static sa_settings sa_song_set;                              /* the step armed (kept until its bar line) */
+static int sa_song_end, sa_song_next = -1;
+static bool sa_song_primed;
+static bool sa_song_ok(int k)
+{
+    int st = sa_u.song.set[k];
+    return st >= 1 && st <= SV_SETS && (sa_u.sets[st - 1].used || sa_u.sets[st - 1].wait);
+}
+static int sa_song_after(int k)                              /* the next step with a set (round); -1: none */
+{
+    for (int i = 1; i <= SV_STEPS; ++i)
+        if (sa_song_ok((k + i) % SV_STEPS)) return (k + i) % SV_STEPS;
+    return -1;
+}
+static bool sa_song_arm(int k)
+{
+    int st = sa_u.song.set[k] - 1;
+    if (st == sa_wait_slot) {
+        if (sa_wait_clear) return false;
+        sa_song_set = sa_wait.s;
+    } else if (!sa_set_read(st, &sa_song_set)) {
+        return false;
+    }
+    fm1_irq_off();
+    sa_set_arm(&sa_g, &sa_song_set);
+    fm1_irq_on();
+    return true;
+}
+static void sa_song(void)
+{
+    if (!sa_u.song.on) {
+        sa_u.song_step = -1;
+        sa_song_primed = false;
+        sa_song_next = -1;
+        return;
+    }
+    if (!sa_g.playing) {                                     /* stopped: the first step's set in, ready for PLAY */
+        sa_u.song_step = -1;
+        sa_song_next = -1;
+        if (!sa_song_primed) {
+            int f = sa_song_after(SV_STEPS - 1);
+            if (f >= 0 && sa_song_arm(f)) sv_msg(&sa_u, "SONG: PLAY");
+            sa_song_primed = true;
+        }
+        return;
+    }
+    int bar = sa_g.bar;
+    if (sa_u.song_step < 0) {                                /* SONG on while playing, or PLAY after the first */
+        int f = sa_song_after(SV_STEPS - 1);
+        if (f < 0) return;
+        sa_u.song_step = f;
+        if (sa_song_primed && bar <= 0) {
+            sa_song_end = sv_song_bars(sa_u.song.bars[f]);
+        } else {
+            sa_song_arm(f);
+            sa_song_end = bar + 1 + sv_song_bars(sa_u.song.bars[f]);
+        }
+        sa_song_primed = false;
+        sa_song_next = -1;
+        return;
+    }
+    if (sa_song_next < 0 && bar >= sa_song_end - 1) {       /* the next one, for the bar line */
+        int n = sa_song_after(sa_u.song_step);
+        if (n < 0) return;
+        if (sa_u.song.set[n] != sa_u.song.set[sa_u.song_step] || n != sa_u.song_step) sa_song_arm(n);
+        sa_song_next = n;
+    }
+    if (sa_song_next >= 0 && bar >= sa_song_end) {
+        sa_u.song_step = sa_song_next;
+        sa_song_end += sv_song_bars(sa_u.song.bars[sa_song_next]);
+        sa_song_next = -1;
+    }
 }
 
 /* ---- the main loop ----------------------------------------------------------------------------------------------- */
@@ -650,6 +739,7 @@ static void sa_frame(void)
         sa_set_do(sa_u.req_act, sa_u.req_slot);
         sa_u.req_act = -1;
     }
+    sa_song();
     sa_apply();
     if (sa_wait_slot >= 0 && !sa_g.playing) {                /* a set stored while playing: now */
         int k = sa_wait_slot;
@@ -666,7 +756,7 @@ static void sa_frame(void)
     if (was_playing && !sa_g.playing) sa_save_ms = now;     /* (stopped: the tails ring out before the flash) */
     was_playing = sa_g.playing;
     if (sa_dirty && !sa_g.playing && now - sa_save_ms > SA_LAST_MS) {   /* the look; LAST, when the groove changed */
-        if (sa_g.s.look != sa_pref_look) sa_prefs_save();
+        if (sa_g.s.look != sa_pref_look || memcmp(&sa_u.song, &sa_pref.song, sizeof sa_u.song)) sa_prefs_save();
         uint32_t sig = sv_hashb(2166136261u, &sa_g.s, sizeof sa_g.s) | 1u;
         if (sig != sa_last_sig && sa_set_write(SV_LAST, &sa_g.s)) {
             sa_last_sig = sig;

@@ -65,6 +65,18 @@ typedef struct {
     uint8_t wait;                                     /* stored while playing: written once stopped */
 } sv_set_info;
 
+/* SONG (GLO's 5th page): up to eight steps, each a set for a number of bars, played in turn round and round
+ * while SONG is ON (the glue loads each on its bar line); kept with the preferences */
+#define SV_STEPS 8
+#define SV_SONG_BARS 5                        /* 4 8 16 32 64 */
+typedef struct {
+    uint8_t set[SV_STEPS];                    /* 0: END (nothing), 1..8 the set */
+    uint8_t bars[SV_STEPS];                   /* 0..4: 4 8 16 32 64 bars */
+    uint8_t on, pad[3];
+} sv_song;
+int sv_song_bars(int i);
+void sv_song_default(sv_song *s);
+
 typedef struct {
     sa_groove *g;
     int page;
@@ -76,7 +88,10 @@ typedef struct {
     int back;                             /* the page KEY goes back to */
     int mback;                            /* the page the MIXER goes back to */
     bool home2;                           /* HOME's second page (FX): RESO, WIDTH */
-    int mixmute;                          /* GLO's page: 0 VOLUME, 1 MUTE, 2 SOLO, 3 STYLE (GLO turns them over) */
+    int mixmute;                          /* GLO's page: 0 VOLUME, 1 MUTE, 2 SOLO, 3 STYLE, 4 SONG (GLO turns them over) */
+    sv_song song;                         /* SONG (the glue keeps it) */
+    int song_pick;                        /* SONG: the step KNOB 1 picked */
+    int song_step;                        /* SONG: the step playing (-1: none; the glue sets it) */
     int style_pick;                       /* the MIXER's STYLE page: the style SEQ makes a groove in */
     int scur;                             /* REC on a synth layer, EDIT: the step the keys write */
     int fill;                             /* EDIT: KNOB 2's FILL (0 CURR: the pattern as it was) */

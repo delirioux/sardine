@@ -44,7 +44,22 @@ shows its sound dimmed and OFF, a muted one is crossed out. The knobs act at onc
 (the swing of the off sixteenths), **PUMP** (how deep the synth layers duck under the kick; each layer's own share on its PUMP page) and **SPACE** (the room:
 reverb and delay together; at 70 each sound has its own). **FX** on HOME turns the knobs over to **RESO** (resonance on the whole mix's
 filter, over each synth layer's own: ride FILTER down with it up for the filter-house sweep) and **WIDTH** (the stereo
-spread, 70: each sound's own); FX again back.
+spread, 70: each sound's own), **PHRASE** and **A/B** (below); FX again back.
+
+### Phrases, PART A and B
+
+The synth layers play in four-bar phrases, the way a tune is built: A A A' B. Bar 3 lifts its second half a step (each
+chord tone to the next, an own note a step up the scale), bar 4 answers: LEAD's first note of its second half lands on
+the chord's root and is held, nothing after it; BASS and CHORD leave the last beat empty, room for the drum fill, and
+the bass's last note is the root. **PHRASE** (HOME, FX) OFF plays every bar as written.
+
+Every groove has two parts. **PART B** is each synth layer's second line (another of its kind: another lead line,
+bass line, stab or pad; in a STYLE, the style's other line), busier hats and a progression of its own. **ALGORITHM**
+on HOME turns PART to A (left) or B (right): playing, it comes in on the next phrase (the header shows A, >B, B, B>A);
+stopped, at once. **A/B** (HOME, FX) OFF, 8 or 16 bars: the parts take turns by themselves. While B is picked,
+ALGORITHM on a layer page picks that layer's B line (the top shows it) and KEY's third knob is **B CHORDS**; both wait for
+SEQ like any pattern. An edited (own) pattern is A's; B plays its line, or A's when B is "as A". An older set
+gets a B made from its A when it loads. PART goes back to A when a set comes in.
 
 ## LEAD, CHORD, BASS
 
@@ -177,7 +192,7 @@ CLASSIC, ROOM, VINTAGE, MINIMAL, VOLT (electro), GARAGE, DISCO, BREAKS, DUB, LOF
 **GLO** opens the MIXER: a fader for each layer, LEAD, CHORD, BASS and DRUMS (all the drums together), on the four
 knobs, at once (80: as it is); the dot under a fader lights as the layer plays. **GLO** again turns the knobs over to their
 MUTE, GLO again to their **SOLO** (turn right: that layer, with any others soloed, alone; left: back), GLO again
-to STYLE (below), GLO once more back. SOLO is a live move: not kept with the groove. A layer's VOLUME here is the same as on its own first FX page.
+to STYLE (below), GLO again to SONG (below), GLO once more back. SOLO is a live move: not kept with the groove. A layer's VOLUME here is the same as on its own first FX page.
 
 ## The drum fill
 
@@ -244,6 +259,14 @@ They act in order, each on what the ones before it made, and on time itself, not
 | LEN 3..15 | the first 3..15 sixteenths, over and over: against a 16-step layer it drifts and comes back |
 | OCT -2..+2 | octaves (synth layers) |
 | PLY 2 3 4 | each note 2, 3 or 4 times in its own length |
+
+## SONG
+
+**GLO** five times: **SONG**, the sets as the sections of a song. Eight steps, each a set and its length: **STEP** (1 to 8),
+**SET** (1 to 8, or END), **BARS** (4, 8, 16, 32, 64) and **SONG** (OFF, ON). ON, the steps play in turn, round and round:
+each set comes in on its bar line (read a bar ahead), empty sets and END steps are passed. Stopped, SONG ON loads the
+first step's set, PLAY starts the song from it; switched ON while playing, the first step comes in on the next 1. Out
+of the box: sets 1 to 4, 16 bars each. The steps are kept (with the look); SONG itself starts OFF.
 
 ## The key and the chords
 

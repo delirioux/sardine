@@ -397,13 +397,17 @@ static inline void sas_style_apply(sa_settings *s, int st, uint32_t seed, const 
     s->mreso = y->reso;
     struct { int slot; const char *const *snd, *const *pat; } L3[3] = {
         {SA_L_BASS, y->bass, y->bpat}, {SA_L_CHORD, y->chord, y->cpat}, {SA_L_LEAD, y->lead, y->lpat}};
+    int b_alt[3];
     for (int k = 0; k < 3; ++k) {
         sa_code *c = &s->code[L3[k].slot];
-        int a = SAS_R(2), snd = sas_find(L3[k].snd[a] ? L3[k].snd[a] : ""), pat = sas_pat(SA_T_SYNTH, L3[k].pat[SAS_R(2)]);
+        int a = SAS_R(2), pi = SAS_R(2), snd = sas_find(L3[k].snd[a] ? L3[k].snd[a] : ""),
+            pat = sas_pat(SA_T_SYNTH, L3[k].pat[pi]), alt = sas_pat(SA_T_SYNTH, L3[k].pat[1 - pi]);
         if (snd >= 0) c->sound = (uint8_t)snd;
         c->own = 0;
         c->amode = SA_AR_OFF;
-        c->pat = pat >= 0 ? (uint8_t)pat : (uint8_t)SA_PAT_OFF;
+        if (pat >= 0 || L3[k].slot != SA_L_LEAD)     /* (a style with no lead line: sa_random's, a song has a lead) */
+            c->pat = pat >= 0 ? (uint8_t)pat : (uint8_t)SA_PAT_OFF;
+        b_alt[k] = alt >= 0 && alt != pat ? alt : -1;
         s->gate[L3[k].slot].pat = 0;
         s->gate[L3[k].slot].own = 0;
         s->pl[L3[k].slot].on = 2;                    /* (the pump by the sound's type: sas_fix) */
@@ -437,6 +441,9 @@ static inline void sas_style_apply(sa_settings *s, int st, uint32_t seed, const 
             }
         }
     }
+    sa_make_b(s, seed);                                /* PART B: the style's other line for each synth layer */
+    for (int k = 0; k < 3; ++k)
+        if (b_alt[k] >= 0) s->patb[L3[k].slot] = (uint8_t)(b_alt[k] + 1);
 #undef SAS_R
     sas_fix(s);
 }

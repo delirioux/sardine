@@ -287,8 +287,9 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         if (u->home2) {                            /* HOME, FX: the whole mix's RESO and WIDTH */
             sv_card_num(&c[0], "RESO", s->mreso, 0, 100);
             sv_card_num(&c[1], "WIDTH", s->width, 0, 100);
-            sv_card_off(&c[2]);
-            sv_card_off(&c[3]);
+            sv_card_txt(&c[2], "PHRASE", s->phrase ? "OFF" : "ON", s->phrase ? 0 : 1000, false);
+            static const char *const AB[SA_ABAUTOS] = {"OFF", "8 BARS", "16 BARS"};
+            sv_card_txt(&c[3], "A/B", AB[s->abauto % SA_ABAUTOS], s->abauto * 500, false);
             return;
         }
         sv_card_txt(&c[0], "FILTER", s->filter >= 100 ? "OPEN" : "", s->filter * 10, false);
@@ -301,8 +302,14 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         const sa_harm *e = &g->ed_harm, *l = &s->harm;
         sv_card_txt(&c[0], "KEY", sa_note_name(e->key), e->key * 1000 / 11, e->key != l->key);
         sv_card_txt(&c[1], "SCALE", sa_scale_name(e->scale), e->scale * 1000 / (SA_SCALES - 1), e->scale != l->scale);
-        sa_prog_name(e->prog, t, sizeof t);
-        sv_card_txt(&c[2], "CHORDS", t, e->prog * 1000 / (SA_PROGS - 1), e->prog != l->prog);
+        if (g->part_cue) {                         /* PART B: B's progression (0: as A) */
+            int pb = g->ed_progb ? g->ed_progb - 1 : e->prog;
+            sa_prog_name(pb, t, sizeof t);
+            sv_card_txt(&c[2], "B CHORDS", t, pb * 1000 / (SA_PROGS - 1), g->ed_progb != s->progb);
+        } else {
+            sa_prog_name(e->prog, t, sizeof t);
+            sv_card_txt(&c[2], "CHORDS", t, e->prog * 1000 / (SA_PROGS - 1), e->prog != l->prog);
+        }
         sv_fmt_int(t, e->bars);
         sv_cat(t, e->bars == 1 ? " BAR" : " BARS", sizeof t);
         sv_card_txt(&c[3], "BARS", t, e->bars == 1 ? 0 : e->bars == 2 ? 500 : 1000, e->bars != l->bars);
@@ -319,6 +326,18 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         return;
     }
     case SV_PG_MIXER:
+        if (u->mixmute == 4) {                     /* SONG: STEP SET BARS ON */
+            static const char *const BN[SV_SONG_BARS] = {"4 BARS", "8 BARS", "16 BARS", "32 BARS", "64 BARS"};
+            int k = sv_clampi(u->song_pick, 0, SV_STEPS - 1), st = u->song.set[k];
+            sv_fmt_int(t, k + 1);
+            sv_card_txt(&c[0], "STEP", t, k * 1000 / (SV_STEPS - 1), false);
+            if (st) { sv_cpy(t, "SET ", sizeof t); t[4] = (char)('0' + st); t[5] = 0; }
+            else sv_cpy(t, "END", sizeof t);
+            sv_card_txt(&c[1], "SET", t, st * 1000 / SV_SETS, false);
+            sv_card_txt(&c[2], "BARS", BN[u->song.bars[k] % SV_SONG_BARS], u->song.bars[k] * 250, false);
+            sv_card_txt(&c[3], "SONG", u->song.on ? "ON" : "OFF", u->song.on ? 1000 : 0, u->song.on);
+            return;
+        }
         if (u->mixmute == 3) {                     /* STYLE INTRO ARC */
             static const char *const IN[SA_INTROS] = {"OFF", "4 BARS", "8 BARS", "16 BARS"};
             static const char *const AR[SA_ARCS] = {"OFF", "16 BARS", "32 BARS", "64 BARS"};
@@ -549,10 +568,14 @@ static void sv_head_title(const sa_ui *u, char *t, unsigned n)
     t[0] = 0;
     if (u->msg_ms > 0) { sv_cpy(t, u->msg, n); return; }
     switch (u->page) {
-    case SV_PG_MAIN: sv_cpy(t, u->home2 ? "HOME  RESO WIDTH" : u->g->playing ? u->g->chord_name : "HOME", n); break;
+    case SV_PG_MAIN:
+        sv_cpy(t, u->home2 ? "HOME  SPACE" : u->g->playing ? u->g->chord_name : "HOME", n);
+        sv_cat(t, u->g->part_b ? "  B" : u->g->part_cue ? "  >B" : "  A", n);
+        if (u->g->part_b && !u->g->part_cue) sv_cat(t, ">A", n);
+        break;
     case SV_PG_KEY: sv_cpy(t, "KEY", n); break;
     case SV_PG_SETS: sv_cpy(t, "SETS", n); break;
-    case SV_PG_MIXER: sv_cpy(t, u->mixmute == 3 ? "STYLE" : u->mixmute == 2 ? "MIXER  SOLO" : u->mixmute ? "MIXER  MUTE" : "MIXER", n); break;
+    case SV_PG_MIXER: sv_cpy(t, u->mixmute == 4 ? "SONG" : u->mixmute == 3 ? "STYLE" : u->mixmute == 2 ? "MIXER  SOLO" : u->mixmute ? "MIXER  MUTE" : "MIXER", n); break;
     case SV_PG_EDIT:
         sv_cpy(t, SV_VIEW_NAME[u->view], n);
         sv_cat(t, u->rec ? "  EDIT  REC" : "  EDIT", n);
@@ -636,7 +659,7 @@ static void sv_draw_foot(sa_ui *u)
     } else if (u->page == SV_PG_EDIT) {
         sv_cpy(r, u->rec ? "KEYS: WRITE" : "REC: WRITE", sizeof r);
     } else if (u->page == SV_PG_MIXER) {
-        sv_cpy(r, u->mixmute == 3 ? (u->g->set_next ? "IN ON THE 1" : "SEQ: A NEW GROOVE") : u->mixmute == 2 ? "GLO: STYLE" :
+        sv_cpy(r, u->mixmute == 4 ? "GLO: BACK" : u->mixmute == 3 ? (u->g->set_next ? "IN ON THE 1" : "SEQ: A NEW GROOVE") : u->mixmute == 2 ? "GLO: STYLE" :
                   u->mixmute ? "GLO: SOLO" : "GLO: MUTE", sizeof r);
     }
     uint32_t sig = sv_hash(sv_hash((uint32_t)(now + 1) * 7u + (uint32_t)g->playing * 3u + ux.gen * 11u +
@@ -992,10 +1015,25 @@ static void sv_panel_home(sa_ui *u)
 }
 
 /* a layer's top: its sound now, as a wave (silent: a flat line); its pattern, and what SEQ drops when it differs */
+/* a layer's code with a B pattern in place of its pattern (b: 0 as it is, SA_PATB_OFF OFF, else the pattern + 1) */
+static const sa_code *sv_with_b(sa_code *tmp, const sa_code *c, uint8_t b)
+{
+    if (b == 0) return c;
+    *tmp = *c;
+    tmp->own = 0;
+    tmp->pat = b == SA_PATB_OFF ? SA_PAT_OFF : (uint8_t)(b - 1);
+    return tmp;
+}
+
 static void sv_layer_top(sa_ui *u, int l)
 {
     sa_groove *g = u->g;
+    static sa_code tb[2];
     const sa_code *e = &g->ed[l], *lv = &g->s.code[l];
+    if (g->part_cue) {                             /* PART B: B's patterns */
+        e = sv_with_b(&tb[0], e, g->ed_patb[l]);
+        lv = sv_with_b(&tb[1], lv, g->s.patb[l]);
+    }
     bool pend = sa_layer_pending(g, l), mute = g->s.live[l].mute;
     bool off = lv->type == SA_T_NONE || (lv->pat == SA_PAT_OFF && !lv->own);
     char t[24];
@@ -1196,8 +1234,47 @@ static void sv_panel_style(sa_ui *u)
     sv_label(10, 102, s->arc ? "ARC: GROOVE, BREAK, BUILD, DROP" : "ARC OFF: THE GROOVE AS IT IS", T_DIM);
 }
 
+void sv_song_default(sv_song *s)                   /* sets 1..4, 16 bars each */
+{
+    memset(s, 0, sizeof *s);
+    for (int k = 0; k < 4; ++k) {
+        s->set[k] = (uint8_t)(k + 1);
+        s->bars[k] = 2;
+    }
+}
+int sv_song_bars(int i) { static const uint8_t B[SV_SONG_BARS] = {4, 8, 16, 32, 64}; return B[sv_clampi(i, 0, SV_SONG_BARS - 1)]; }
+
+/* SONG: the eight steps, two columns; the one picked lit, the one playing in the accent */
+static void sv_panel_song(sa_ui *u)
+{
+    for (int k = 0; k < SV_STEPS; ++k) {
+        int32_t x = 6 + (k / 4) * 116, y = 6 + (k % 4) * 20;
+        bool sel = k == u->song_pick, play = k == u->song_step && u->song.on;
+        uint16_t bg = sel ? ux_mix(T_SURF, T_THEME, 18) : T_SURF;
+        if (sel) cv_rrect(x - 2, y - 2, 112, 18, 2, bg, T_SURF);
+        char t[16], a[8];
+        sv_fmt_int(t, k + 1);
+        cv_text_on(x + 2, y + 2, &AF_S, t, T_DIM, bg);
+        int st = u->song.set[k];
+        if (st) {
+            sv_cpy(t, "SET ", sizeof t);
+            t[4] = (char)('0' + st);
+            t[5] = 0;
+            bool used = u->sets[st - 1].used || u->sets[st - 1].wait;
+            cv_text_on(x + 18, y + 2, &AF_S, used ? t : "EMPTY", play ? T_ACCENT : used ? T_TEXT : T_DIM, bg);
+            sv_fmt_int(a, sv_song_bars(u->song.bars[k]));
+            cv_text_on(x + 78, y + 2, &AF_S, a, play ? T_ACCENT : T_MID, bg);
+        } else {
+            cv_text_on(x + 18, y + 2, &AF_S, "END", T_DIM, bg);
+        }
+    }
+    sv_label(10, 92, u->song.on ? "PLAY: THE STEPS IN TURN, ROUND" : "SONG ON: THE SETS IN TURN", T_DIM);
+    sv_label(10, 108, "EMPTY AND END ONES ARE PASSED", T_DIM);
+}
+
 static void sv_panel_mixer(sa_ui *u)
 {
+    if (u->mixmute == 4) { sv_panel_song(u); return; }
     if (u->mixmute == 3) { sv_panel_style(u); return; }
     const sa_groove *g = u->g;
     const sa_settings *s = &g->s;
@@ -1365,6 +1442,8 @@ void sv_init(sa_ui *u, sa_groove *g)
     u->batt = 3;
     u->pv_layer = -1;
     u->req_act = -1;
+    u->song_step = -1;
+    sv_song_default(&u->song);
     for (int k = 0; k < 27; ++k)
         u->key_sent[k] = -1;
     memset(u->main_code, 0xFF, sizeof u->main_code);
@@ -1456,6 +1535,16 @@ static void sv_algo(sa_ui *u, int d)
     sa_code *e = sv_ed(u);
     uint8_t list[64];
     int n = sv_pat_list(u, list), at = -1;
+    if (g->part_cue && e->type != SA_T_NONE) {      /* PART B: the layer's B pattern (SEQ drops it) */
+        uint8_t *b = &g->ed_patb[u->layer];
+        int cur = *b == 0 ? (e->own ? -1 : e->pat) : *b == SA_PATB_OFF ? SA_PAT_OFF : *b - 1;
+        at = 0;
+        for (int i = 0; i < n; ++i) if (list[i] == cur) at = i;
+        int to = sv_clampi(at + d, 0, n - 1);
+        *b = list[to] == SA_PAT_OFF ? SA_PATB_OFF : (uint8_t)(list[to] + 1);
+        u->changed = true;
+        return;
+    }
     if (e->type == SA_T_NONE) at = -1;
     else for (int i = 0; i < n; ++i) if (list[i] == e->pat) at = i;
     if (at < 0 && e->type != SA_T_NONE) at = 0;
@@ -1524,6 +1613,11 @@ void sv_knob(sa_ui *u, int k, int d)
     }
     if (k == SV_K_ALGO) {
         if (u->page == SV_PG_LAYER) sv_algo(u, d);
+        else if (u->page == SV_PG_MAIN && (d > 0) != g->part_cue) {   /* HOME: PART A or B, on the next phrase */
+            sa_part(g, d > 0);
+            sv_msg(u, g->playing ? (d > 0 ? "PART B ON THE PHRASE" : "PART A ON THE PHRASE") : d > 0 ? "PART B" : "PART A");
+            u->force = true;
+        }
         return;
     }
     if (k < SV_K1 || k > SV_K4) return;
@@ -1536,6 +1630,8 @@ void sv_knob(sa_ui *u, int k, int d)
         if (u->home2) {
             if (i == 0) s->mreso = (uint8_t)sv_clampi(s->mreso + d * 2, 0, 100);
             else if (i == 1) s->width = (uint8_t)sv_clampi(s->width + d * 2, 0, 100);
+            else if (i == 2) s->phrase = (uint8_t)(d > 0 ? 0 : 1);
+            else s->abauto = (uint8_t)sv_clampi(s->abauto + d, 0, SA_ABAUTOS - 1);
             return;
         }
         if (i == 0) s->filter = (uint8_t)sv_clampi(s->filter + d * 2, 0, 100);
@@ -1548,6 +1644,8 @@ void sv_knob(sa_ui *u, int k, int d)
         u->changed = true;
         if (i == 0) h->key = (uint8_t)sv_wrap(h->key + d, 12);
         else if (i == 1) h->scale = (uint8_t)sv_clampi(h->scale + d, 0, SA_SCALES - 1);
+        else if (i == 2 && g->part_cue)
+            g->ed_progb = (uint8_t)(sv_wrap((g->ed_progb ? g->ed_progb - 1 : h->prog) + d, SA_PROGS) + 1);
         else if (i == 2) h->prog = (uint8_t)sv_wrap(h->prog + d, SA_PROGS);
         else { static const uint8_t BARS[3] = {1, 2, 4}; int b = h->bars >= 4 ? 2 : h->bars >= 2 ? 1 : 0;
                h->bars = BARS[sv_clampi(b + d, 0, 2)]; }
@@ -1559,6 +1657,14 @@ void sv_knob(sa_ui *u, int k, int d)
         return;
     case SV_PG_MIXER:
         u->changed = true;
+        if (u->mixmute == 4) {                     /* SONG */
+            int k = sv_clampi(u->song_pick, 0, SV_STEPS - 1);
+            if (i == 0) u->song_pick = sv_clampi(k + d, 0, SV_STEPS - 1);
+            else if (i == 1) u->song.set[k] = (uint8_t)sv_clampi(u->song.set[k] + d, 0, SV_SETS);
+            else if (i == 2) u->song.bars[k] = (uint8_t)sv_clampi(u->song.bars[k] + d, 0, SV_SONG_BARS - 1);
+            else u->song.on = (uint8_t)(d > 0);
+            return;
+        }
         if (u->mixmute == 3) {                     /* STYLE (SEQ makes it), INTRO, ARC */
             if (i == 0) u->style_pick = sv_clampi(u->style_pick + d, 0, SAS_NSTYLES - 1);
             else if (i == 1) s->intro = (uint8_t)sv_clampi(s->intro + d, 0, SA_INTROS - 1);
@@ -1767,7 +1873,7 @@ void sv_button(sa_ui *u, int b, bool down)
         }
         break;
     case SV_B_GLO:                                 /* GLOBAL: MIXER, MUTE, SOLO, STYLE, each press the next; past the last: back */
-        if (u->page == SV_PG_MIXER && u->mixmute < 3) {
+        if (u->page == SV_PG_MIXER && u->mixmute < 4) {
             u->mixmute++;
             if (u->mixmute == 3) u->style_pick = g->s.style;
             u->force = true;

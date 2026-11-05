@@ -157,7 +157,15 @@ typedef struct {
     uint8_t mreso;                                  /* 0.7: HOME's RESO, on the whole mix's filter (each synth layer's) */
     uint8_t style, intro, arc;                      /* 0.7: the STYLE last dropped; INTRO 0 OFF, 1..3 4 8 16 bars; ARC 0 OFF,
                                                      * 1..3 a cycle of 16 32 64 bars */
+    /* 0.7, songs: each layer's B pattern (0 as A, SA_PATB_OFF OFF, else the pattern + 1) and B's progression (0 as A,
+     * else the progression + 1): PART (HOME's ALGORITHM) A or B, on the next phrase; A/B (HOME, FX) every 8 or 16
+     * bars by itself (0 OFF, 1 8, 2 16). PHRASE (0 ON, 1 OFF): the synth layers over four bars, A A A' B (bar 3 a
+     * step up in its second half, bar 4 an answer on the root and space at its end) */
+    uint8_t patb[SA_LAYERS];
+    uint8_t progb, phrase, abauto;
 } sa_settings;
+#define SA_PATB_OFF 255
+#define SA_ABAUTOS 3
 
 typedef struct {
     uint8_t on, part, note, vel;                    /* part 3: note is a General MIDI drum note */
@@ -221,6 +229,8 @@ typedef struct {
     int8_t el_now[SA_SYNTHS];
     uint8_t pan_side[SA_LAYERS];                    /* PING-PONG: the side the next note goes to */
     uint32_t pan_rnd;
+    bool part_b, part_cue;                          /* PART B playing; the PART wanted (in on the next phrase) */
+    uint8_t ed_patb[SA_LAYERS], ed_progb;           /* the edit copy of the B patterns and B's progression (SEQ drops) */
     char msg[24];
     uint8_t msg_new;
     void (*sound)(void *ctx, const sa_event *e);
@@ -259,6 +269,8 @@ void sa_fill(sa_groove *g, bool down);              /* the drum fill button: hel
 const char *sa_fill_name(int kind);
 void sa_break(sa_groove *g, bool down);             /* BREAK: held, the drums and the bass out at once; let go: in on the 1 */
 void sa_sweep(sa_groove *g, bool down);
+void sa_part(sa_groove *g, bool b);                 /* PART A or B: playing, on the next phrase (4 bars); stopped, at once */
+int sa_ab_bars(int i);                              /* A/B by itself: 0 OFF, 8, 16 */
 #define SA_INTROS 4                                 /* INTRO: OFF, 4, 8, 16 bars */
 #define SA_ARCS 4                                   /* ARC: OFF, 16, 32, 64 bars */
 int sa_intro_bars(int i);
@@ -270,6 +282,8 @@ void sa_set_arm(sa_groove *g, const sa_settings *s);
  * lead, a key, scale, progression, kit, tempo and swing that suit a club. The sounds come from the glue's lists */
 typedef struct { const uint8_t *bass, *keys, *pad, *lead; uint8_t nbass, nkeys, npad, nlead; } sa_pool;
 void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p);
+void sa_make_b(sa_settings *s, uint32_t seed);      /* PART B from A: another line of the same kind on each synth layer,
+                                                     * busier hats, another progression */
 void sa_play(sa_groove *g, bool on);
 void sa_process(sa_groove *g, int frames);
 void sa_all_off(sa_groove *g);

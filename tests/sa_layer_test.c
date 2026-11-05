@@ -349,6 +349,38 @@ int main(void)
     }
     CHECK(g.nheld <= SA_HELD, "held in range");
 
+    /* PHRASE (A A A' B: bar 4's last beat quiet on the bass) and PART B (on the next phrase) */
+    {
+        static sa_groove h;
+        sa_init(&h, SR);
+        sa_set_sound(&h, snd, 0);
+        only(&h, BS);
+        h.s.code[BS].pat = 4;                       /* PUMP 16: a note every sixteenth */
+        sa_edit_reset(&h);
+        int nb[8];
+        sa_play(&h, true);
+        for (int b = 0; b < 8; ++b) { clear_log(); run_bars(&h, 1); nb[b] = LG.per_part[2]; }
+        CHECK(nb[3] < nb[0] && nb[7] < nb[4] && nb[1] == nb[0], "PHRASE: bar 4 the answer, room at its end (%d %d %d %d)",
+              nb[0], nb[1], nb[2], nb[3]);
+        h.s.phrase = 1;
+        for (int b = 0; b < 4; ++b) { clear_log(); run_bars(&h, 1); nb[b] = LG.per_part[2]; }
+        CHECK(nb[3] == nb[0], "PHRASE OFF: every bar the same (%d %d)", nb[0], nb[3]);
+        h.s.patb[BS] = 1;                           /* B: OFFBEAT (pattern 0) */
+        sa_part(&h, true);
+        int was = h.part_b;
+        for (int b = 0; b < 4 && !h.part_b; ++b) run_bars(&h, 1);
+        clear_log();
+        run_bars(&h, 1);
+        CHECK(!was && h.part_b && LG.per_part[2] == 4, "PART B on the phrase: B's line (%d notes)", LG.per_part[2]);
+        h.s.abauto = 1;                             /* A/B every 8 bars by itself */
+        int flips = 0, last = h.part_b;
+        for (int b = 0; b < 32; ++b) { run_bars(&h, 1); flips += h.part_b != last; last = h.part_b; }
+        CHECK(flips == 4, "A/B every 8 bars: %d turns in 32", flips);
+        sa_settings z;
+        sa_random(&z, 7, &(sa_pool){0});
+        CHECK(z.progb != 0 && z.patb[BS] != 0 && z.patb[BS] != z.code[BS].pat + 1, "a fresh groove has a B");
+    }
+
     if (fails) { printf("sa_layer_test: %d failed\n", fails); return 1; }
     printf("sa_layer_test: all passed\n");
     return 0;

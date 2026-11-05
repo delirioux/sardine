@@ -604,7 +604,19 @@ int main(int argc, char **argv)
     ui.req_act = -1;
     g.s.intro = g.s.arc = 0;
     press(SV_B_GLO);
-    CHECK(ui.page == SV_PG_MAIN, "GLO past STYLE: back HOME");
+    CHECK(ui.page == SV_PG_MIXER && ui.mixmute == 4, "GLO: SONG");
+    CHECK(ui.song.set[0] == 1 && ui.song.set[3] == 4 && ui.song.set[4] == 0 && sv_song_bars(ui.song.bars[0]) == 16,
+          "SONG: sets 1..4, 16 bars each");
+    sv_knob(&ui, SV_K1, 4);
+    sv_knob(&ui, SV_K2, 2);
+    sv_knob(&ui, SV_K3, 1);
+    CHECK(ui.song_pick == 4 && ui.song.set[4] == 2 && sv_song_bars(ui.song.bars[4]) == 8, "SONG: step 5, set 2, 8 bars");
+    sv_knob(&ui, SV_K4, 1);
+    CHECK(ui.song.on, "SONG ON");
+    shot("18i_song");
+    sv_knob(&ui, SV_K4, -1);
+    press(SV_B_GLO);
+    CHECK(ui.page == SV_PG_MAIN, "GLO past SONG: back HOME");
     g.s.dvol = 80;
     /* SETS */
     ui.sets[0] = (sv_set_info){1, 126, 9, SA_SC_MINOR, SA_KIT_TECH, 3, {0, 1, (uint8_t)(SAS_NSOUNDS - 1)}, 0};
