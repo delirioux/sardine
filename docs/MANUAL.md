@@ -119,7 +119,8 @@ CRASH RIM TOM LOW TOM CONGA COWBELL CLAVE SHAKER); SEQ drops it in. Without REC 
 lowest keys are the drum's steps, the keys above play it.
 
 FX: **MIX** (VOLUME, MUTE), **KIT** (KIT, TUNE, TONE, DECAY: the whole kit, every drum plays on it) and **MOD**
-(the drum's modifiers). The kits: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY, CLASSIC, all synthesised.
+(the drum's modifiers). The kits, all synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY, CLASSIC,
+ROOM, VINTAGE, MINIMAL, VOLT (electro), GARAGE, DISCO, BREAKS, DUB, LOFI, IRON (industrial), ACID.
 
 ## The modifiers
 

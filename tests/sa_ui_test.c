@@ -375,6 +375,15 @@ int main(int argc, char **argv)
     fx_to(SVP_KIT);
     sv_knob(&ui, SV_K1, 3);
     CHECK(g.s.kit == SA_KIT_HARD, "KIT +3: HARD (%d)", g.s.kit);
+    for (int k = 0; k < SA_KITS; ++k) {            /* every kit's name on its card */
+        char nm[32];
+        g.s.kit = (uint8_t)k;
+        snprintf(nm, sizeof nm, "kit_%s", sa_kit_name(k));
+        lint_where = nm;
+        sv_draw_all(&ui);
+    }
+    CHECK(SA_KITS == 20, "twenty kits (%d)", SA_KITS);
+    g.s.kit = SA_KIT_HARD;
     shot("16_drums_kit");
     /* KEY on SCL, and back */
     press(SV_B_SCL);

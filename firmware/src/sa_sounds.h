@@ -307,6 +307,18 @@ static const uint8_t SAS_KIT[SA_KITS][8] = {
     {11, 64, 64, 64, 64, 100, 0, 0},     /* AFRO: the hand percussion kit */
     {6, 60, 44, 60, 50, 100, 0, 32},     /* DUSTY: the small box, dark and driven */
     {8, 64, 64, 64, 64, 100, 0, 0},      /* CLASSIC */
+    /* 0.7 */
+    {0, 64, 64, 64, 64, 100, 0, 0},      /* ROOM: the standard kit, plain */
+    {7, 62, 58, 64, 60, 100, 0, 10},     /* VINTAGE: the 55 */
+    {10, 70, 70, 34, 80, 96, 0, 12},     /* MINIMAL: tight, short, clicky */
+    {4, 66, 84, 40, 90, 110, 0, 48},     /* VOLT: electro, bright, snappy, driven */
+    {5, 68, 74, 44, 78, 104, 0, 14},     /* GARAGE: crisp, a short kick */
+    {8, 62, 66, 74, 58, 100, 1, 6},      /* DISCO: open and warm, longer hats, a round kick */
+    {6, 60, 70, 56, 88, 112, 1, 30},     /* BREAKS: a punchy snare, a round kick */
+    {9, 50, 40, 90, 46, 96, 1, 8},       /* DUB: low, long, dark */
+    {6, 58, 36, 58, 50, 100, 0, 64},     /* LOFI: dark, driven hard */
+    {5, 46, 92, 30, 100, 118, 0, 96},    /* IRON: hard, very driven, short */
+    {4, 64, 76, 50, 74, 104, 0, 36},     /* ACID: the 80, for a 303 line */
 };
 static inline int16_t sas_clamp(int v, int lo, int hi) { return (int16_t)(v < lo ? lo : v > hi ? hi : v); }
 /* a knob 0..100 around a kit's own value v (50: v itself) */

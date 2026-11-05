@@ -9,7 +9,7 @@ Sardine 0.7: live club mixing for the FM-1.
 - CHORD's arpeggiator, off until you turn it on; GATE, PAN and four modifiers on every layer
 - Every start a fresh groove; SETS keeps eight grooves (LOAD on the one, STORE, NEW, CLEAR) and LAST, the last groove,
   by itself
-- 81 synth sounds, among them an AMBIENT set in a big hall; nine synthesised drum kits; 24 drum and 29 synth patterns
+- 81 synth sounds, among them an AMBIENT set in a big hall; twenty synthesised drum kits; 24 drum and 29 synth patterns
 - On Felucca 1.8.2-beta: newer FM-1 units' flash is recognised
 
 Install it from the site with a Chromium browser (Chrome, Edge) and a USB cable. The package also holds three files of
