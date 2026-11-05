@@ -208,6 +208,8 @@ static const char *const SAS_POOL_BASS[] = {"TECH BASS", "SUB", "SQUARE", "ACID"
 static const char *const SAS_POOL_KEYS[] = {"DUB CHORD", "TECH STAB", "SUPER", "TRANCE", "PLUCK", "E-PIANO", "RAVE",
                                             "ORGAN", "PIANO", "FM PLUCK", "GOSPEL", "DUB STAB", "SPACE STAB",
                                             "ECHO CHORD"};
+static const char *const SAS_POOL_LEAD[] = {"SAW LEAD", "SUPER LEAD", "HOOVER", "SYNC LEAD", "ARP LEAD", "PULSE",
+                                            "VOX LEAD", "WHISTLE", "RESO", "AIR LEAD", "FM BRASS"};
 static const char *const SAS_POOL_PAD[] = {"SOFT PAD", "STRINGS", "PWM STR", "FM PAD", "CLOUD", "SHIMMER", "FROZEN",
                                            "WIDE PAD", "DARK PAD", "GLASS", "VAPOR", "SWELL", "NIGHT", "SKY",
                                            "TAPE PAD", "CHOIR AIR"};
@@ -232,13 +234,49 @@ static inline uint8_t sas_pool_list(uint8_t *out, const char *const *names, int 
 static inline void sas_pool_make(sa_pool *p)
 {
     static uint8_t b[sizeof SAS_POOL_BASS / sizeof SAS_POOL_BASS[0]], k[sizeof SAS_POOL_KEYS / sizeof SAS_POOL_KEYS[0]],
-        d[sizeof SAS_POOL_PAD / sizeof SAS_POOL_PAD[0]];
+        d[sizeof SAS_POOL_PAD / sizeof SAS_POOL_PAD[0]], e[sizeof SAS_POOL_LEAD / sizeof SAS_POOL_LEAD[0]];
+    p->lead = e;
+    p->nlead = sas_pool_list(e, SAS_POOL_LEAD, (int)sizeof e);
     p->bass = b;
     p->keys = k;
     p->pad = d;
     p->nbass = sas_pool_list(b, SAS_POOL_BASS, (int)sizeof b);
     p->nkeys = sas_pool_list(k, SAS_POOL_KEYS, (int)sizeof k);
     p->npad = sas_pool_list(d, SAS_POOL_PAD, (int)sizeof d);
+}
+
+/* a groove into the fixed layers (a set of 0.6, a record from anywhere): each synth layer to the part of its role
+ * (BASS to BASS; KEYS and PADS to CHORD; LEADS and FX to LEAD; a clash: the part left), then the engine's fix (the
+ * layers into their slots); a layer left OFF without a sound of its role gets the first of its list */
+static inline void sas_fix(sa_settings *s)
+{
+    static const int8_t PART_OF[SAS_ROLES] = {SA_L_BASS, SA_L_CHORD, SA_L_CHORD, SA_L_LEAD, SA_L_LEAD};
+    uint8_t taken = 0;
+    for (int l = 0; l < SA_LAYERS; ++l) {
+        sa_code *c = &s->code[l];
+        if (c->type != SA_T_SYNTH) continue;
+        int want = PART_OF[sas_of(c->sound)->role % SAS_ROLES];
+        if ((taken >> want) & 1u) { c->part = 0xFF; continue; }
+        taken |= (uint8_t)(1u << want);
+        c->part = (uint8_t)want;
+    }
+    for (int l = 0; l < SA_LAYERS; ++l) {
+        sa_code *c = &s->code[l];
+        if (c->type != SA_T_SYNTH || c->part != 0xFF) continue;
+        c->type = SA_T_NONE;
+        for (int p = 0; p < 3; ++p)
+            if (!((taken >> p) & 1u)) { taken |= (uint8_t)(1u << p); c->part = (uint8_t)p; c->type = SA_T_SYNTH; break; }
+    }
+    bool had[3] = {false, false, false};
+    for (int l = 0; l < SA_LAYERS; ++l)
+        if (s->code[l].type == SA_T_SYNTH && s->code[l].part < 3) had[s->code[l].part] = true;
+    sa_settings_fix(s);
+    static const char *const DEF[3] = {"SAW LEAD", "DUB CHORD", "TECH BASS"};
+    for (int p = 0; p < 3; ++p)
+        if (!had[p]) {
+            int k = sas_find(DEF[p]);
+            s->code[p].sound = (uint8_t)(k < 0 ? 0 : k);
+        }
 }
 
 /* ---- the kits: the DRUM engine's {KIT, TUNE, TONE, DECY, SNAP, ACC, KICK, DRV} (eng_drum.c DK_*: STD 0, the model
@@ -286,7 +324,7 @@ typedef struct { int16_t bright, fenv, dist; } sas_base;
 /* a synth layer's part from its sound and its cards (main loop, the audio held off) */
 static inline void sas_synth(track_t *t, const sas_sound *snd, const sas_base *b, const sa_live *v, const sa_settings *s)
 {
-    t->p[P_LEVEL] = sas_clamp(108 + snd->trim, 1, 127);
+    t->p[P_LEVEL] = sas_clamp((108 + snd->trim) * v->level / 80, 0, 127);   /* (MIX's LEVEL: 80 as it is) */
     if (snd->bright >= 0) {
         int f = v->cut * (20 + s->filter * 80 / 100) / 100;                      /* 0..100 */
         int base = b->bright < 24 ? 24 : b->bright;

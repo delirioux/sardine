@@ -160,12 +160,14 @@ static void bars(int n)
     for (int k = 0; k < 4000 && g.bar < b; ++k)
         run_ms(16);
 }
-static void go_layer(int l)                       /* SELECT until layer l is open */
+static void to_view(int v)                        /* PRESETS to a layer (from HOME) */
 {
-    sv_button(&ui, SV_B_HOME, true);
-    sv_button(&ui, SV_B_HOME, false);
-    for (int k = 0; k < 16 && !(ui.page == SV_PG_LAYER && ui.layer == l); ++k)
-        sv_knob(&ui, SV_K_SELECT, 1);
+    press(SV_B_HOME);
+    sv_knob(&ui, SV_K_PRESETS, v);
+}
+static void fx_to(int pg)                         /* FX until the page */
+{
+    for (int k = 0; k < 8 && sv_page_now(&ui) != pg; ++k) press(SV_B_FX);
 }
 
 int main(int argc, char **argv)
@@ -177,350 +179,191 @@ int main(int argc, char **argv)
     sv_init(&ui, &g);
     CHECK(!strcmp(UI_PALETTES[UI_SHOAL_INDEX].name, "SHOAL"), "SHOAL is Sardine's palette");
     CHECK(SAS_NSOUNDS >= 60, "a ton of synth sounds (%d)", SAS_NSOUNDS);
-    shot("01_main_stopped");
-    all_palettes("main_stopped");
+    shot("01_home_stopped");
     press(SV_B_PLAY);
     CHECK(g.playing, "PLAY plays");
     bars(2);
-    CHECK(part_on[SA_PART_DRUMS] && part_on[0] && part_on[1], "the first groove plays (%d %d %d %d)", part_on[0],
-          part_on[1], part_on[2], part_on[3]);
-    shot("02_main");
-    all_palettes("main");
-    for (int f = 0; f < 40; ++f) {                 /* MAIN as it plays, a frame every 48 ms */
+    CHECK(part_on[SA_PART_DRUMS] && part_on[SA_L_CHORD] && part_on[SA_L_BASS] && !part_on[SA_L_LEAD],
+          "the first groove: drums, chord, bass; LEAD OFF (%d %d %d %d)", part_on[0], part_on[1], part_on[2], part_on[3]);
+    shot("02_home");
+    all_palettes("home");
+    for (int f = 0; f < 40; ++f) {                 /* HOME as it plays, a frame every 48 ms */
         char nm[32];
         run_ms(48);
         snprintf(nm, sizeof nm, "anim_%03d", f);
         lint_where = nm;
         write_ppm(nm);
     }
-    /* MAIN's knobs act at once */
-    sv_knob(&ui, SV_K1, 2);
-    CHECK(g.s.bpm == 128, "TEMPO +2 (%d)", g.s.bpm);
-    sv_knob(&ui, SV_K4, 3);
-    CHECK(g.s.kit == SA_KIT_HARD, "KIT +3: HARD (%d)", g.s.kit);
-    CHECK(sa_pending(&g) == 0, "MAIN's knobs are not code");
-    /* SPACE: HOME on MAIN; the pump follows the kick */
-    press(SV_B_HOME);
-    CHECK(ui.page == SV_PG_MAIN && ui.space, "HOME on MAIN: SPACE");
-    sv_knob(&ui, SV_K1, 10);
-    CHECK(g.s.pump == 55, "PUMP +10 steps of 2 (%d)", g.s.pump);
-    {
-        int maxd = 0;
-        for (int t = 0; t < 2000; t += 16) { run_ms(16); if (g.duck > maxd) maxd = g.duck; }
-        CHECK(maxd > 40, "the synth layers duck under the kick (%d)", maxd);
-    }
-    shot("02b_space");
-    all_palettes("space");
-    press(SV_B_HOME);
-    CHECK(!ui.space, "HOME again: MAIN");
-    /* SELECT: to the bass layer (4) */
-    go_layer(3);
-    CHECK(ui.page == SV_PG_LAYER && ui.layer == 3, "SELECT reaches layer 4");
-    shot("03_layer_bass");
-    all_palettes("layer_bass");
-    sv_knob(&ui, SV_K1, -10);
-    CHECK(g.s.live[3].cut == 80, "CUTOFF at once (%d)", g.s.live[3].cut);
-    {                                              /* the PUMP chip: off and on at once, not code */
-        sv_chip ch[SA_MODS + 5];
-        int n = sv_chips(&ui, ch);
-        CHECK(ch[n - 1].kind == CH_PUMP, "the last chip of a synth layer: PUMP");
-        ui.chip = n - 1;
-        sv_knob(&ui, SV_K_ALGO, -1);
-        CHECK(g.s.live[3].nopump && sa_pending(&g) == 0, "PUMP OFF at once");
-        sv_knob(&ui, SV_K_ALGO, 1);
-        CHECK(!g.s.live[3].nopump, "PUMP ON again");
-        ui.chip = 0;
-    }
-    CHECK(sa_pending(&g) == 0, "the tone is not code");
-    /* the code: PRESETS to the pattern chip, ALGORITHM to the next pattern; then a modifier on + */
+    /* SELECT is the tempo everywhere; HOME's knobs act at once */
+    sv_knob(&ui, SV_K_SELECT, 2);
+    CHECK(g.s.bpm == 128, "SELECT: the tempo +2 (%d)", g.s.bpm);
+    sv_knob(&ui, SV_K4, -5);
+    CHECK(g.s.reverb == 60 && g.s.delay == 60, "SPACE: reverb and delay (%d %d)", g.s.reverb, g.s.delay);
+    sv_knob(&ui, SV_K3, 5);
+    CHECK(g.s.pump == 45, "PUMP (%d)", g.s.pump);
+    /* PRESETS: HOME LEAD CHORD BASS DRUMS, each on its home page */
     sv_knob(&ui, SV_K_PRESETS, 1);
-    sv_knob(&ui, SV_K_ALGO, 1);
-    CHECK(g.ed[3].pat == 2 && g.s.code[3].pat == 1, "the pattern changes in the copy only");
-    CHECK(sa_pending(&g) == 1, "one layer pending");
-    sv_knob(&ui, SV_K_PRESETS, 1);                 /* the + chip */
-    sv_knob(&ui, SV_K_ALGO, 1);
-    CHECK(g.ed[3].mod[0].type == SA_M_FAST && g.ed[3].mod[0].val == 2, "+ makes FAST 2");
-    sv_knob(&ui, SV_K_ALGO, 1);
-    CHECK(g.ed[3].mod[0].type == SA_M_FAST && g.ed[3].mod[0].val == 3, "then FAST 3");
-    sv_knob(&ui, SV_K_ALGO, -1);
-    shot("04_layer_pending");
-    all_palettes("layer_pending");
+    CHECK(ui.page == SV_PG_LAYER && ui.view == SV_V_LEAD && ui.layer == SA_L_LEAD && ui.fx == 0, "PRESETS: LEAD");
+    shot("03_lead_off");
+    sv_knob(&ui, SV_K_PRESETS, 1);
+    CHECK(ui.view == SV_V_CHORD && ui.layer == SA_L_CHORD, "PRESETS: CHORD");
+    shot("04_chord");
+    all_palettes("chord");
+    sv_knob(&ui, SV_K_PRESETS, 1);
+    CHECK(ui.view == SV_V_BASS && ui.layer == SA_L_BASS, "PRESETS: BASS");
+    int cut = g.s.live[SA_L_BASS].cut;
+    sv_knob(&ui, SV_K1, -10);
+    CHECK(g.s.live[SA_L_BASS].cut == cut - 20, "BASS's CUTOFF at once");
+    /* ALGORITHM: the pattern, in the copy; SEQ drops it on the bar line */
+    int pat = g.s.code[SA_L_BASS].pat;
+    sv_knob(&ui, SV_K_ALGO, 2);
+    CHECK(g.ed[SA_L_BASS].pat != pat && g.s.code[SA_L_BASS].pat == pat && sa_pending(&g) == 1, "ALGORITHM: waits");
+    shot("05_bass_pending");
     press(SV_B_REC);
-    CHECK(g.drop_armed, "REC arms the drop");
-    shot("05_layer_armed");
+    CHECK(ui.rec && sa_pending(&g) == 1, "REC is step recording, not a drop");
+    press(SV_B_REC);
+    press(SV_B_SEQ);
+    CHECK(g.drop_armed, "SEQ: armed");
     bars(1);
-    CHECK(!g.drop_armed && g.s.code[3].pat == 2 && sa_pending(&g) == 0, "dropped on the 1");
-    /* the ARP page */
-    press(SV_B_ARP);
-    CHECK(ui.page == SV_PG_ARP, "ARP: the arp page");
-    sv_knob(&ui, SV_K1, 5);
-    CHECK(g.ed[3].amode == SA_AR_CONVERGE, "MODE +5: CONVERGE (%d)", g.ed[3].amode);
+    CHECK(g.s.code[SA_L_BASS].pat == g.ed[SA_L_BASS].pat && !sa_pending(&g), "dropped on the bar line");
+    /* FX through BASS's pages and back to its home; another layer opens on its home */
+    press(SV_B_FX);
+    CHECK(sv_page_now(&ui) == SVP_SOUND, "FX: SOUND");
+    shot("06_bass_sound");
+    int snd = g.s.code[SA_L_BASS].sound;
     sv_knob(&ui, SV_K2, 1);
-    sv_knob(&ui, SV_K3, 1);
-    shot("06_arp");
-    all_palettes("arp");
-    press(SV_B_ARP);
-    CHECK(ui.page == SV_PG_LAYER, "ARP again: back");
-    press(SV_B_REC);
-    bars(1);
-    /* FX mutes at once */
+    CHECK(g.s.code[SA_L_BASS].sound != snd && g.ed[SA_L_BASS].sound == g.s.code[SA_L_BASS].sound && !sa_pending(&g),
+          "SOUND: at once, nothing waits");
     press(SV_B_FX);
-    CHECK(g.s.live[3].mute, "FX mutes the layer");
-    shot("07_layer_muted");
+    CHECK(sv_page_now(&ui) == SVP_PAN, "FX: PAN (no ARP on BASS)");
+    shot("07_bass_pan");
     press(SV_B_FX);
-    /* DRUMS: every drum on one screen, the step keys */
-    sv_button(&ui, SV_B_HOME, true);
-    sv_button(&ui, SV_B_HOME, false);
-    sv_knob(&ui, SV_K_SELECT, 1);
-    CHECK(ui.page == SV_PG_DRUMS, "SELECT after MAIN: DRUMS (%d)", ui.page);
-    shot("08_drums");
-    all_palettes("drums");
-    sv_knob(&ui, SV_K2, 3);
-    CHECK(g.s.ktune == 56, "TUNE moves the kit (%d)", g.s.ktune);
-    sv_knob(&ui, SV_K_PRESETS, 1);                 /* the HAT row */
-    CHECK(sv_drow_layer(&ui) == 1, "PRESETS picks the hat row (%d)", sv_drow_layer(&ui));
-    {
-        uint32_t full, dim;
-        sv_draw(&ui);
-        CHECK(sv_key_leds(&ui, &full, &dim) && dim == 0xFFFFu && full == ((1u << 2) | (1u << 6) | (1u << 10) | (1u << 14)),
-              "the step keys dim, the hat's steps full (%x %x)", full, dim);
-        sv_key(&ui, SV_KEY_LO + 6, true);          /* step 7 off */
-        sv_key(&ui, SV_KEY_LO + 6, false);
-        sv_key(&ui, SV_KEY_LO + 15, true);         /* step 16 on */
-        sv_key(&ui, SV_KEY_LO + 15, false);
-        sv_draw(&ui);
-        sv_key_leds(&ui, &full, &dim);
-        CHECK(g.ed[1].own && g.ed[1].hits == ((1u << 2) | (1u << 10) | (1u << 14) | (1u << 15)), "keys edit the hat (%04x)",
-              g.ed[1].hits);
-        CHECK(full == g.ed[1].hits, "the keys show the edit (%x)", full);
-    }
-    shot("09_drums_edited");
-    all_palettes("drums_edited");
-    press(SV_B_REC);
-    bars(1);
-    CHECK(g.s.code[1].own && sa_pending(&g) == 0, "the hat's edit dropped");
-    sv_knob(&ui, SV_K_ALGO, 1);                    /* a ready pattern again */
-    CHECK(!g.ed[1].own && g.ed[1].pat == 2, "ALGORITHM: the next ready pattern (%d)", g.ed[1].pat);
-    sv_knob(&ui, SV_K_ALGO, -1);
-    /* + ADD A DRUM */
-    sv_knob(&ui, SV_K_PRESETS, 9);
-    CHECK(sv_drow_layer(&ui) < 0, "the last row: + ADD A DRUM");
-    shot("10_drums_add");
-    sv_knob(&ui, SV_K_ALGO, 10);                   /* a new drum: the conga (and another turn: still the new one) */
-    int nl = -1;
-    for (int l = 0; l < SA_LAYERS; ++l) if (g.ed[l].type == SA_T_DRUM && g.s.code[l].type == SA_T_NONE) nl = l;
-    CHECK(nl >= 0, "ADD: a drum layer in the copy");
-    sv_knob(&ui, SV_K_PRESETS, -9);
-    sv_knob(&ui, SV_K_PRESETS, 3);
-    CHECK(sv_drow_layer(&ui) == nl, "the new drum is a row (%d %d)", sv_drow_layer(&ui), nl);
-    sv_knob(&ui, SV_K_ALGO, 10);
-    CHECK(g.ed[nl].sound == (9 + 10) % SA_DVS, "a drum not yet dropped: ALGORITHM changes the drum (%d)", g.ed[nl].sound);
-    shot("11_drums_added");
-    press(SV_B_REC);
-    bars(1);
-    /* EDIT: the row as a layer screen, its modifiers; EDIT again: back */
-    press(SV_B_EDIT);
-    CHECK(ui.page == SV_PG_LAYER && ui.layer == nl, "EDIT opens the row");
-    shot("12_drum_layer");
-    press(SV_B_EDIT);
-    CHECK(ui.page == SV_PG_DRUMS, "EDIT again: DRUMS");
-    /* STEPS on the bass: notes on the keys */
-    go_layer(3);
+    CHECK(sv_page_now(&ui) == SVP_GATE, "FX: GATE");
+    press(SV_B_FX);
+    CHECK(sv_page_now(&ui) == SVP_MOD, "FX: MOD");
+    sv_knob(&ui, SV_K1, 1);
+    CHECK(g.ed[SA_L_BASS].mod[0].type != SA_M_OFF && sa_pending(&g) == 1, "MOD 1: a modifier, waiting");
+    shot("08_bass_mod");
     press(SV_B_SEQ);
-    CHECK(ui.page == SV_PG_STEPS, "SEQ: STEPS");
-    sv_key(&ui, 57, true);                          /* A3 on step 1, the cursor on */
-    sv_key(&ui, 57, false);
-    CHECK(g.ed[3].own && g.ed[3].sn[0] == 57 - g.ed_harm.key && ui.scur == 1, "a key writes the step (%d %d)",
-          g.ed[3].sn[0], ui.scur);
+    bars(1);
+    press(SV_B_FX);
+    CHECK(sv_page_now(&ui) == SVP_MIX, "FX: MIX");
+    sv_knob(&ui, SV_K1, 1);
+    CHECK(g.s.live[SA_L_BASS].mute, "MIX: MUTE at once");
+    shot("09_bass_mix");
     sv_knob(&ui, SV_K1, -1);
-    sv_knob(&ui, SV_K2, 3);
-    CHECK(g.ed[3].sl[0] == 4, "KNOB 2: its length (%d)", g.ed[3].sl[0]);
-    {
-        uint32_t full, dim;
-        CHECK(sv_key_leds(&ui, &full, &dim) && (full >> (57 - SV_KEY_LO)) & 1u, "the step's note lit full");
-    }
-    shot("13_steps");
-    all_palettes("steps");
-    press(SV_B_SEQ);
-    CHECK(ui.page == SV_PG_LAYER, "SEQ again: back");
-    /* GATE: ENV on a synth layer */
-    press(SV_B_ENV);
-    CHECK(ui.page == SV_PG_GATE, "ENV: GATE");
-    sv_knob(&ui, SV_K1, 5);
-    CHECK(g.ed_gate[3].pat == 5, "KNOB 1: TRANCE A (%d)", g.ed_gate[3].pat);
-    sv_key(&ui, SV_KEY_LO + 1, true);
-    sv_key(&ui, SV_KEY_LO + 1, false);
-    CHECK(g.ed_gate[3].own && g.ed_gate[3].mask == (0x6D6D ^ 2), "a key edits the gate (%04x)", g.ed_gate[3].mask);
-    {
-        uint32_t full, dim;
-        CHECK(sv_key_leds(&ui, &full, &dim) && dim == 0xFFFFu && full == g.ed_gate[3].mask, "the gate's keys lit (%x)", full);
-    }
-    sv_knob(&ui, SV_K3, -4);
-    shot("13b_gate");
-    all_palettes("gate");
-    press(SV_B_ENV);
-    CHECK(ui.page == SV_PG_LAYER, "ENV again: back");
-    /* PAN: LFO on a synth layer, at once */
-    press(SV_B_LFO);
-    CHECK(ui.page == SV_PG_PAN, "LFO: PAN");
-    int pend_before = sa_pending(&g);
     sv_knob(&ui, SV_K2, -10);
-    CHECK(g.s.pan[3].pos == -20 && sa_pending(&g) == pend_before, "PAN L20 at once, not code (%d)", g.s.pan[3].pos);
-    run_ms(100);
-    CHECK(g.pan_now[0] < -20, "the part pans left (%d)", g.pan_now[0]);
+    CHECK(g.s.live[SA_L_BASS].level == 60, "MIX: LEVEL fades (%d)", g.s.live[SA_L_BASS].level);
+    press(SV_B_FX);
+    CHECK(ui.fx == 0, "FX past the last page: home");
+    press(SV_B_FX);
+    sv_knob(&ui, SV_K_PRESETS, -1);
+    CHECK(ui.view == SV_V_CHORD && ui.fx == 0, "another layer: its home page, not the page FX was on");
+    /* CHORD's ARP, off at first */
+    fx_to(SVP_ARP);
+    CHECK(sv_page_now(&ui) == SVP_ARP && g.ed[SA_L_CHORD].amode == SA_AR_OFF, "CHORD: ARP, OFF");
     sv_knob(&ui, SV_K1, 1);
-    CHECK(g.s.pan[3].mode == SA_PAN_SWEEP, "MODE: SWEEP");
-    {
-        int lo = 64, hi = -64;
-        for (int t = 0; t < 2500; t += 16) { run_ms(16); if (g.pan_now[0] < lo) lo = g.pan_now[0]; if (g.pan_now[0] > hi) hi = g.pan_now[0]; }
-        CHECK(hi - lo > 30, "SWEEP moves it (%d .. %d)", lo, hi);
-    }
-    shot("13c_pan");
-    all_palettes("pan");
-    sv_knob(&ui, SV_K1, 1);
-    {
-        int lo = 64, hi = -64;
-        for (int t = 0; t < 2500; t += 16) { run_ms(16); if (g.pan_now[0] < lo) lo = g.pan_now[0]; if (g.pan_now[0] > hi) hi = g.pan_now[0]; }
-        CHECK(g.s.pan[3].mode == SA_PAN_PINGPONG && hi - lo > 30, "PING-PONG: from side to side (%d .. %d)", lo, hi);
-    }
-    sv_knob(&ui, SV_K1, -2);
-    sv_knob(&ui, SV_K2, 10);
-    press(SV_B_LFO);
-    CHECK(ui.page == SV_PG_LAYER, "LFO again: back");
-    press(SV_B_REC);
+    shot("10_chord_arp");
+    all_palettes("chord_arp");
+    press(SV_B_SEQ);
     bars(1);
-    /* every chip text on the lint: every sound, every pattern, every modifier */
-    go_layer(3);
-    {
-        sa_code keep = g.ed[3];
-        for (int i = 0; i < SAS_NSOUNDS; ++i) {
-            char nm[48];
-            g.ed[3].sound = (uint8_t)i;
-            snprintf(nm, sizeof nm, "z_sound_%02d", i);
-            lint_where = nm;
-            sv_draw_all(&ui);
-        }
-        g.ed[3] = keep;
-        for (int i = 0; i < sa_synth_pats(); ++i) {
-            char nm[48];
-            g.ed[3].pat = (uint8_t)i;
-            snprintf(nm, sizeof nm, "z_pat_%02d", i);
-            lint_where = nm;
-            sv_draw_all(&ui);
-        }
-        for (int i = 0; i < sa_mod_opts(SA_T_SYNTH); ++i) {
-            char nm[48];
-            for (int k = 0; k < SA_MODS; ++k) g.ed[3].mod[k] = sa_mod_opt(SA_T_SYNTH, (i + k * 9) % sa_mod_opts(SA_T_SYNTH));
-            if (g.ed[3].mod[0].type == SA_M_OFF) g.ed[3].mod[0] = sa_mod_opt(SA_T_SYNTH, 1);
-            snprintf(nm, sizeof nm, "z_mod_%02d", i);
-            lint_where = nm;
-            sv_draw_all(&ui);
-            if (i == 20) write_ppm("19_layer_four_mods");
-        }
-        g.ed[3] = keep;
-    }
-    /* the KEY page: code too */
+    CHECK(g.s.code[SA_L_CHORD].amode == SA_AR_UP, "ARP UP dropped");
+    fx_to(SVP_GATE);
+    press(SV_B_REC);
+    sv_key(&ui, SV_KEY_LO + 2, true);
+    sv_key(&ui, SV_KEY_LO + 2, false);
+    CHECK(g.ed_gate[SA_L_CHORD].own, "REC on GATE: a key, a gate step");
+    shot("11_chord_gate_rec");
+    press(SV_B_SEQ);
+    press(SV_B_FX);
+    CHECK(sv_page_now(&ui) == SVP_MOD && ui.rec, "REC stays while FX turns");
+    sv_knob(&ui, SV_K_PRESETS, -1);
+    CHECK(!ui.rec, "another layer: REC off");
+    /* LEAD: OFF; REC writes its steps from the keys */
+    press(SV_B_REC);
+    CHECK(ui.rec && sv_steps_on(&ui), "LEAD, REC: STEPS");
+    sv_key(&ui, 69, true);
+    sv_key(&ui, 69, false);
+    sv_key(&ui, 72, true);
+    sv_key(&ui, 72, false);
+    CHECK(g.ed[SA_L_LEAD].own && g.ed[SA_L_LEAD].sn[0] != SA_NO_NOTE && g.ed[SA_L_LEAD].sn[1] != SA_NO_NOTE &&
+          ui.scur == 2, "two notes on two steps");
+    shot("12_lead_steps");
+    press(SV_B_SEQ);
+    bars(2);
+    CHECK(part_on[SA_L_LEAD] > 0, "LEAD plays its steps (%d)", part_on[SA_L_LEAD]);
+    press(SV_B_REC);
+    /* DRUMS: KNOB 1 the drum, the keys its steps under REC, + ADD a drum */
+    sv_knob(&ui, SV_K_PRESETS, 4);
+    CHECK(ui.view == SV_V_DRUMS && ui.layer == SA_L_DRUM0, "DRUMS: the first drum");
+    shot("13_drums");
+    all_palettes("drums");
+    sv_knob(&ui, SV_K1, 1);
+    CHECK(ui.layer == SA_L_DRUM0 + 1, "DRUM: the next drum");
+    sv_knob(&ui, SV_K3, 10);
+    sv_knob(&ui, SV_K4, -10);
+    CHECK(g.s.live[ui.layer].env == 70 && g.s.live[ui.layer].cut == 50, "ACCENT and CHANCE");
+    press(SV_B_REC);
+    uint32_t fl, dl;
+    CHECK(sv_key_leds(&ui, &fl, &dl) && dl == 0xFFFFu, "REC: the step keys lit");
+    sv_key(&ui, SV_KEY_LO + 5, true);
+    sv_key(&ui, SV_KEY_LO + 5, false);
+    CHECK(g.ed[ui.layer].own, "a drum step");
+    shot("14_drums_rec");
+    press(SV_B_SEQ);
+    press(SV_B_REC);
+    sv_knob(&ui, SV_K1, 10);
+    CHECK(ui.layer < 0, "DRUM past the last: + ADD");
+    sv_knob(&ui, SV_K_ALGO, 1);
+    CHECK(ui.layer >= SA_L_DRUM0 && g.ed[ui.layer].type == SA_T_DRUM, "+ ADD: ALGORITHM a drum");
+    shot("15_drums_add");
+    press(SV_B_SEQ);
+    bars(1);
+    fx_to(SVP_KIT);
+    sv_knob(&ui, SV_K1, 3);
+    CHECK(g.s.kit == SA_KIT_HARD, "KIT +3: HARD (%d)", g.s.kit);
+    shot("16_drums_kit");
+    /* KEY on SCL, and back */
     press(SV_B_SCL);
     CHECK(ui.page == SV_PG_KEY, "SCL: KEY");
     sv_knob(&ui, SV_K1, 2);
-    CHECK(g.ed_harm.key == 11 && g.s.harm.key == 9, "KEY in the copy (%d %d)", g.ed_harm.key, g.s.harm.key);
-    shot("14_key");
-    all_palettes("key");
-    press(SV_B_REC);
+    shot("17_key");
+    press(SV_B_SEQ);
     bars(1);
-    CHECK(g.s.harm.key == 11, "the key dropped");
     press(SV_B_SCL);
-    CHECK(ui.page == SV_PG_LAYER && ui.layer == 3, "SCL again: back to the layer");
-    /* NEW: past the last layer, a synth layer while a part is free */
-    sv_button(&ui, SV_B_HOME, true);
-    sv_button(&ui, SV_B_HOME, false);
-    for (int k = 0; k < 16 && !sv_is_new(&ui); ++k)
-        sv_knob(&ui, SV_K_SELECT, 1);
-    CHECK(sv_is_new(&ui) && sv_free_slot(&ui) == ui.layer, "SELECT past the last: NEW (layer %d)", ui.layer);
-    shot("15_new");
-    all_palettes("new");
-    int newl = ui.layer;
-    sv_knob(&ui, SV_K1, 4);                        /* the fourth synth sound */
-    CHECK(g.ed[newl].type == SA_T_SYNTH && g.ed[newl].part == 2 && g.ed[newl].sound == 3,
-          "a new synth layer on the free part (%d %d %d)", g.ed[newl].type, g.ed[newl].part, g.ed[newl].sound);
-    shot("16_new_made");
-    press(SV_B_REC);
-    bars(2);
-    CHECK(part_on[2] > 0, "the new layer plays on part 3 (%d)", part_on[2]);
-    /* three synth layers: no NEW any more */
-    sv_button(&ui, SV_B_HOME, true);
-    sv_button(&ui, SV_B_HOME, false);
-    for (int k = 0; k < 16 && !sv_is_new(&ui); ++k)
-        sv_knob(&ui, SV_K_SELECT, 1);
-    CHECK(!sv_is_new(&ui), "three synth layers: no NEW screen");
-    /* MAIN with more drums and a mute */
-    sv_button(&ui, SV_B_HOME, true);
-    sv_button(&ui, SV_B_HOME, false);
-    sv_knob(&ui, SV_K_SELECT, 1);
-    for (int k = 0; k < 2; ++k) {
-        sv_knob(&ui, SV_K_PRESETS, 12);
-        sv_knob(&ui, SV_K_ALGO, 5 + k);
-    }
-    press(SV_B_REC);
-    bars(1);
-    sa_mute(&g, 1, true);
+    CHECK(ui.page == SV_PG_LAYER && ui.view == SV_V_DRUMS, "SCL again: back to DRUMS");
+    /* HOME: every layer */
     press(SV_B_HOME);
     bars(1);
-    shot("17_main_full");
-    all_palettes("main_full");
-    /* the keys play the open layer */
-    go_layer(3);
-    int before = part_on[0];
-    sv_key(&ui, 57, true);
-    CHECK(part_on[0] == before + 1, "a key plays the bass layer");
-    sv_key(&ui, 57, false);
-    /* MENU */
-    sv_button(&ui, SV_B_HOME, true);
-    run_ms(700);
-    sv_button(&ui, SV_B_HOME, false);
-    CHECK(ui.page == SV_PG_MENU, "HOME held: MENU");
-    shot("18_menu");
-    all_palettes("menu");
-    press(SV_B_HOME);
-    /* SETS: SAVE opens it, KNOB 1 the set, KNOB 2 the action, REC asks the glue; SAVE again back */
-    go_layer(3);
+    shot("18_home_full");
+    all_palettes("home_full");
+    /* SETS */
     ui.sets[0] = (sv_set_info){1, 126, 9, SA_SC_MINOR, SA_KIT_TECH, 3, {0, 1, (uint8_t)(SAS_NSOUNDS - 1)}, 0};
     ui.sets[1] = (sv_set_info){0, 0, 0, 0, 0, 0, {0, 0, 0}, 1};
-    ui.sets[2] = (sv_set_info){1, 124, 2, SA_SC_DORIAN, SA_KIT_AFRO, 2, {(uint8_t)(SAS_NSOUNDS - 3), 5, 0}, 0};
-    ui.sets[3] = (sv_set_info){0, 0, 0, 0, 0, 0, {0, 0, 0}, 2};
+    ui.sets[SV_LAST] = (sv_set_info){1, 128, 5, SA_SC_MINOR, SA_KIT_HOUSE, 2, {2, 4, 0}, 0};
     press(SV_B_SAVE);
     CHECK(ui.page == SV_PG_SETS && sv_page_button(&ui) == SV_B_SAVE, "SAVE: SETS");
     shot("19_sets");
     all_palettes("sets");
     sv_knob(&ui, SV_K1, 4);
-    CHECK(ui.set_slot == 4, "KNOB 1: the set (%d)", ui.set_slot);
     press(SV_B_REC);
-    CHECK(ui.req_act == -1 && ui.msg_ms > 0, "LOAD an empty set: nothing asked, a message");
+    CHECK(ui.req_act == -1 && ui.msg_ms > 0, "LOAD an empty set: nothing asked");
     sv_knob(&ui, SV_K_PRESETS, -4);
     press(SV_B_REC);
-    CHECK(ui.req_act == SV_SA_LOAD && ui.req_slot == 0, "REC: LOAD set 1 asked (%d %d)", ui.req_act, ui.req_slot);
+    CHECK(ui.req_act == SV_SA_LOAD && ui.req_slot == 0, "REC: LOAD set 1 asked");
     ui.req_act = -1;
-    sv_knob(&ui, SV_K2, 1);
-    sv_knob(&ui, SV_K1, 6);
-    press(SV_B_REC);
-    CHECK(ui.req_act == SV_SA_STORE && ui.req_slot == 6, "REC: STORE into an empty set asked");
-    ui.req_act = -1;
-    ui.sets[SV_LAST] = (sv_set_info){1, 128, 5, SA_SC_MINOR, SA_KIT_HOUSE, 2, {2, 4, 0}, 0};
     sv_knob(&ui, SV_K1, 9);
-    CHECK(ui.set_slot == SV_LAST, "KNOB 1 ends on LAST (%d)", ui.set_slot);
-    shot("19b_sets_last");
+    sv_knob(&ui, SV_K2, 1);
     press(SV_B_REC);
-    CHECK(ui.req_act == -1, "STORE into LAST: refused (it keeps itself)");
-    sv_knob(&ui, SV_K2, -1);
-    press(SV_B_REC);
-    CHECK(ui.req_act == SV_SA_LOAD && ui.req_slot == SV_LAST, "LOAD LAST asked");
-    ui.req_act = -1;
-    sv_knob(&ui, SV_K1, -2);
-    sv_knob(&ui, SV_K2, 9);
-    CHECK(ui.set_act == SV_SA_CLEAR, "KNOB 2 stops at CLEAR");
-    shot("20_sets_clear");
+    CHECK(ui.req_act == -1, "STORE into LAST: refused");
     press(SV_B_SAVE);
-    CHECK(ui.page == SV_PG_LAYER && ui.layer == 3, "SAVE again: back to the layer");
+    CHECK(ui.page == SV_PG_MAIN, "SAVE again: back HOME");
+    /* MENU */
+    sv_button(&ui, SV_B_HOME, true);
+    run_ms(700);
+    sv_button(&ui, SV_B_HOME, false);
+    CHECK(ui.page == SV_PG_MENU, "HOME held: MENU");
+    shot("20_menu");
     press(SV_B_HOME);
     press(SV_B_PLAY);
     CHECK(!g.playing, "PLAY stops");

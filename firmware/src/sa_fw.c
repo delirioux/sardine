@@ -128,7 +128,7 @@ static bool sa_set_read(int k, sa_settings *s)
         return false;
     sa_defaults(s);
     memcpy(s, st_buf + off + 8u, r.size < sizeof *s ? r.size : sizeof *s);
-    sa_settings_fix(s);
+    sas_fix(s);
     return true;
 #else
     (void)k;
@@ -214,7 +214,7 @@ static void sa_prefs_load(void)
         uint32_t k = sa_wait.size < sizeof sa_next ? sa_wait.size : sizeof sa_next;
         sa_defaults(&sa_next);
         memcpy(&sa_next, &sa_wait.s, k);
-        sa_settings_fix(&sa_next);
+        sas_fix(&sa_next);
         sa_pref.look = sa_next.look;
         sa_set_write(0, &sa_next);
     }
@@ -470,8 +470,8 @@ static void sa_input(void)
     sa_notes_prev = notes;
 }
 
-/* the LEDs: the page's button; REC while something waits for it (blinking once armed); FX while the layer open is
- * muted; PLAY green while playing; the keys held, else the chord's tones dim */
+/* the LEDs: the page's button (FX past a layer's home page); SEQ while something waits for it (blinking once armed);
+ * REC while step recording (on SETS: blinking, it does the action); PLAY green while playing; the keys held, else the chord's tones dim */
 static void sa_leds(void)
 {
     static uint8_t ready;
@@ -485,12 +485,8 @@ static void sa_leds(void)
     if (pb >= 0)
         led_put(nl, panel.btn[pb], 1);
     bool pend = sa_pending(&sa_g) > 0;
-    led_put(nl, panel.btn[B_REC], pend && (!sa_g.drop_armed || (fm1_ms / 125u) % 2u));
-    int ml = sa_u.page == SV_PG_DRUMS ? sv_drow_layer(&sa_u) :
-             (sa_u.page == SV_PG_LAYER || sa_u.page == SV_PG_ARP || sa_u.page == SV_PG_STEPS ||
-              sa_u.page == SV_PG_GATE || sa_u.page == SV_PG_PAN) ? sa_u.layer : -1;
-    if (ml >= 0 && sa_g.s.live[ml].mute)
-        led_put(nl, panel.btn[B_FX], 1);
+    led_put(nl, panel.btn[B_SEQ], pend && (!sa_g.drop_armed || (fm1_ms / 125u) % 2u));   /* SEQ: what waits */
+    led_put(nl, panel.btn[B_REC], sa_u.rec || (sa_u.page == SV_PG_SETS && (fm1_ms / 500u) % 2u));
     uint32_t efull = 0, edim = 0;
     bool editing = sv_key_leds(&sa_u, &efull, &edim);   /* DRUMS, STEPS: the keys show what they edit */
     for (k = 0; k < NB; k++)

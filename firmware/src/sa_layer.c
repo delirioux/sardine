@@ -491,7 +491,7 @@ static int bar_query(const sa_code *c, int layer, int bar, qev **out)
 uint16_t sa_preview(const sa_groove *g, const sa_code *c, int layer, int bar)
 {
     (void)g;
-    if (c->type == SA_T_NONE) return 0;
+    if (c->type == SA_T_NONE || (c->pat == SA_PAT_OFF && !c->own)) return 0;
     qev *e;
     int n = bar_query(c, layer, bar < 0 ? 0 : bar, &e);
     uint16_t bits = 0;
@@ -577,14 +577,25 @@ static int arp_pick(int mode, uint32_t i, int n, int layer)
 static void layer_bar(sa_groove *g, int l, int bar)
 {
     const sa_code *c = &g->s.code[l];
-    if (c->type == SA_T_NONE) return;
+    if (c->type == SA_T_NONE || (c->pat == SA_PAT_OFF && !c->own)) return;
     qev *e;
     int n = bar_query(c, l, bar, &e);
     int32_t b0 = (int32_t)bar * SA_TPB;
-    if (c->type == SA_T_DRUM) {
-        int lv = g->s.live[l].level, note = sa_dv_gm(c->sound);
-        for (int i = 0; i < n; ++i)
-            bn_add(g, (int)(e[i].t - b0), e[i].d, note, e[i].v * (20 + lv * 80 / 100) / 100, l);
+    if (c->type == SA_T_DRUM) {                    /* LEVEL; ACCENT (env, 50: as written); CHANCE (cut) */
+        const sa_live *v = &g->s.live[l];
+        int lv = v->level, note = sa_dv_gm(c->sound), ac = v->env, ch = v->cut;
+        for (int i = 0; i < n; ++i) {
+            if (ch < 100) {
+                uint32_t h = ((uint32_t)bar * 2654435761u) ^ ((uint32_t)e[i].t * 40503u) ^ ((uint32_t)l * 2246822519u);
+                h ^= h >> 15;
+                h *= 2654435761u;
+                if ((int)((h >> 16) % 100u) >= ch) continue;
+            }
+            int vel = e[i].v;
+            vel = vel >= 120 ? 90 + (vel - 90) * ac / 50 : vel * (150 - ac) / 100;
+            vel = clampi(vel, 20, 127);
+            bn_add(g, (int)(e[i].t - b0), e[i].d, note, vel * (20 + lv * 80 / 100) / 100, l);
+        }
         return;
     }
     int poct = c->own ? c->ooct : SPAT[c->pat % NSPAT].oct;
@@ -637,6 +648,8 @@ static void bar_build(sa_groove *g)
 bool sa_chordy(const sa_code *c)
 {
     if (c->type != SA_T_SYNTH) return false;
+    if (c->part == SA_L_CHORD) return true;        /* (the CHORD layer: its steps are chords) */
+    if (c->pat == SA_PAT_OFF) return false;
     const spat *p = &SPAT[c->pat % NSPAT];
     for (int i = 0; i < p->n; ++i)
         if (p->s[i].tone == SA_CH) return true;
@@ -650,6 +663,11 @@ void sa_own_make(sa_groove *g, sa_code *c)
     for (int i = 0; i < 16; ++i) {
         c->sn[i] = SA_NO_NOTE;
         c->sl[i] = 1;
+    }
+    if (c->pat == SA_PAT_OFF) {                    /* (OFF: an empty one, in the layer's octave) */
+        c->ooct = (uint8_t)(c->part == SA_L_BASS ? 2 : c->part == SA_L_LEAD ? 5 : 4);
+        c->own = 1;
+        return;
     }
     if (c->type == SA_T_DRUM) {                    /* (a triplet hit goes to its nearest sixteenth) */
         const dpat *p = &DPAT[c->pat % NDPAT];
@@ -720,8 +738,8 @@ void sa_step_len(sa_groove *g, int l, int st, int d)
 
 void sa_pat_label(const sa_code *c, char *out, int max)
 {
-    cpy(out, sa_pat_name(c->type, c->pat), max);
-    if (c->own) cat(out, " EDIT", max);
+    if (c->own) { cpy(out, "MY STEPS", max); return; }
+    cpy(out, c->pat == SA_PAT_OFF ? "OFF" : sa_pat_name(c->type, c->pat), max);
 }
 
 /* ---- the gates ---------------------------------------------------------------------------------------------------- */
@@ -909,11 +927,50 @@ void sa_defaults(sa_settings *s)
         s->pan[l].width = 60;
         s->pan[l].rate = SA_PRATE_BAR;
     }
-    code_drum(&s->code[0], SA_DV_KICK, 0);         /* 4 FLOOR */
-    code_drum(&s->code[1], SA_DV_HAT, 1);          /* OFFBEAT */
-    code_drum(&s->code[2], SA_DV_CLAP, 2);         /* 2 + 4 */
-    code_synth(&s->code[3], SA_DEF_BASS, 1, 0);    /* ROLLER */
-    code_synth(&s->code[4], SA_DEF_STAB, 13, 1);   /* STAB 2 */
+    code_synth(&s->code[SA_L_LEAD], SA_DEF_BASS, SA_PAT_OFF, SA_L_LEAD);
+    code_synth(&s->code[SA_L_CHORD], SA_DEF_STAB, 13, SA_L_CHORD);   /* STAB 2 */
+    code_synth(&s->code[SA_L_BASS], SA_DEF_BASS, 1, SA_L_BASS);      /* ROLLER */
+    code_drum(&s->code[SA_L_DRUM0], SA_DV_KICK, 0);                  /* 4 FLOOR */
+    code_drum(&s->code[SA_L_DRUM0 + 1], SA_DV_HAT, 1);               /* OFFBEAT */
+    code_drum(&s->code[SA_L_DRUM0 + 2], SA_DV_CLAP, 2);              /* 2 + 4 */
+}
+
+/* the fixed layers: LEAD CHORD BASS in slots 0..2 on parts 0..2 (a synth layer elsewhere, or a drum there, moves:
+ * its code, sound, gate and pan with it); a slot of them empty: that synth, OFF */
+static void canon(sa_settings *s)
+{
+    sa_code c[SA_LAYERS];
+    sa_live v[SA_LAYERS];
+    sa_gate gt[SA_LAYERS];
+    sa_pan pn[SA_LAYERS];
+    bool have[3] = {false, false, false};
+    int nd = SA_L_DRUM0;
+    memset(c, 0, sizeof c);
+    for (int l = 0; l < SA_LAYERS; ++l) {
+        live_default(&v[l]);
+        gate_default(&gt[l]);
+        memset(&pn[l], 0, sizeof pn[l]);
+        pn[l].width = 60;
+        pn[l].rate = SA_PRATE_BAR;
+    }
+    for (int l = 0; l < SA_LAYERS; ++l) {           /* the synths to their parts' slots (the first of a part wins) */
+        const sa_code *o = &s->code[l];
+        int to = -1;
+        if (o->type == SA_T_SYNTH && o->part < 3 && !have[o->part]) to = o->part;
+        else if (o->type == SA_T_DRUM && nd < SA_LAYERS) to = nd++;
+        if (to < 0) continue;
+        if (o->type == SA_T_SYNTH) have[to] = true;
+        c[to] = *o;
+        v[to] = s->live[l];
+        gt[to] = s->gate[l];
+        pn[to] = s->pan[l];
+    }
+    for (int p = 0; p < 3; ++p)
+        if (!have[p]) code_synth(&c[p], 0, SA_PAT_OFF, p);
+    memcpy(s->code, c, sizeof c);
+    memcpy(s->live, v, sizeof v);
+    memcpy(s->gate, gt, sizeof gt);
+    memcpy(s->pan, pn, sizeof pn);
 }
 
 void sa_settings_fix(sa_settings *s)
@@ -951,13 +1008,13 @@ void sa_settings_fix(sa_settings *s)
             if (c->type == SA_T_SYNTH) {
                 parts |= (uint8_t)(1u << c->part);
                 synths++;
-                c->pat %= (uint8_t)NSPAT;
+                if (c->pat != SA_PAT_OFF) c->pat %= (uint8_t)NSPAT;
             }
         }
         if (c->type == SA_T_DRUM) {
             c->part = SA_PART_DRUMS;
             c->sound %= SA_DVS;
-            c->pat %= (uint8_t)NDPAT;
+            if (c->pat != SA_PAT_OFF) c->pat %= (uint8_t)NDPAT;
         }
         for (int i = 0; i < SA_MODS; ++i) {
             sa_mod *m = &c->mod[i];
@@ -993,6 +1050,7 @@ void sa_settings_fix(sa_settings *s)
         pn->width = (uint8_t)clampi(pn->width, 0, 100);
         pn->rate = (uint8_t)(pn->rate % SA_PRATES);
     }
+    canon(s);
 }
 
 /* ---- a fresh groove ---------------------------------------------------------------------------------------------- */
@@ -1047,7 +1105,8 @@ void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p)
     s->harm.scale = SCL[rnd(&r, sizeof SCL)];
     s->harm.prog = (uint8_t)rnd(&r, SA_PROGS);
     s->harm.bars = BARS[rnd(&r, sizeof BARS)];
-    int l = 0;
+    static const char *const LEADS[] = {"TONES UP", "RIFF", "PLUCKS", "CALL"};
+    int l = SA_L_DRUM0;
     /* the drums: a kick, hats, a clap or a snare on 2 and 4; sometimes an open hat, a shaker, a rim, a conga, a ride */
     code_drum(&s->code[l++], SA_DV_KICK, pat_find(SA_T_DRUM, rnd(&r, 8) ? "4 FLOOR" : rnd(&r, 2) ? "2-STEP" : "BROKEN"));
     int hat = pick_pat(&r, SA_T_DRUM, HATS, (int)(sizeof HATS / sizeof HATS[0]));
@@ -1062,23 +1121,21 @@ void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p)
     case 3: code_drum(&s->code[l++], SA_DV_RIDE, pat_find(SA_T_DRUM, "8THS")); break;
     default: break;
     }
-    /* the synths: a bass; stabs or a pad; now and then both */
-    code_synth(&s->code[l++], pick_sound(&r, p->bass, p->nbass),
-               pick_pat(&r, SA_T_SYNTH, BASS, (int)(sizeof BASS / sizeof BASS[0])), 0);
-    bool stab = rnd(&r, 100) < 55, both = rnd(&r, 100) < 40;
-    for (int k = 0; k < (both ? 2 : 1); ++k) {
-        bool st = k == 0 ? stab : !stab;
-        int sl = l++;
-        if (st) {
-            code_synth(&s->code[sl], pick_sound(&r, p->keys, p->nkeys),
-                       pick_pat(&r, SA_T_SYNTH, STABS, (int)(sizeof STABS / sizeof STABS[0])), 1 + k);
-        } else {
-            code_synth(&s->code[sl], pick_sound(&r, p->pad, p->npad),
-                       pick_pat(&r, SA_T_SYNTH, PADS, (int)(sizeof PADS / sizeof PADS[0])), 1 + k);
-            if (rnd(&r, 100) < 35) s->gate[sl].pat = (uint8_t)(1 + rnd(&r, SA_GATES - 1));   /* a gated pad */
-            if (rnd(&r, 100) < 40) s->pan[sl].mode = SA_PAN_SWEEP;
-        }
+    /* BASS always; CHORD stabs or a pad (sometimes gated, sweeping); LEAD now and then, mostly OFF */
+    code_synth(&s->code[SA_L_BASS], pick_sound(&r, p->bass, p->nbass),
+               pick_pat(&r, SA_T_SYNTH, BASS, (int)(sizeof BASS / sizeof BASS[0])), SA_L_BASS);
+    if (rnd(&r, 100) < 55) {
+        code_synth(&s->code[SA_L_CHORD], pick_sound(&r, p->keys, p->nkeys),
+                   pick_pat(&r, SA_T_SYNTH, STABS, (int)(sizeof STABS / sizeof STABS[0])), SA_L_CHORD);
+    } else {
+        code_synth(&s->code[SA_L_CHORD], pick_sound(&r, p->pad, p->npad),
+                   pick_pat(&r, SA_T_SYNTH, PADS, (int)(sizeof PADS / sizeof PADS[0])), SA_L_CHORD);
+        if (rnd(&r, 100) < 35) s->gate[SA_L_CHORD].pat = (uint8_t)(1 + rnd(&r, SA_GATES - 1));
+        if (rnd(&r, 100) < 40) s->pan[SA_L_CHORD].mode = SA_PAN_SWEEP;
     }
+    code_synth(&s->code[SA_L_LEAD], pick_sound(&r, p->lead, p->nlead),
+               rnd(&r, 100) < 25 ? pick_pat(&r, SA_T_SYNTH, LEADS, (int)(sizeof LEADS / sizeof LEADS[0])) : SA_PAT_OFF,
+               SA_L_LEAD);
     sa_settings_fix(s);
 }
 
@@ -1231,6 +1288,15 @@ static void drop_now(sa_groove *g)
     memcpy(g->s.gate, g->ed_gate, sizeof g->ed_gate);
     g->s.harm = g->ed_harm;
     g->drop_armed = false;
+    g->sound_sig++;
+}
+
+void sa_sound_now(sa_groove *g, int l, int sound)
+{
+    if (l < 0 || l >= SA_LAYERS || g->s.code[l].type != SA_T_SYNTH) return;
+    part_off(g, g->s.code[l].part);
+    g->s.code[l].sound = (uint8_t)sound;
+    g->ed[l].sound = (uint8_t)sound;
     g->sound_sig++;
 }
 

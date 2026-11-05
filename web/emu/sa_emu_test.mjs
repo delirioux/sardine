@@ -40,17 +40,18 @@ run(8);
 check(`PLAY plays (peak ${peak.toFixed(3)}, bar ${w.web_da_bar()})`, w.web_playing() && peak > 0.02 && peak <= 1 && w.web_da_bar() >= 3);
 check("PLAY's green LED lit", (w.web_lit_buttons() >> 14) & 1);
 
-// SELECT to a layer, ARP opens its page, SCL the KEY page, HOME back to MAIN
+// PRESETS to a layer, FX through its pages, SCL the KEY page, HOME back; SELECT is the tempo
 const pages = [];
-w.web_enc(EN.SELECT, 2); run(0.2); pages.push(w.web_da_page());   // MAIN, DRUMS, the bass layer: LAYER
-press(B.ARP); pages.push(w.web_da_page());                          // ARP
-press(B.SCL); pages.push(w.web_da_page());                          // KEY
-check(`SELECT, ARP, SCL open LAYER, ARP, KEY (${pages.join(" ")})`, pages[0] === 1 && pages[1] === 2 && pages[2] === 3);
+w.web_enc(EN.PRESETS, 2); run(0.2); pages.push(w.web_da_page(), w.web_da_view());   // CHORD: LAYER
+press(B.FX); pages.push(w.web_da_fx());                                                // its SOUND page
+press(B.SCL); pages.push(w.web_da_page());                                             // KEY
+check(`PRESETS, FX, SCL: CHORD, SOUND, KEY (${pages.join(" ")})`, pages[0] === 1 && pages[1] === 2 && pages[2] === 1 && pages[3] === 2);
 press(B.HOME);
 run(0.5);
-check("HOME returns to MAIN", w.web_da_page() === 0);
+check("HOME returns HOME", w.web_da_page() === 0);
+const bpm = w.web_da_bpm();
 w.web_enc(EN.SELECT, 1); run(0.2);
-check("SELECT after MAIN: DRUMS", w.web_da_page() === 5);
+check("SELECT: the tempo", w.web_da_bpm() === bpm + 1 && w.web_da_page() === 0);
 press(B.HOME); run(0.3);
 
 press(B.PLAY);
@@ -60,12 +61,12 @@ run(1);
 check(`PLAY again stops (tail peak ${peak.toFixed(4)})`, !w.web_playing() && peak < 1e-3);
 
 const writes = w.web_flash_writes_count();
-w.web_enc(EN.K1, 2);  // TEMPO
+w.web_enc(EN.K1, -2);  // FILTER
 run(4);
 check("a setting changed, stopped: LAST keeps it", w.web_flash_writes_count() > writes && w.web_da_set_used(8) === 1);
 const groove1b = w.web_da_groove();
 press(B.SAVE);
-check("SAVE opens SETS", w.web_da_page() === 9);
+check("SAVE opens SETS", w.web_da_page() === 4);
 w.web_enc(EN.K2, 1); run(0.1);  // STORE
 w.web_enc(EN.K1, 2); run(0.1);  // set 3
 press(B.REC); run(0.2);

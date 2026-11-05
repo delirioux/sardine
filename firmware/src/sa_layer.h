@@ -68,15 +68,21 @@ typedef struct {
     uint8_t sl[16];
 } sa_code;
 #define SA_NO_NOTE (-128)
+#define SA_PAT_OFF 255                              /* a layer's pattern OFF: it plays nothing (a ready pattern's place) */
+/* the fixed layers (0.7): LEAD, CHORD and BASS on the synth parts of the same number; the drums in the slots after */
+enum { SA_L_LEAD, SA_L_CHORD, SA_L_BASS, SA_L_DRUM0 };
 
 /* a layer's sound: at once */
 typedef struct {
     uint8_t mute;
     uint8_t cut, reso, drive, env;                  /* synth: 0..100 (CUT 100: the sound as it is) */
-    uint8_t level;                                  /* drum: 0..100 */
+    uint8_t level;                                  /* 0..100 (80: as it is; MIX's LEVEL, a drum's LEVEL) */
     uint8_t nopump;                                 /* synth: 1 = this layer does not duck under the kick (0.4) */
     uint8_t pad;
 } sa_live;
+
+/* a drum layer's ACCENT and CHANCE (0.7) live in its sa_live's env (0..100, 50: the pattern's own accents) and cut
+ * (0..100 %: how likely each hit plays) */
 
 /* a synth layer's gate (0.5): its volume cut to a rhythm on the sixteenths, the note held (no new attack). Code: it
  * drops with REC. pat 0: off; own: the steps of `mask` (edited on the keys), else the ready gate pat's */
@@ -195,13 +201,14 @@ void sa_set_sound(sa_groove *g, void (*fn)(void *ctx, const sa_event *e), void *
 void sa_edit_reset(sa_groove *g);                   /* the edit copy = what plays */
 int sa_pending(const sa_groove *g);                 /* how many changes wait for REC (layers, plus 1 for the key) */
 bool sa_layer_pending(const sa_groove *g, int l);
-void sa_drop(sa_groove *g);                         /* REC: playing, on the next bar line; stopped, at once */
+void sa_drop(sa_groove *g);                         /* SEQ: playing, on the next bar line; stopped, at once */
+void sa_sound_now(sa_groove *g, int l, int sound);  /* a synth layer's sound, at once (in the copy too) */
 /* a whole groove in (a set loaded, a fresh one): playing, on the next bar line; stopped, at once. What waits for REC
  * goes, the colour and the look stay. s is read on the bar line: the caller keeps it until then */
 void sa_set_arm(sa_groove *g, const sa_settings *s);
-/* a fresh groove from a seed: a kick, hats, a clap or snare and maybe more, a bass, stabs or a pad (sometimes both),
- * a key, scale, progression, kit, tempo and swing that suit a club. The sounds come from the glue's lists */
-typedef struct { const uint8_t *bass, *keys, *pad; uint8_t nbass, nkeys, npad; } sa_pool;
+/* a fresh groove from a seed: a kick, hats, a clap or snare and maybe more, a bass, stabs or a pad, now and then a
+ * lead, a key, scale, progression, kit, tempo and swing that suit a club. The sounds come from the glue's lists */
+typedef struct { const uint8_t *bass, *keys, *pad, *lead; uint8_t nbass, nkeys, npad, nlead; } sa_pool;
 void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p);
 void sa_play(sa_groove *g, bool on);
 void sa_process(sa_groove *g, int frames);
