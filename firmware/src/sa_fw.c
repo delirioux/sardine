@@ -375,6 +375,12 @@ static void sa_load_synth(uint32_t part, int sound)
     fm1_irq_off();
     if (snd->own)
         sa_apply_own(trk[part].p, snd->own);
+    if (snd->engine == SAS_ANALOG) {                         /* (0.7.1) the engine presets detuned 20..30 cents beat
+                                                              * sourly in a chord: down to 12 (DTN, E1) */
+        static const char *const TAME[] = {"RAVE", "STRINGS", "SOFT PAD"};
+        for (unsigned k = 0; k < sizeof TAME / sizeof TAME[0]; ++k)
+            if (sound == sas_find(TAME[k])) trk[part].p[P_E0 + 1] = 12;
+    }
     if (snd->fm6)
         sa_fm6_load(&trk[part], snd->fm6);
     sa_base[part].bright = snd->bright >= 0 ? trk[part].p[P_E0 + snd->bright] : 0;
