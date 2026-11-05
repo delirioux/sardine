@@ -146,10 +146,13 @@ static bool sa_set_write(int k, const sa_settings *s)
     int cur = flash_ok ? st_current(obj, &h) : -1;           /* (its payload, the other sets, now in st_buf) */
     if (!flash_ok)
         return false;
-    if (cur < 0 || h.len != SA_SET_LEN) {
+    if (cur < 0) {
         memset(st_buf, 0, SA_SET_LEN);
         h.seq = 0;
         cur = 1;                                             /* (the first write: copy A) */
+    } else if (h.len != SA_SET_LEN) {                        /* another firmware's project there (Felucca's, Sill's
+                                                              * slot): its sequence kept, so the sets win over it */
+        memset(st_buf, 0, SA_SET_LEN);
     }
     memset(st_buf + off, 0, SA_SET_STRIDE);
     if (s) {
