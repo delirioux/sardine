@@ -1301,21 +1301,20 @@ static void sv_panel_mixer(sa_ui *u)
     const sa_settings *s = &g->s;
     static const char *const N[4] = {"LEAD", "CHORD", "BASS", "DRUMS"};
     int now = sv_now(g);
-    for (int i = 0; i < 4; ++i) {
-        int32_t x = SV_CARD_X(i) + 20, y0 = 10, h = 80;
+    for (int i = 0; i < 4; ++i) {                  /* a row each: the name, the level across, the beat's dot */
+        int32_t y = 5 + i * 13, x = 58, w = 150;
         bool m = (i < 3 ? s->live[i].mute : s->dmute) || (g->solo && !((g->solo >> i) & 1u));
-        int v = i < 3 ? s->live[i].level : s->dvol, f = v * h / 100;
-        bool hit = false;
+        int v = i < 3 ? s->live[i].level : s->dvol, f = v * w / 100;
+        bool hit = false, so = (g->solo >> i) & 1u;
         if (now >= 0 && i < 3) hit = (g->hits[i] >> now) & 1u;
         for (int l = SA_L_DRUM0; i == 3 && now >= 0 && l < SA_LAYERS; ++l) hit |= (g->hits[l] >> now) & 1u;
-        cv_rect(x, y0, 14, h, sv_well());
-        cv_rect(x, y0 + h - f, 14, f > 0 ? f : 1, m ? T_DIM : i == 3 ? T_THEME : T_ACCENT);
-        cv_rect(x - 3, y0 + h - 80 * h / 100, 20, 1, T_MID);          /* (80: as it is) */
-        cv_rrect(x + 3, y0 + h + 6, 8, 8, 4, hit && !m ? T_TEXT : sv_well(), T_SURF);
-        bool so = (g->solo >> i) & 1u;
-        cv_text_in(SV_CARD_X(i), y0 + h + 18, SV_CARD_W, &AF_S, so ? "SOLO" : m ? "MUTED" : N[i], so || m ? T_ACCENT : T_MID,
-                   T_SURF);
+        cv_free_text(10, y, &AF_S, so ? "SOLO" : m ? "MUTED" : N[i], so || m ? T_ACCENT : T_MID, T_SURF, 46);
+        cv_rect(x, y + 2, w, 6, sv_well());
+        cv_rect(x, y + 2, f > 0 ? f : 1, 6, m ? T_DIM : i == 3 ? T_THEME : T_ACCENT);
+        cv_rect(x + 80 * w / 100, y, 1, 10, T_MID);          /* (80: as it is) */
+        cv_rrect(218, y + 1, 8, 8, 4, hit && !m ? T_TEXT : sv_well(), T_SURF);
     }
+    sv_scope(u, 8, 92, 224, 24, T_THEME);          /* the whole mix */
 }
 
 /* EDIT, a drum: its 16 steps large, the step KNOB 1 is on framed */

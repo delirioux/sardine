@@ -63,6 +63,10 @@ w.web_enc(EN.PRESETS, -1); run(0.2);
 press(B.FX); pages.push(w.web_da_fx());                                                // its SOUND page
 press(B.SCL); pages.push(w.web_da_page());                                             // KEY
 check(`PRESETS, FX, SCL: CHORD, SOUND, KEY (${pages.join(" ")})`, pages[0] === 1 && pages[1] === 2 && pages[2] === 1 && pages[3] === 2);
+press(B.HOME); press(B.GLO);                                                          // the MIXER: the whole mix's scope
+wv = 0;
+for (let i = 0; i < 40; i++) { run(0.05); wv = Math.max(wv, w.web_da_wave()); }
+check(`the MIXER's scope of the whole mix (${wv} points)`, wv === 96);
 press(B.HOME);
 run(0.5);
 check("HOME returns HOME", w.web_da_page() === 0);

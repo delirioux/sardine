@@ -880,6 +880,7 @@ static const uint16_t ENG_VCOST[NENGINES] = {163, FELUCCA_FM4 ? 181 : 0, 162, 67
 
 #if FELUCCA_SARDINE
 static void sa_scope_take(uint32_t part, const int32_t *b, uint32_t n);   /* (sa_fw.c: a layer's wave for its screen) */
+#define SA_SCOPE_MIX 3u                                 /* (its ring for the whole mix) */
 #endif
 /* one synth part into the dry mix and the sends of sm (mx[0]; mx[1] on the second core); a part with no voice sounding costs
  * the LFO tick and a cleared buffer only (after the DIST tail has run out) */
@@ -1082,6 +1083,9 @@ static void mix_block(int32_t *out, uint32_t n)
         rev_side_mix(mix_l, mix_r, n);                  /* HALL: stereo */
     if (scope_mix)
         scope_take_mix(n);
+#if FELUCCA_SARDINE
+    sa_scope_take(SA_SCOPE_MIX, mix_l, n);              /* (the whole mix, dry: the MIXER's scope) */
+#endif
     if (perf) {
         perf_master(out, n);
         return;
