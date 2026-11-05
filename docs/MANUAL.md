@@ -34,8 +34,8 @@ The footer shows the layer, a dot for each of its pages (the one open lit) and w
 
 ## HOME
 
-Every layer playing: LEAD, CHORD and BASS with their sound and their bar, DRUMS a thin bar for each drum; OFF and
-muted layers dimmed. The knobs act at once: **FILTER** (the whole mix darker to the left, OPEN at the top), **FEEL**
+Every layer playing: LEAD, CHORD and BASS with their sound and their bar, DRUMS a thin bar for each drum; an OFF layer
+shows its sound dimmed and OFF, a muted one is crossed out. The knobs act at once: **FILTER** (the whole mix darker to the left, OPEN at the top), **FEEL**
 (the swing of the off sixteenths), **PUMP** (how deep the synth layers duck under the kick) and **SPACE** (the room:
 reverb and delay together; at 70 each sound has its own).
 
@@ -130,7 +130,8 @@ drums do not. A key change waits for SEQ. SCL again goes back.
 
 ## The keys
 
-The keys play the layer open, live, snapped to the scale (on HOME: LEAD); with REC they write its steps. They never
+The keys play the layer open, live, snapped to the scale (on HOME: LEAD); the header says what, briefly (KEYS: LEAD,
+SAW LEAD). With REC they write its steps. They never
 change a setting.
 
 ## SETS

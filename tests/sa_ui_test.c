@@ -215,6 +215,9 @@ int main(int argc, char **argv)
     all_palettes("chord");
     sv_knob(&ui, SV_K_PRESETS, 1);
     CHECK(ui.view == SV_V_BASS && ui.layer == SA_L_BASS, "PRESETS: BASS");
+    sv_key(&ui, 57, true);
+    CHECK(ui.msg_ms > 0 && !strncmp(ui.msg, "KEYS: BASS, ", 12), "a key: what it plays (%s)", ui.msg);
+    sv_key(&ui, 57, false);
     int cut = g.s.live[SA_L_BASS].cut;
     sv_knob(&ui, SV_K1, -10);
     CHECK(g.s.live[SA_L_BASS].cut == cut - 20, "BASS's CUTOFF at once");

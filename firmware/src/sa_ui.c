@@ -859,9 +859,9 @@ static void sv_panel_home(sa_ui *u)
         const sa_code *c = &g->s.code[l];
         bool mute = g->s.live[l].mute, off = c->pat == SA_PAT_OFF && !c->own, pend = sa_layer_pending(g, l);
         sv_label(10, y + 2, SV_VIEW_NAME[v], T_MID);
-        cv_free_text(58, y + 2, &AF_S, off ? "OFF" : sas_of(c->sound)->name, mute || off ? T_DIM : pend ? T_ACCENT : T_TEXT,
-                     T_SURF, 84);
-        sv_strip(146, y + 4, 88, 8, off ? 0 : sv_play_bits(u, l), now, v == SV_V_BASS ? T_THEME : T_ACCENT, mute || off);
+        cv_free_text(58, y + 2, &AF_S, sas_of(c->sound)->name, mute || off ? T_DIM : pend ? T_ACCENT : T_TEXT, T_SURF, 84);
+        if (off) cv_text_on(146, y + 2, &AF_S, "OFF", T_DIM, T_SURF);   /* (OFF: its sound still shown) */
+        else sv_strip(146, y + 4, 88, 8, sv_play_bits(u, l), now, v == SV_V_BASS ? T_THEME : T_ACCENT, mute);
         if (mute) cv_rect(146, y + 7, 88, 2, T_ACCENT);
     }
     int32_t y = 66;
@@ -1448,6 +1448,12 @@ void sv_key(sa_ui *u, int note, bool down)
         }
     }
     if (down) {
+        char m[32];                                /* what the keys play, briefly in the header */
+        sv_cpy(m, "KEYS: ", sizeof m);
+        sv_cat(m, lay ? SV_VIEW_NAME[u->view] : "LEAD", sizeof m);
+        sv_cat(m, ", ", sizeof m);
+        sv_cat(m, sv_layer_name(u, layer), sizeof m);
+        sv_msg(u, m);
         u->key_sent[k] = note + 12 * u->oct;
         sa_key(u->g, k, u->key_sent[k], true, layer);
     } else {
