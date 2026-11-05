@@ -339,15 +339,14 @@ int main(int argc, char **argv)
     /* DRUMS: KNOB 1 the drum, the keys its steps under REC, + ADD a drum */
     sv_knob(&ui, SV_K_PRESETS, 4);
     CHECK(ui.view == SV_V_DRUMS && ui.layer == SA_L_DRUM0, "DRUMS: the first drum");
-    CHECK(sv_play_keys(&ui) == 1u << SA_DV_KICK && (sv_play_dim(&ui) & 0xDu) == 0xDu,
-          "DRUMS: the kit on the keys, the kick's key lit, the groove's drums dim (%x %x)", sv_play_keys(&ui),
-          sv_play_dim(&ui));
+    CHECK(sv_play_keys(&ui) == 1u << (60 - SV_KEY_LO), "DRUMS: the kick's own note (C, folded up) lit (%x)",
+          sv_play_keys(&ui));
     {
         int before = part_on[SA_PART_DRUMS];
-        sv_key(&ui, SV_KEY_LO + SA_DV_CLAP, true);
-        CHECK(part_on[SA_PART_DRUMS] == before + 1 && !strcmp(ui.msg, "KEYS: DRUMS, CLAP"), "the clap's key plays the clap (%s)",
+        sv_key(&ui, SV_KEY_LO + 7, true);
+        CHECK(part_on[SA_PART_DRUMS] == before + 1 && !strcmp(ui.msg, "KEYS: DRUMS, KICK"), "any key plays the drum picked (%s)",
               ui.msg);
-        sv_key(&ui, SV_KEY_LO + SA_DV_CLAP, false);
+        sv_key(&ui, SV_KEY_LO + 7, false);
     }
     shot("13_drums");
     all_palettes("drums");

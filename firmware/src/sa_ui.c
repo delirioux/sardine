@@ -1533,8 +1533,9 @@ void sv_key(sa_ui *u, int note, bool down)
             return;
         }
     }
-    if (lay && u->view == SV_V_DRUMS) {            /* DRUMS: the 14 lowest keys the kit's drums, the rest the drum picked */
-        int dv = k < SA_DVS ? k : u->g->ed[u->layer].type == SA_T_DRUM ? u->g->ed[u->layer].sound : 0;
+    if (lay && u->view == SV_V_DRUMS) {            /* DRUMS: every key plays the drum picked */
+        if (u->g->ed[u->layer].type != SA_T_DRUM) return;
+        int dv = u->g->ed[u->layer].sound;
         if (down) {
             char m[32];
             sv_cpy(m, "KEYS: DRUMS, ", sizeof m);
@@ -1594,9 +1595,13 @@ uint32_t sv_play_keys(const sa_ui *u)
     const sa_groove *g = u->g;
     if (u->page != SV_PG_LAYER || u->layer < 0) return 0;
     if (u->view != SV_V_DRUMS && !g->playing) return 0;
-    if (u->view == SV_V_DRUMS) {                   /* the drum picked: its key in the kit, lit */
+    if (u->view == SV_V_DRUMS) {                   /* the drum picked: its own note (General MIDI), on the keys */
         const sa_code *e = &g->ed[u->layer];
-        return e->type == SA_T_DRUM ? 1u << (e->sound % SA_DVS) : 0u;
+        if (e->type != SA_T_DRUM) return 0;
+        int k = sa_dv_gm(e->sound);
+        while (k < SV_KEY_LO) k += 12;
+        while (k > SV_KEY_HI) k -= 12;
+        return 1u << (k - SV_KEY_LO);
     }
     int part = g->s.code[u->layer].part, n = g->nheld;
     uint32_t m = 0;
@@ -1612,11 +1617,8 @@ uint32_t sv_play_keys(const sa_ui *u)
 
 uint32_t sv_play_dim(const sa_ui *u)
 {
-    if (u->page != SV_PG_LAYER || u->view != SV_V_DRUMS) return 0;
-    uint32_t m = 0;                                /* the kit on the keys: the drums of the groove dim */
-    for (int l = SA_L_DRUM0; l < SA_LAYERS; ++l)
-        if (u->g->s.code[l].type == SA_T_DRUM) m |= 1u << u->g->s.code[l].sound;
-    return m;
+    (void)u;
+    return 0;
 }
 
 void sv_tick(sa_ui *u, int ms)

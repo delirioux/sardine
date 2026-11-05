@@ -107,8 +107,7 @@ bool sv_key_leds(const sa_ui *u, uint32_t *full, uint32_t *dim);
 /* DRUMS: the drum picked's key; else the notes the open synth layer sounds now, on the keys (bit k: SV_KEY_LO + k; an octave out of the keys' reach
  * folded into it). 0: not on a synth layer */
 uint32_t sv_play_keys(const sa_ui *u);
-/* DRUMS: the kit on the keys (the 14 lowest, KICK SNARE CLAP HAT OPEN HAT RIDE CRASH RIM TOM LOW TOM CONGA COWBELL
- * CLAVE SHAKER): the drums of the groove dim (the one picked lit: sv_play_keys); 0 elsewhere */
+/* (0.7: nothing; kept for the glue) */
 uint32_t sv_play_dim(const sa_ui *u);
 
 #endif
