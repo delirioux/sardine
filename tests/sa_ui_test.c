@@ -237,12 +237,17 @@ int main(int argc, char **argv)
     CHECK(g.s.code[SA_L_BASS].pat == g.ed[SA_L_BASS].pat && !sa_pending(&g), "dropped on the bar line");
     /* FX through BASS's pages and back to its home; another layer opens on its home */
     press(SV_B_FX);
-    CHECK(sv_page_now(&ui) == SVP_SOUND, "FX: SOUND");
-    shot("06_bass_sound");
+    CHECK(sv_page_now(&ui) == SVP_MIX, "FX: the first page, VOLUME TYPE INSTR MUTE");
     int snd = g.s.code[SA_L_BASS].sound;
-    sv_knob(&ui, SV_K2, 1);
+    sv_knob(&ui, SV_K3, 1);
     CHECK(g.s.code[SA_L_BASS].sound != snd && g.ed[SA_L_BASS].sound == g.s.code[SA_L_BASS].sound && !sa_pending(&g),
-          "SOUND: at once, nothing waits");
+          "INSTR: at once, nothing waits");
+    sv_knob(&ui, SV_K4, 1);
+    CHECK(g.s.live[SA_L_BASS].mute, "MUTE at once");
+    shot("06_bass_mix");
+    sv_knob(&ui, SV_K4, -1);
+    sv_knob(&ui, SV_K1, -10);
+    CHECK(g.s.live[SA_L_BASS].level == 60, "VOLUME (%d)", g.s.live[SA_L_BASS].level);
     press(SV_B_FX);
     CHECK(sv_page_now(&ui) == SVP_PAN, "FX: PAN (no ARP on BASS)");
     shot("07_bass_pan");
@@ -252,8 +257,7 @@ int main(int argc, char **argv)
     sv_knob(&ui, SV_K2, 4);
     sv_knob(&ui, SV_K3, 10);
     CHECK(g.s.d3[SA_L_BASS].on && g.s.d3[SA_L_BASS].az == 27 && g.s.d3[SA_L_BASS].el == 20 && g.s.d3[SA_L_BASS].dist == 50,
-          "3D: ANGLE HEIGHT DISTANCE, on (%d %d %d %d)", g.s.d3[SA_L_BASS].on, g.s.d3[SA_L_BASS].az,
-          g.s.d3[SA_L_BASS].el, g.s.d3[SA_L_BASS].dist);
+          "3D: ANGLE HEIGHT DISTANCE, on");
     run_ms(50);
     CHECK(g.pan_now[SA_L_BASS] > 30, "3D: behind on the right pans right (%d)", g.pan_now[SA_L_BASS]);
     shot("07b_bass_3d");
@@ -269,14 +273,6 @@ int main(int argc, char **argv)
     shot("08_bass_mod");
     press(SV_B_SEQ);
     bars(1);
-    press(SV_B_FX);
-    CHECK(sv_page_now(&ui) == SVP_MIX, "FX: MIX");
-    sv_knob(&ui, SV_K1, 1);
-    CHECK(g.s.live[SA_L_BASS].mute, "MIX: MUTE at once");
-    shot("09_bass_mix");
-    sv_knob(&ui, SV_K1, -1);
-    sv_knob(&ui, SV_K2, -10);
-    CHECK(g.s.live[SA_L_BASS].level == 60, "MIX: LEVEL fades (%d)", g.s.live[SA_L_BASS].level);
     press(SV_B_FX);
     CHECK(ui.fx == 0, "FX past the last page: home");
     press(SV_B_FX);

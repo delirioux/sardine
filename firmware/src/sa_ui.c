@@ -195,19 +195,17 @@ static int sv_pages(const sa_ui *u, int *p)
 {
     int n = 0;
     p[n++] = SVP_HOME;
+    p[n++] = SVP_MIX;                              /* (first: VOLUME, TYPE, INSTR, MUTE) */
     if (u->view == SV_V_DRUMS) {
         p[n++] = SVP_KIT;
         p[n++] = SVP_MOD;
-        p[n++] = SVP_MIX;
         return n;
     }
-    p[n++] = SVP_SOUND;
     if (u->view == SV_V_CHORD) p[n++] = SVP_ARP;
     p[n++] = SVP_PAN;
     p[n++] = SVP_3D;
     p[n++] = SVP_GATE;
     p[n++] = SVP_MOD;
-    p[n++] = SVP_MIX;
     return n;
 }
 static int sv_page_now(const sa_ui *u)
@@ -340,7 +338,7 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
     case SVP_HOME:
         if (u->view == SV_V_DRUMS) {
             sv_card_txt(&c[0], "DRUM", sv_layer_name(u, l), -1, false);
-            sv_card_num(&c[1], "LEVEL", v->level, 0, 100);
+            sv_card_num(&c[1], "VOLUME", v->level, 0, 100);
             sv_card_num(&c[2], "ACCENT", v->env, 0, 100);
             sv_fmt_int(t, v->cut);
             sv_cat(t, " %", sizeof t);
@@ -352,25 +350,6 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
             sv_card_num(&c[3], "ENV", v->env, 0, 100);
         }
         break;
-    case SVP_SOUND: {
-        static const char *const ROLE[SAS_ROLES] = {"BASS", "KEYS", "PADS", "LEADS", "FX"};
-        int role = sas_of(lc->sound)->role % SAS_ROLES;
-        sv_card_txt(&c[0], "TYPE", ROLE[role], role * 1000 / (SAS_ROLES - 1), false);
-        {
-            uint8_t list[SAS_NSOUNDS > 0 ? SAS_NSOUNDS : 1];
-            int n = sv_sounds_of(role, list), at = 0;
-            char a[8];
-            for (int k = 0; k < n; ++k) if (list[k] == lc->sound) at = k;
-            sv_fmt_int(t, at + 1);
-            sv_cat(t, "/", sizeof t);
-            sv_fmt_int(a, n);
-            sv_cat(t, a, sizeof t);
-            sv_card_txt(&c[1], "SOUND", t, n > 1 ? at * 1000 / (n - 1) : -1, false);   /* (its name on the panel) */
-        }
-        sv_card_txt(&c[2], "PUMP", v->nopump ? "OFF" : "ON", -1, false);
-        sv_card_off(&c[3]);
-        break;
-    }
     case SVP_ARP: {
         static const char *const SHORT[SA_AR_MODES] = {"OFF", "UP", "DOWN", "UP-DN", "DN-UP", "CONVRG", "DIVRG",
                                                        "RANDOM", "THUMB", "PINKY", "STRUM"};
@@ -440,11 +419,26 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
             sv_card_txt(&c[i], lb, t, -1, e->mod[i].type != lc->mod[i].type || e->mod[i].val != lc->mod[i].val);
         }
         break;
-    case SVP_MIX:
-        sv_card_txt(&c[0], "MUTE", v->mute ? "ON" : "OFF", -1, false);
-        sv_card_num(&c[1], "LEVEL", v->level, 0, 100);
-        sv_card_off(&c[2]);
-        sv_card_off(&c[3]);
+    case SVP_MIX:                                  /* VOLUME TYPE INSTR MUTE (a drum: VOLUME, MUTE) */
+        sv_card_num(&c[0], "VOLUME", v->level, 0, 100);
+        if (u->view == SV_V_DRUMS) {
+            sv_card_off(&c[1]);
+            sv_card_off(&c[2]);
+        } else {
+            static const char *const ROLE[SAS_ROLES] = {"BASS", "KEYS", "PADS", "LEADS", "FX"};
+            int role = sas_of(lc->sound)->role % SAS_ROLES;
+            uint8_t list[SAS_NSOUNDS > 0 ? SAS_NSOUNDS : 1];
+            int n = sv_sounds_of(role, list), at = 0;
+            char a[8];
+            sv_card_txt(&c[1], "TYPE", ROLE[role], role * 1000 / (SAS_ROLES - 1), false);
+            for (int k = 0; k < n; ++k) if (list[k] == lc->sound) at = k;
+            sv_fmt_int(t, at + 1);
+            sv_cat(t, "/", sizeof t);
+            sv_fmt_int(a, n);
+            sv_cat(t, a, sizeof t);
+            sv_card_txt(&c[2], "INSTR", t, n > 1 ? at * 1000 / (n - 1) : -1, false);   /* (its name on the panel) */
+        }
+        sv_card_txt(&c[3], "MUTE", v->mute ? "ON" : "OFF", -1, false);
         break;
     case SVP_KIT:
         sv_card_txt(&c[0], "KIT", sa_kit_name(s->kit), s->kit * 1000 / (SA_KITS - 1), false);
@@ -976,21 +970,13 @@ static void sv_panel_3d(sa_ui *u)
 static void sv_panel_mix(sa_ui *u)
 {
     const sa_live *v = &u->g->s.live[sv_clampi(u->layer, 0, SA_LAYERS - 1)];
-    cv_text_on(10, 42, &AF_M, v->mute ? "MUTED" : "PLAYING", v->mute ? T_ACCENT : T_THEME, T_SURF);
+    cv_free_text(10, 40, &AF_M, u->view == SV_V_DRUMS ? sv_layer_name(u, u->layer) : sas_of(sv_live(u)->sound)->name,
+                 v->mute ? T_DIM : T_THEME, T_SURF, 160);
     int32_t w = 212, f = v->level * w / 100;
-    cv_rect(14, 76, w, 6, sv_well());
-    cv_rect(14, 76, f > 0 ? f : 1, 6, v->mute ? T_DIM : T_THEME);
-    cv_rect(14 + 80 * w / 100, 72, 1, 14, T_MID);
-    sv_label(10, 96, "LEVEL FADES IT IN AND OUT, AT ONCE", T_DIM);
-}
-
-static void sv_panel_sound(sa_ui *u)
-{
-    const sa_code *lc = sv_live(u);
-    static const char *const ROLE[SAS_ROLES] = {"BASS", "KEYS", "PADS", "LEADS", "FX"};
-    sv_label(10, 40, ROLE[sas_of(lc->sound)->role % SAS_ROLES], T_MID);
-    cv_free_text(10, 56, &AF_M, sas_of(lc->sound)->name, T_THEME, T_SURF, 220);
-    sv_label(10, 92, "AT ONCE, AS YOU TURN", T_DIM);
+    cv_rect(14, 78, w, 6, sv_well());
+    cv_rect(14, 78, f > 0 ? f : 1, 6, v->mute ? T_DIM : T_THEME);
+    cv_rect(14 + 80 * w / 100, 74, 1, 14, T_MID);
+    sv_label(10, 98, "AT ONCE: VOLUME FADES IT", T_DIM);
 }
 
 static void sv_panel_synth_home(sa_ui *u)
@@ -998,7 +984,7 @@ static void sv_panel_synth_home(sa_ui *u)
     const sa_code *lc = sv_live(u);
     cv_free_text(10, 42, &AF_M, sas_of(lc->sound)->name, T_THEME, T_SURF, 220);
     sv_label(10, 72, "ALGORITHM: THE PATTERN", T_MID);
-    sv_label(10, 88, "FX: SOUND AND MORE   REC: STEPS", T_DIM);
+    sv_label(10, 88, "FX: VOLUME, SOUND AND MORE", T_DIM);
 }
 
 /* DRUMS: the drum KNOB 1 picked, large: which of how many, its pattern, its 16 steps (what plays, or what SEQ drops) */
@@ -1051,7 +1037,6 @@ static void sv_panel_layer(sa_ui *u)
     sv_layer_top(u, u->layer);
     switch (pg) {
     case SVP_HOME: sv_panel_synth_home(u); break;
-    case SVP_SOUND: sv_panel_sound(u); break;
     case SVP_ARP: sv_panel_arp(u); break;
     case SVP_PAN: sv_panel_pan(u); break;
     case SVP_3D: sv_panel_3d(u); break;
@@ -1335,10 +1320,6 @@ void sv_knob(sa_ui *u, int k, int d)
             SV_ADJ(*f, 2, 0, 100);
         }
         break;
-    case SVP_SOUND:
-        if (i < 2) sv_sound_turn(u, i, d);
-        else if (i == 2) v->nopump = (uint8_t)(d < 0);
-        break;
     case SVP_ARP:
         if (i == 0) e->amode = (uint8_t)sv_clampi(e->amode + d, 0, SA_AR_MODES - 1);
         else if (i == 1) e->arate = (uint8_t)sv_clampi(e->arate + d, 0, SA_RATES - 1);
@@ -1376,8 +1357,9 @@ void sv_knob(sa_ui *u, int k, int d)
         break;
     }
     case SVP_MIX:
-        if (i == 0) sa_mute(g, l, d > 0);
-        else if (i == 1) SV_ADJ(v->level, 2, 0, 100);
+        if (i == 0) SV_ADJ(v->level, 2, 0, 100);
+        else if (i == 3) sa_mute(g, l, d > 0);
+        else if (u->view != SV_V_DRUMS) sv_sound_turn(u, i - 1, d);   /* TYPE, INSTR: at once */
         break;
     case SVP_KIT:
         if (i == 0) s->kit = (uint8_t)sv_clampi(s->kit + d, 0, SA_KITS - 1);

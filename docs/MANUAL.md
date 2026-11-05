@@ -47,23 +47,21 @@ LEAD lead lines and the bass lines). FX turns through its pages:
 
 | Page | KNOB 1 | KNOB 2 | KNOB 3 | KNOB 4 | |
 | --- | --- | --- | --- | --- | --- |
-| SOUND | TYPE (BASS KEYS PADS LEADS FX) | SOUND | PUMP ON / OFF | | at once |
+| MIX (the first) | VOLUME (fades it in and out) | TYPE (BASS KEYS PADS LEADS FX) | INSTR (the sound) | MUTE | at once |
 | ARP (CHORD only) | MODE (OFF, UP, DOWN, UP-DOWN, DOWN-UP, CONVERGE, DIVERGE, RANDOM, THUMB, PINKY, STRUM) | RATE | RANGE | GATE | waits for SEQ |
 | PAN | MODE (FIXED, SWEEP, PING-PONG, RANDOM) | PAN | WIDTH | RATE (SWEEP) | at once |
 | 3D | ANGLE (around you) | HEIGHT | DIST | 3D ON / OFF | at once |
 | GATE | a ready gate (or OFF) | DEPTH | WIDTH | SMOOTH | waits for SEQ |
 | MOD | MOD 1 | MOD 2 | MOD 3 | MOD 4 | waits for SEQ |
-| MIX | MUTE | LEVEL (fades it in and out) | | | at once |
 
 <p align="center">
-<img src="screens/sound.png" alt="SOUND" width="200">
+<img src="screens/mix.png" alt="MIX" width="200">
 <img src="screens/arp.png" alt="ARP" width="200">
 <img src="screens/pan.png" alt="PAN" width="200">
 </p>
 <p align="center">
 <img src="screens/gate.png" alt="GATE" width="200">
 <img src="screens/mod.png" alt="MOD" width="200">
-<img src="screens/mix.png" alt="MIX" width="200">
 </p>
 
 <p align="center">
@@ -104,14 +102,14 @@ pattern the layer's own (MY STEPS); like a pattern, the steps wait for SEQ, and 
 
 DRUMS shows the drum KNOB 1 picked, large: which of how many, its pattern and its 16 steps (HOME shows them all). The
 home page: **DRUM** (which drum; the last
-one, **+ ADD**, adds one), **LEVEL**, **ACCENT** (how hard the accented steps hit against the rest; 50: as written)
+one, **+ ADD**, adds one), **VOLUME**, **ACCENT** (how hard the accented steps hit against the rest; 50: as written)
 and **CHANCE** (how likely each hit plays: 100 % always, lower and it drops out at random). ALGORITHM turns the drum's
 pattern: OFF, the patterns, and left of OFF, REMOVE. On + ADD it picks the drum (KICK SNARE CLAP HAT OPEN HAT RIDE
 CRASH RIM TOM LOW TOM CONGA COWBELL CLAVE SHAKER); SEQ drops it in. With REC the 16 lowest keys are the drum's steps;
 the keys above play it.
 
-FX: **KIT** (KIT, TUNE, TONE, DECAY: the whole kit, every drum plays on it), **MOD** (the drum's modifiers) and
-**MIX** (MUTE, LEVEL). The kits: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY, CLASSIC, all synthesised.
+FX: **MIX** (VOLUME, MUTE), **KIT** (KIT, TUNE, TONE, DECAY: the whole kit, every drum plays on it) and **MOD**
+(the drum's modifiers). The kits: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY, CLASSIC, all synthesised.
 
 ## The modifiers
 

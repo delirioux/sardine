@@ -1,7 +1,7 @@
 Sardine 0.7: live club mixing for the FM-1.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
-  through a layer's pages (SOUND, ARP on CHORD, PAN, 3D, GATE, MOD, MIX; DRUMS: KIT, MOD, MIX), HOME back to them all
+  through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, ARP on CHORD, PAN, 3D, GATE, MOD; DRUMS: MIX, KIT, MOD), HOME back to them all
 - SELECT is the tempo, ALGORITHM the pattern; SEQ drops what waits on the one; REC records steps on the keys
 - DRUMS: each drum's LEVEL, ACCENT and CHANCE; the kit's TUNE, TONE and DECAY on its KIT page
 - 3D: a synth layer placed around you for headphones (angle, height, distance), drawn on a circle
