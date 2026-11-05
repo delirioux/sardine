@@ -205,6 +205,8 @@ int main(int argc, char **argv)
     sv_draw(&ui);
     sv_knob(&ui, SV_K_PRESETS, -1);
     CHECK(ui.page == SV_PG_MAIN && !ui.force, "PRESETS down on HOME: no redraw");
+    press(SV_B_HOME);
+    CHECK(ui.page == SV_PG_MAIN && !ui.force, "HOME on HOME: no redraw");
     /* PRESETS: HOME LEAD CHORD BASS DRUMS, each on its home page */
     sv_knob(&ui, SV_K_PRESETS, 1);
     CHECK(ui.page == SV_PG_LAYER && ui.view == SV_V_LEAD && ui.layer == SA_L_LEAD && ui.fx == 0, "PRESETS: LEAD");

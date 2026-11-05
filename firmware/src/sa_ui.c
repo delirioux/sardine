@@ -1340,7 +1340,7 @@ void sv_button(sa_ui *u, int b, bool down)
             u->home_ms = 0;
         } else if (u->home_down) {
             u->home_down = false;
-            if (u->home_ms < SV_MENU_HOLD_MS) sv_view(u, SV_V_HOME);
+            if (u->home_ms < SV_MENU_HOLD_MS && u->page != SV_PG_MAIN) sv_view(u, SV_V_HOME);   /* (on HOME: nothing) */
         }
         return;
     }
