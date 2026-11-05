@@ -426,6 +426,38 @@ int main(int argc, char **argv)
     bars(1);
     shot("18_home_full");
     all_palettes("home_full");
+    /* EDIT: a layer's pattern editor; KNOB 1 the step, REC: a key writes there */
+    to_view(SV_V_BASS);
+    press(SV_B_EDIT);
+    CHECK(ui.page == SV_PG_EDIT && sv_page_button(&ui) == SV_B_EDIT, "EDIT: BASS's editor");
+    {
+        uint32_t seen = 0;
+        for (int k = 0; k < 40; ++k) { run_ms(16); seen |= sv_play_keys(&ui); }
+        CHECK(seen != 0, "EDIT: the keys light as BASS plays");
+    }
+    sv_knob(&ui, SV_K1, 5);
+    press(SV_B_REC);
+    sv_key(&ui, 60, true);
+    sv_key(&ui, 60, false);
+    CHECK(ui.rec && g.ed[SA_L_BASS].own && g.ed[SA_L_BASS].sn[5] != SA_NO_NOTE && ui.scur == 6, "EDIT, REC: a note on step 6");
+    shot("18d_edit_bass");
+    press(SV_B_SEQ);
+    press(SV_B_EDIT);
+    CHECK(ui.page == SV_PG_LAYER && !ui.rec, "EDIT again: back, REC off");
+    to_view(SV_V_DRUMS);
+    press(SV_B_EDIT);
+    sv_knob(&ui, SV_K1, 2);
+    sv_knob(&ui, SV_K2, 1);
+    CHECK((sv_ed_bits(&ui, ui.layer) >> 2) & 1u, "EDIT, a drum: KNOB 2 a hit on step 3");
+    press(SV_B_REC);
+    sv_key(&ui, 70, true);
+    sv_key(&ui, 70, false);
+    CHECK(((sv_ed_bits(&ui, ui.layer) >> 2) & 1u) == 0 && ui.scur == 3, "EDIT, REC: a key toggles the step, then on");
+    shot("18e_edit_drum");
+    press(SV_B_SEQ);
+    press(SV_B_EDIT);
+    press(SV_B_HOME);
+    bars(1);
     /* the MIXER on GLO: the four volumes, FX: their mutes */
     press(SV_B_GLO);
     CHECK(ui.page == SV_PG_MIXER && sv_page_button(&ui) == SV_B_GLO, "GLO: MIXER");

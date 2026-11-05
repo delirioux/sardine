@@ -152,8 +152,9 @@ static void sv_draw_card(sa_ui *u, int i, const sv_card *c)
 /* ---- the layers ------------------------------------------------------------------------------------------------ */
 static const char *const SV_VIEW_NAME[SV_VIEWS] = {"HOME", "LEAD", "CHORD", "BASS", "DRUMS"};
 static int sv_slot_of_view(int v) { return v == SV_V_LEAD ? SA_L_LEAD : v == SV_V_CHORD ? SA_L_CHORD : SA_L_BASS; }
-static bool sv_synth_view(const sa_ui *u) { return u->page == SV_PG_LAYER && u->view >= SV_V_LEAD && u->view <= SV_V_BASS; }
-static bool sv_drum_view(const sa_ui *u) { return u->page == SV_PG_LAYER && u->view == SV_V_DRUMS; }
+static bool sv_on_layer(const sa_ui *u) { return u->page == SV_PG_LAYER || u->page == SV_PG_EDIT; }
+static bool sv_synth_view(const sa_ui *u) { return sv_on_layer(u) && u->view >= SV_V_LEAD && u->view <= SV_V_BASS; }
+static bool sv_drum_view(const sa_ui *u) { return sv_on_layer(u) && u->view == SV_V_DRUMS; }
 /* the code the screen edits (the copy) and what plays */
 static sa_code *sv_ed(sa_ui *u) { return &u->g->ed[sv_clampi(u->layer, 0, SA_LAYERS - 1)]; }
 static const sa_code *sv_live(const sa_ui *u) { return &u->g->s.code[sv_clampi(u->layer, 0, SA_LAYERS - 1)]; }
@@ -222,7 +223,10 @@ static const char *sv_page_name(int pg)
     return N[sv_clampi(pg, 0, 9)];
 }
 /* REC on a synth layer, off GATE: the steps take the cards and the panel */
-static bool sv_steps_on(const sa_ui *u) { return u->rec && sv_synth_view(u) && sv_page_now(u) != SVP_GATE; }
+static bool sv_steps_on(const sa_ui *u)
+{
+    return sv_synth_view(u) && (u->page == SV_PG_EDIT || (u->rec && sv_page_now(u) != SVP_GATE));
+}
 
 /* the patterns ALGORITHM turns through on a layer: OFF, then its own kind (and, on LEAD, the bass lines too) */
 static int sv_pat_list(const sa_ui *u, uint8_t *out)
@@ -256,6 +260,7 @@ static int sv_sounds_of(int role, uint8_t *out)
     return n;
 }
 
+static uint16_t sv_ed_bits(sa_ui *u, int l);         /* (below: the copy's bar of a layer) */
 static int sv_now(const sa_groove *g) { return g->playing && g->tick >= 0 ? g->tick / SA_TPS : -1; }
 
 static void sv_cards_of(sa_ui *u, sv_card *c)
@@ -317,6 +322,16 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
     }
     sa_live *v = &s->live[l];
     const sa_code *e = &g->ed[l], *lc = &g->s.code[l];
+    if (u->page == SV_PG_EDIT && u->view == SV_V_DRUMS) {
+        int st = sv_clampi(u->scur, 0, 15);
+        bool on = e->type == SA_T_DRUM && ((sv_ed_bits(u, l) >> st) & 1u);
+        sv_fmt_int(t, st + 1);
+        sv_card_txt(&c[0], "STEP", t, st * 1000 / 15, false);
+        sv_card_txt(&c[1], "HIT", on ? "ON" : "OFF", -1, false);
+        sv_card_off(&c[2]);
+        sv_card_off(&c[3]);
+        return;
+    }
     if (sv_steps_on(u)) {
         sa_code o = *e;
         sa_own_make(g, &o);
@@ -498,6 +513,10 @@ static void sv_head_title(const sa_ui *u, char *t, unsigned n)
     case SV_PG_KEY: sv_cpy(t, "KEY", n); break;
     case SV_PG_SETS: sv_cpy(t, "SETS", n); break;
     case SV_PG_MIXER: sv_cpy(t, u->mixmute ? "MIXER  MUTE" : "MIXER", n); break;
+    case SV_PG_EDIT:
+        sv_cpy(t, SV_VIEW_NAME[u->view], n);
+        sv_cat(t, u->rec ? "  EDIT  REC" : "  EDIT", n);
+        break;
     case SV_PG_MENU: sv_cpy(t, "MENU", n); break;
     default:
         sv_cpy(t, SV_VIEW_NAME[u->view], n);
@@ -560,7 +579,7 @@ static void sv_draw_foot(sa_ui *u)
         sv_cpy(l, SV_VIEW_NAME[u->view], sizeof l);
     } else {
         sv_cpy(l, u->page == SV_PG_MAIN ? "HOME" : u->page == SV_PG_KEY ? "KEY" : u->page == SV_PG_SETS ? "SETS" :
-                  u->page == SV_PG_MIXER ? "MIXER" : "MENU", sizeof l);
+                  u->page == SV_PG_MIXER ? "MIXER" : u->page == SV_PG_EDIT ? SV_VIEW_NAME[u->view] : "MENU", sizeof l);
     }
     if (u->page == SV_PG_SETS) {
         static const char *const ACT[SV_SA_ACTS] = {"REC: LOAD", "REC: STORE", "REC: NEW", "REC: CLEAR"};
@@ -574,6 +593,8 @@ static void sv_draw_foot(sa_ui *u)
         sv_cat(r, sv_page_name(pg[(sv_clampi(u->fx, 0, np - 1) + 1) % np]), sizeof r);
     } else if (u->page == SV_PG_MAIN) {
         sv_cpy(r, "PRESETS: LAYERS", sizeof r);
+    } else if (u->page == SV_PG_EDIT) {
+        sv_cpy(r, u->rec ? "KEYS: WRITE" : "REC: WRITE", sizeof r);
     } else if (u->page == SV_PG_MIXER) {
         sv_cpy(r, u->mixmute ? "FX: VOLUME" : "FX: MUTE", sizeof r);
     }
@@ -1134,6 +1155,27 @@ static void sv_panel_mixer(sa_ui *u)
     }
 }
 
+/* EDIT, a drum: its 16 steps large, the step KNOB 1 is on framed */
+static void sv_panel_edit_drum(sa_ui *u)
+{
+    sa_groove *g = u->g;
+    int l = u->layer, now = sv_now(g), st = sv_clampi(u->scur, 0, 15);
+    const sa_code *e = &g->ed[l];
+    bool pend = sa_layer_pending(g, l);
+    uint16_t bits = e->type == SA_T_DRUM ? sv_ed_bits(u, l) : 0;
+    cv_free_text(10, 6, &AF_M, sv_layer_name(u, l), pend ? T_ACCENT : T_THEME, T_SURF, 150);
+    for (int k = 0; k < 16; ++k) {
+        int32_t x = 8 + k * 14;
+        bool on = (bits >> k) & 1u;
+        uint16_t c = on ? (pend ? T_ACCENT : T_THEME) : sv_well();
+        if (k == now) c = on ? T_TEXT : ux_mix(T_SURF, T_TEXT, 30);
+        if (k == st) cv_rrect(x - 2, 34, 16, 48, 3, T_TEXT, T_SURF);
+        cv_rrect(x, 36, 12, 44, 3, c, T_SURF);
+        if (k % 4 == 0) cv_rect(x, 86, 12, 2, T_DIM);
+    }
+    sv_label(10, 98, u->rec ? "REC: A KEY, A HIT HERE, THEN ON" : "REC: WRITE WITH THE KEYS", u->rec ? T_ACCENT : T_DIM);
+}
+
 static void sv_draw_panel(sa_ui *u)
 {
     sv_panel_begin();
@@ -1143,6 +1185,7 @@ static void sv_draw_panel(sa_ui *u)
     case SV_PG_KEY: sv_panel_key(u); break;
     case SV_PG_SETS: sv_panel_sets(u); break;
     case SV_PG_MIXER: sv_panel_mixer(u); break;
+    case SV_PG_EDIT: if (u->view == SV_V_DRUMS) sv_panel_edit_drum(u); else sv_panel_steps(u); break;
     default: sv_panel_menu(u); break;
     }
     cv_blit(0, SV_PANEL_Y);
@@ -1193,6 +1236,7 @@ int sv_page_button(const sa_ui *u)
     case SV_PG_KEY: return SV_B_SCL;
     case SV_PG_SETS: return SV_B_SAVE;
     case SV_PG_MIXER: return SV_B_GLO;
+    case SV_PG_EDIT: return SV_B_EDIT;
     case SV_PG_LAYER: return u->fx > 0 ? SV_B_FX : -1;
     default: return -1;
     }
@@ -1376,7 +1420,7 @@ void sv_knob(sa_ui *u, int k, int d)
     default: break;
     }
     /* a layer */
-    if (u->view == SV_V_DRUMS && i == 0 && sv_page_now(u) == SVP_HOME) {   /* DRUM: which row */
+    if (u->page == SV_PG_LAYER && u->view == SV_V_DRUMS && i == 0 && sv_page_now(u) == SVP_HOME) {   /* DRUM: which row */
         u->drow = sv_clampi(u->drow + d, 0, sv_drow_count(u) - 1);
         sv_drum_sync(u);
         return;
@@ -1387,6 +1431,15 @@ void sv_knob(sa_ui *u, int k, int d)
     sa_code *e = &g->ed[l];
     u->changed = true;
 #define SV_ADJ(f, step, lo, hi) (f) = (uint8_t)sv_clampi((f) + d * (step), (lo), (hi))
+    if (u->page == SV_PG_EDIT && u->view == SV_V_DRUMS) {   /* EDIT, a drum: KNOB 1 the step, KNOB 2 its hit */
+        if (i == 0) u->scur = sv_wrap(u->scur + d, 16);
+        else if (i == 1 && g->ed[l].type == SA_T_DRUM) {
+            int st = sv_clampi(u->scur, 0, 15);
+            bool on = (sv_ed_bits(u, l) >> st) & 1u;
+            if (on != (d > 0)) sa_step_drum(g, l, st);
+        }
+        return;
+    }
     if (sv_steps_on(u)) {                          /* REC: KNOB 1 the step, KNOB 2 its length */
         if (i == 0) u->scur = sv_wrap(u->scur + d, 16);
         else if (i == 1) sa_step_len(g, l, sv_clampi(u->scur, 0, 15), d);
@@ -1507,12 +1560,16 @@ void sv_button(sa_ui *u, int b, bool down)
             u->req_slot = u->set_slot;
             break;
         }
-        if (u->page == SV_PG_LAYER && u->layer >= 0) {
+        if (sv_on_layer(u) && u->layer >= 0) {
             u->rec = !u->rec;
-            u->scur = 0;
+            if (u->page == SV_PG_LAYER) u->scur = 0;   /* (EDIT: the cursor stays where KNOB 1 put it) */
             u->force = true;
             sv_msg(u, u->rec ? "REC: STEPS ON THE KEYS" : "REC OFF: THE KEYS PLAY");
         }
+        break;
+    case SV_B_EDIT:                                /* a layer's pattern editor, again: back to its page */
+        if (u->page == SV_PG_EDIT) { u->page = SV_PG_LAYER; u->rec = false; u->force = true; }
+        else if (u->page == SV_PG_LAYER && u->layer >= 0) { u->page = SV_PG_EDIT; u->rec = false; u->scur = 0; u->force = true; }
         break;
     case SV_B_GLO:                                 /* the MIXER, again: back */
         if (u->page == SV_PG_MIXER) {
@@ -1573,9 +1630,19 @@ void sv_key(sa_ui *u, int note, bool down)
     if (note < SV_KEY_LO || note > SV_KEY_HI)
         return;
     int k = note - SV_KEY_LO;
-    bool lay = u->page == SV_PG_LAYER && u->layer >= 0;
+    bool lay = sv_on_layer(u) && u->layer >= 0;
+    if (lay && u->rec && u->page == SV_PG_EDIT && u->view == SV_V_DRUMS) {   /* EDIT, REC: a hit at the step, then on */
+        if (!down || u->g->ed[u->layer].type != SA_T_DRUM) return;
+        int st = sv_clampi(u->scur, 0, 15);
+        bool was = (sv_ed_bits(u, u->layer) >> st) & 1u;
+        sa_step_drum(u->g, u->layer, st);
+        if (!was) sa_key_drum(u->g, k, u->g->ed[u->layer].sound, true), sa_key_drum(u->g, k, u->g->ed[u->layer].sound, false);
+        u->scur = (st + 1) % 16;
+        u->changed = true;
+        return;
+    }
     int layer = lay ? u->layer : SA_L_LEAD;
-    if (lay && u->rec) {
+    if (lay && u->rec && u->page == SV_PG_LAYER) {
         if (u->view == SV_V_DRUMS && k < 16) {     /* a drum's steps */
             if (!down || u->g->ed[u->layer].type != SA_T_DRUM) return;
             uint16_t was = sv_ed_bits(u, u->layer);
@@ -1594,6 +1661,8 @@ void sv_key(sa_ui *u, int note, bool down)
             }
             return;
         }
+    }
+    if (lay && u->rec) {
         if (sv_steps_on(u)) {                      /* a synth layer's step: the key's note (CHORD: the chord) */
             if (!down) return;
             sa_step_note(u->g, u->layer, sv_clampi(u->scur, 0, 15), note + 12 * u->oct);
@@ -1632,7 +1701,8 @@ void sv_key(sa_ui *u, int note, bool down)
 bool sv_key_leds(const sa_ui *u, uint32_t *full, uint32_t *dim)
 {
     *full = *dim = 0;
-    if (!u->rec || u->page != SV_PG_LAYER || u->layer < 0) return false;
+    if (!u->rec || !sv_on_layer(u) || u->layer < 0) return false;
+    if (u->page == SV_PG_EDIT && u->view == SV_V_DRUMS) return false;   /* (EDIT, a drum: the keys write at the step) */
     const sa_groove *g = u->g;
     int l = u->layer;
     if (u->view == SV_V_DRUMS) {
@@ -1662,7 +1732,7 @@ bool sv_key_leds(const sa_ui *u, uint32_t *full, uint32_t *dim)
 uint32_t sv_play_keys(const sa_ui *u)
 {
     const sa_groove *g = u->g;
-    if (u->page != SV_PG_LAYER || u->layer < 0) return 0;
+    if (!sv_on_layer(u) || u->layer < 0) return 0;
     if (u->view != SV_V_DRUMS && !g->playing) return 0;
     if (u->view == SV_V_DRUMS) {                   /* the drum picked: its own note (General MIDI), on the keys */
         const sa_code *e = &g->ed[u->layer];

@@ -21,6 +21,7 @@ into one of eight sets (SAVE, below).
 | REC | step recording on the layer, on and off |
 | SCL | the key and the chords, again: back |
 | SAVE | the sets, again: back |
+| EDIT | the layer's pattern editor, again: back |
 | GLO | the MIXER, again: back |
 | PLAY | start, stop |
 | OCT- OCT+ | the keys' octave (the one it moved to lit) |
@@ -104,6 +105,19 @@ goes in as fast as you play it; the same note again takes the step off. **KNOB 2
 key puts the chord on the step or takes it off: it plays the chord of the bar. On the GATE page the 16 lowest keys
 are the gate's steps. The keys of the scale (or the step keys) glow dim, what is set full. The first edit makes the
 pattern the layer's own (MY STEPS); like a pattern, the steps wait for SEQ, and the modifiers still act on them.
+
+## EDIT
+
+<p align="center">
+<img src="screens/edit.png" alt="EDIT" width="200">
+<img src="screens/edit_drum.png" alt="EDIT, a drum" width="200">
+</p>
+
+**EDIT** on a layer opens its pattern editor: its 16 steps, the step **KNOB 1** is on framed. With **REC** on, a key
+writes there and the frame moves on to the next step: on LEAD and BASS the key's note (snapped to the scale; the same
+note again takes it off, **KNOB 2** its length), on CHORD the chord, on DRUMS a hit of the row picked, on or off
+(**KNOB 2** sets it on or off too). Without REC the keys play the layer, lit with what it plays. Like a pattern, the
+steps wait for SEQ. EDIT again goes back.
 
 ## DRUMS
 

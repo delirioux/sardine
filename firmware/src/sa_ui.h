@@ -23,6 +23,8 @@
  *   PLAY       start / stop
  *   SCL        the KEY page (KEY SCALE CHORDS BARS), again: back
  *   SAVE       SETS (eight sets and LAST), again: back
+ *   EDIT       a layer's pattern editor: KNOB 1 the step, REC: a key writes it there (a synth layer: its note,
+ *              KNOB 2 its length; a drum: a hit on or off), then the next; again: back
  *   GLO        the MIXER (LEAD CHORD BASS DRUMS: their VOLUME; FX: their MUTE), again: back
  *   HOME       HOME; held: MENU (colour, look)
  *   keys       the layer open, live (HOME: LEAD), snapped to the scale; REC: its steps. Music and steps only
@@ -40,7 +42,7 @@ enum {
     SV_B_HOME, SV_B_SAVE, SV_B_ARP, SV_B_SEQ, SV_B_PLAY, SV_B_REC,
     SV_B_OCTDN, SV_B_OCTUP, SV_BUTTONS
 };
-enum { SV_PG_MAIN, SV_PG_LAYER, SV_PG_KEY, SV_PG_MENU, SV_PG_SETS, SV_PG_MIXER, SV_PAGES };
+enum { SV_PG_MAIN, SV_PG_LAYER, SV_PG_KEY, SV_PG_MENU, SV_PG_SETS, SV_PG_MIXER, SV_PG_EDIT, SV_PAGES };
 enum { SV_V_HOME, SV_V_LEAD, SV_V_CHORD, SV_V_BASS, SV_V_DRUMS, SV_VIEWS };       /* what PRESETS turns through */
 enum { SVP_HOME, SVP_SOUND, SVP_ARP, SVP_PAN, SVP_GATE, SVP_MOD, SVP_MIX, SVP_KIT, SVP_3D, SVP_PUMP };  /* a layer's pages (FX) */
 #define SV_KEY_LO 53                      /* F3: the FM-1's lowest key */
