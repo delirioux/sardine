@@ -514,7 +514,10 @@ static inline void sas_synth(track_t *t, const sas_sound *snd, const sas_base *b
     t->p[P_DIST] = sas_clamp(b->dist + v->drive * 70 / 100, 0, 127);
     if (snd->glide >= 0)
         t->p[P_GLIDE] = snd->glide;
-    if (snd->voice >= 0)
+    if (snd->role == SAS_R_LEAD)                       /* LEAD: POLY always (0.7.1), so a chord on the keys is there; its
+                                                     * patterns are single lines and play as they did */
+        t->p[P_VOICE] = V_POLY;
+    else if (snd->voice >= 0)
         t->p[P_VOICE] = (int16_t)(snd->voice == SAS_UNISON ? V_UNISON : snd->voice == SAS_LEGATO ? V_LEGATO
                                   : snd->voice == SAS_MONO ? V_MONO : V_POLY);
     static const uint8_t REV[SAS_ROLES] = {6, 30, 55, 35, 45}, DLY[SAS_ROLES] = {0, 20, 15, 30, 25},

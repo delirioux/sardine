@@ -224,7 +224,7 @@ and now and then a lead of its kind, its drums.
 **INTRO** (OFF, 4, 8, 16 bars): from PLAY the layers come in one by one, the kick first, the other drums at a quarter,
 BASS at half, CHORD at three quarters, LEAD at the end, the filter opening over it. With INTRO OFF the LEAD still
 waits one pattern (the chord progression once round, 4 to 8 bars) after PLAY, then comes in. Every new groove and
-style has a lead. **ARC** (OFF, 16, 32, 64 bars):
+style has a lead. LEAD is polyphonic: its patterns are single lines, a chord on the keys sounds whole. **ARC** (OFF, 16, 32, 64 bars):
 after the intro a cycle, the groove for half, a break (drums and bass out) for a quarter, a build (the filter closing)
 for the last quarter with a roll on its last half bar, and the drop on the next 1. Both are kept with the groove.
 
