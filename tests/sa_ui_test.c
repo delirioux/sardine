@@ -549,25 +549,25 @@ int main(int argc, char **argv)
     bars(1);
     shot("18b_mixer");
     all_palettes("mixer");
-    press(SV_B_FX);
+    press(SV_B_GLO);
     sv_knob(&ui, SV_K2, 1);
-    CHECK(ui.mixmute && g.s.live[SA_L_CHORD].mute, "MIXER, FX: CHORD muted");
+    CHECK(ui.mixmute && g.s.live[SA_L_CHORD].mute, "GLO again: MUTE, CHORD muted");
     shot("18c_mixer_mute");
     sv_knob(&ui, SV_K2, -1);
     sv_knob(&ui, SV_K4, -1);
-    press(SV_B_FX);
+    press(SV_B_GLO);
     sv_knob(&ui, SV_K3, 1);
     {
         int b0 = part_on[SA_L_BASS], c0 = part_on[SA_L_CHORD], d0 = part_on[SA_PART_DRUMS];
         bars(1);
         CHECK(ui.mixmute == 2 && g.solo == 4 && part_on[SA_L_BASS] > b0 && part_on[SA_L_CHORD] == c0 &&
-              part_on[SA_PART_DRUMS] == d0, "MIXER, FX twice: SOLO, BASS alone");
+              part_on[SA_PART_DRUMS] == d0, "GLO a third time: SOLO, BASS alone");
     }
     shot("18g_mixer_solo");
     sv_knob(&ui, SV_K3, -1);
     CHECK(g.solo == 0, "SOLO off: all");
-    press(SV_B_FX);
-    CHECK(ui.mixmute == 3, "MIXER, FX three times: STYLE");
+    press(SV_B_GLO);
+    CHECK(ui.mixmute == 3, "GLO a fourth time: STYLE");
     sv_knob(&ui, SV_K1, 5);
     sv_knob(&ui, SV_K2, 2);
     sv_knob(&ui, SV_K3, 1);
@@ -578,9 +578,8 @@ int main(int argc, char **argv)
     CHECK(ui.req_act == SV_SA_STYLE && ui.req_slot == ui.style_pick, "SEQ: a groove in the style asked");
     ui.req_act = -1;
     g.s.intro = g.s.arc = 0;
-    press(SV_B_FX);
     press(SV_B_GLO);
-    CHECK(ui.page == SV_PG_MAIN, "GLO again: back HOME");
+    CHECK(ui.page == SV_PG_MAIN, "GLO past STYLE: back HOME");
     g.s.dvol = 80;
     /* SETS */
     ui.sets[0] = (sv_set_info){1, 126, 9, SA_SC_MINOR, SA_KIT_TECH, 3, {0, 1, (uint8_t)(SAS_NSOUNDS - 1)}, 0};

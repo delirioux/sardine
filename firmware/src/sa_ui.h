@@ -30,8 +30,8 @@
  *              BUILD TOMS STUTTER); let go: the groove again
  *   ARP        held: BREAK, the drums and the bass out at once; let go: back in on the next 1
  *   LFO        held: SWEEP, the whole mix's filter closing over two bars; let go: open at once
- *   GLO        the MIXER (LEAD CHORD BASS DRUMS: their VOLUME; FX: their MUTE, again: their SOLO, again: STYLE INTRO
- *              ARC: SEQ a fresh groove in the STYLE, on the 1), again: back
+ *   GLO        GLOBAL, each press its next page: the MIXER (LEAD CHORD BASS DRUMS: their VOLUME), their MUTE, their
+ *              SOLO, STYLE INTRO ARC (SEQ: a fresh groove in the STYLE, on the 1); past the last: back
  *   HOME       HOME; held: MENU (colour, look)
  *   keys       the layer open, live (HOME: LEAD), snapped to the scale; REC: its steps. Music and steps only
  *   OCT- OCT+  the keys' octave */
@@ -76,7 +76,7 @@ typedef struct {
     int back;                             /* the page KEY goes back to */
     int mback;                            /* the page the MIXER goes back to */
     bool home2;                           /* HOME's second page (FX): RESO, WIDTH */
-    int mixmute;                          /* the MIXER's knobs: 0 VOLUME, 1 MUTE, 2 SOLO, 3 STYLE (FX turns them over) */
+    int mixmute;                          /* GLO's page: 0 VOLUME, 1 MUTE, 2 SOLO, 3 STYLE (GLO turns them over) */
     int style_pick;                       /* the MIXER's STYLE page: the style SEQ makes a groove in */
     int scur;                             /* REC on a synth layer, EDIT: the step the keys write */
     int fill;                             /* EDIT: KNOB 2's FILL (0 CURR: the pattern as it was) */

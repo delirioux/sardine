@@ -636,8 +636,8 @@ static void sv_draw_foot(sa_ui *u)
     } else if (u->page == SV_PG_EDIT) {
         sv_cpy(r, u->rec ? "KEYS: WRITE" : "REC: WRITE", sizeof r);
     } else if (u->page == SV_PG_MIXER) {
-        sv_cpy(r, u->mixmute == 3 ? (u->g->set_next ? "IN ON THE 1" : "SEQ: A NEW GROOVE") : u->mixmute == 2 ? "FX: STYLE" :
-                  u->mixmute ? "FX: SOLO" : "FX: MUTE", sizeof r);
+        sv_cpy(r, u->mixmute == 3 ? (u->g->set_next ? "IN ON THE 1" : "SEQ: A NEW GROOVE") : u->mixmute == 2 ? "GLO: STYLE" :
+                  u->mixmute ? "GLO: SOLO" : "GLO: MUTE", sizeof r);
     }
     uint32_t sig = sv_hash(sv_hash((uint32_t)(now + 1) * 7u + (uint32_t)g->playing * 3u + ux.gen * 11u +
                                    (uint32_t)u->fx * 101u + (uint32_t)np * 1009u, l), r);
@@ -1766,8 +1766,12 @@ void sv_button(sa_ui *u, int b, bool down)
             u->force = true;
         }
         break;
-    case SV_B_GLO:                                 /* the MIXER, again: back */
-        if (u->page == SV_PG_MIXER) {
+    case SV_B_GLO:                                 /* GLOBAL: MIXER, MUTE, SOLO, STYLE, each press the next; past the last: back */
+        if (u->page == SV_PG_MIXER && u->mixmute < 3) {
+            u->mixmute++;
+            if (u->mixmute == 3) u->style_pick = g->s.style;
+            u->force = true;
+        } else if (u->page == SV_PG_MIXER) {
             if (u->mback == SV_PG_LAYER) { u->page = SV_PG_LAYER; u->force = true; }
             else sv_view(u, SV_V_HOME);
         } else {
@@ -1782,12 +1786,7 @@ void sv_button(sa_ui *u, int b, bool down)
             u->force = true;
             break;
         }
-        if (u->page == SV_PG_MIXER) {
-            u->mixmute = (u->mixmute + 1) % 4;     /* VOLUME, MUTE, SOLO, STYLE */
-            if (u->mixmute == 3) u->style_pick = g->s.style;
-            u->force = true;
-            break;
-        }
+        if (u->page == SV_PG_MIXER) break;         /* (GLO turns its pages) */
         if (u->page == SV_PG_LAYER) {
             int p[8], n = sv_pages(u, p);
             u->fx = (u->fx + 1) % n;

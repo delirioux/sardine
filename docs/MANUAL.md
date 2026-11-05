@@ -25,7 +25,7 @@ into one of eight sets (SAVE, below).
 | ENV | held: a drum fill (below) |
 | ARP | held: BREAK (below) |
 | LFO | held: SWEEP (below) |
-| GLO | the MIXER, again: back |
+| GLO | GLOBAL: the MIXER, each press its next page (MUTE, SOLO, STYLE), past the last back |
 | PLAY | start, stop |
 | OCT- OCT+ | the keys' octave (the one it moved to lit) |
 
@@ -175,9 +175,9 @@ CLASSIC, ROOM, VINTAGE, MINIMAL, VOLT (electro), GARAGE, DISCO, BREAKS, DUB, LOF
 </p>
 
 **GLO** opens the MIXER: a fader for each layer, LEAD, CHORD, BASS and DRUMS (all the drums together), on the four
-knobs, at once (80: as it is); the dot under a fader lights as the layer plays. **FX** turns the knobs over to their
-MUTE, FX again to their **SOLO** (turn right: that layer, with any others soloed, alone; left: back), FX again
-back to the volumes. SOLO is a live move: not kept with the groove. GLO again goes back. A layer's VOLUME here is the same as on its own first FX page.
+knobs, at once (80: as it is); the dot under a fader lights as the layer plays. **GLO** again turns the knobs over to their
+MUTE, GLO again to their **SOLO** (turn right: that layer, with any others soloed, alone; left: back), GLO again
+to STYLE (below), GLO once more back. SOLO is a live move: not kept with the groove. GLO again goes back. A layer's VOLUME here is the same as on its own first FX page.
 
 ## The drum fill
 
@@ -199,7 +199,7 @@ build, the fill and the drop.
 <img src="screens/style.png" alt="STYLE" width="200">
 </p>
 
-On the MIXER (GLO), **FX** a third time: **STYLE**, **INTRO**, **ARC**. **KNOB 1** picks a style, **SEQ** makes a fresh
+**GLO** four times: **STYLE**, **INTRO**, **ARC**. **KNOB 1** picks a style, **SEQ** makes a fresh
 groove in it, on the next 1 (stopped: at once): its tempo, kit, scale, swing, pump, room and filter, a bass, a chord
 and now and then a lead of its kind, its drums.
 

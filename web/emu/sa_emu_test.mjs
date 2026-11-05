@@ -109,7 +109,7 @@ const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice
   press(B.REC); run(0.2);
   check("REC: LOAD LAST brings the last groove back", w.web_da_groove() === groove1b);
   press(B.SAVE); run(0.2);                                   // (back from SETS)
-  press(B.GLO); press(B.FX); press(B.FX); press(B.FX);       // the MIXER's STYLE page
+  press(B.GLO); press(B.GLO); press(B.GLO); press(B.GLO);    // GLO's STYLE page
   w.web_enc(EN.K1, -20); run(0.1); w.web_enc(EN.K1, 7); run(0.1);   // the 8th style: GABBER (170..180)
   const g0 = w.web_da_groove();
   press(B.SEQ); run(0.3);
