@@ -958,6 +958,7 @@ static void live_default(sa_live *v)
 /* the synth sounds the first groove uses (sa_sounds.h indices: kept in step with it) */
 #define SA_DEF_BASS 0
 #define SA_DEF_STAB 1
+static int pat_find(int type, const char *name);
 void sa_defaults(sa_settings *s)
 {
     memset(s, 0, sizeof *s);
@@ -992,7 +993,7 @@ void sa_defaults(sa_settings *s)
         s->pl[p].src = SA_PS_KICK;
         s->pl[p].on = 2;
     }
-    code_synth(&s->code[SA_L_LEAD], SA_DEF_BASS, SA_PAT_OFF, SA_L_LEAD);
+    code_synth(&s->code[SA_L_LEAD], SA_DEF_BASS, pat_find(SA_T_SYNTH, "RIFF"), SA_L_LEAD);   /* (in after a pattern: arrange) */
     code_synth(&s->code[SA_L_CHORD], SA_DEF_STAB, 13, SA_L_CHORD);   /* STAB 2 */
     code_synth(&s->code[SA_L_BASS], SA_DEF_BASS, 1, SA_L_BASS);      /* ROLLER */
     for (int r = 0; r < SA_DROWS; ++r)
@@ -1223,8 +1224,8 @@ void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p)
         if (rnd(&r, 100) < 40) s->pan[SA_L_CHORD].mode = SA_PAN_SWEEP;
     }
     code_synth(&s->code[SA_L_LEAD], pick_sound(&r, p->lead, p->nlead),
-               rnd(&r, 100) < 25 ? pick_pat(&r, SA_T_SYNTH, LEADS, (int)(sizeof LEADS / sizeof LEADS[0])) : SA_PAT_OFF,
-               SA_L_LEAD);
+               pick_pat(&r, SA_T_SYNTH, LEADS, (int)(sizeof LEADS / sizeof LEADS[0])), SA_L_LEAD);   /* (always: a song
+                                                     * has a lead; it comes in after a pattern, arrange) */
     sa_settings_fix(s);
 }
 
@@ -1589,6 +1590,15 @@ static void arrange(sa_groove *g)
     g->arr_out = 0;
     g->arr_brk = g->arr_fill = false;
     g->arr_sw0 = g->arr_sw1 = 0.0f;
+    if (n == 0) {                                  /* no INTRO: the LEAD in after one pattern (the progression once
+                                                    * round, 4..8 bars) */
+        const sa_harm *h = &g->s.harm;
+        int bars = h->bars >= 4 ? 4 : h->bars >= 2 ? 2 : 1;
+        int w = clampi(PROG[clampi(h->prog, 0, SA_PROGS - 1)].n * bars, 4, 8);
+        if (b < w) g->arr_out |= (uint16_t)(1u << SA_L_LEAD);
+        else if (b == w && g->s.code[SA_L_LEAD].type == SA_T_SYNTH && g->s.code[SA_L_LEAD].pat != SA_PAT_OFF)
+            msg(g, "LEAD IN");
+    }
     if (b < n) {
         for (int l = 0; l < SA_LAYERS; ++l) {
             int at = l == SA_L_DRUM0 + SA_DR_KICK ? 0 : l >= SA_L_DRUM0 ? n / 4 : l == SA_L_BASS ? n / 2 :

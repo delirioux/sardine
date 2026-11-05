@@ -217,7 +217,7 @@ int main(void)
 
     /* the fixed layers: LEAD CHORD BASS on parts 0 1 2, the drums after them; a moved synth layer goes back */
     sa_init(&g, SR);
-    CHECK(sa_synth_count(&g) == 3 && g.s.code[SA_L_LEAD].pat == SA_PAT_OFF, "first groove: three synth layers, LEAD OFF");
+    CHECK(sa_synth_count(&g) == 3 && g.s.code[SA_L_LEAD].pat != SA_PAT_OFF, "first groove: three synth layers, LEAD on (in after a pattern)");
     {
         sa_settings t = g.s;
         sa_code bass = t.code[SA_L_BASS];
@@ -279,7 +279,7 @@ int main(void)
             differ += memcmp(&a, &b, sizeof a) != 0;
         }
         CHECK(differ == 200, "each seed its own groove (%d of 200)", differ);
-        CHECK(gated > 0 && leads > 20 && leads < 100, "some gated pads (%d), a lead now and then (%d)", gated, leads);
+        CHECK(gated > 0 && leads == 200, "some gated pads (%d), always a lead (%d)", gated, leads);
 
         /* a whole groove in: stopped at once, playing on the bar line; the look stays, what waited goes */
         sa_init(&g, SR);

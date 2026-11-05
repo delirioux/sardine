@@ -402,7 +402,6 @@ static inline void sas_style_apply(sa_settings *s, int st, uint32_t seed, const 
         c->own = 0;
         c->amode = SA_AR_OFF;
         c->pat = pat >= 0 ? (uint8_t)pat : (uint8_t)SA_PAT_OFF;
-        if (L3[k].slot == SA_L_LEAD && SAS_R(100) >= y->lead_pct) c->pat = SA_PAT_OFF;
         s->gate[L3[k].slot].pat = 0;
         s->gate[L3[k].slot].own = 0;
         s->pl[L3[k].slot].on = 2;                    /* (the pump by the sound's type: sas_fix) */

@@ -185,8 +185,10 @@ int main(int argc, char **argv)
     CHECK(g.playing, "PLAY plays");
     bars(2);
     CHECK(part_on[SA_PART_DRUMS] && part_on[SA_L_CHORD] && part_on[SA_L_BASS] && !part_on[SA_L_LEAD],
-          "the first groove: drums, chord, bass; LEAD OFF (%d %d %d %d)", part_on[0], part_on[1], part_on[2], part_on[3]);
+          "the first groove: drums, chord, bass; LEAD not in yet (%d %d %d %d)", part_on[0], part_on[1], part_on[2], part_on[3]);
     shot("02_home");
+    bars(7);
+    CHECK(part_on[SA_L_LEAD] > 0, "the LEAD in after a pattern (%d notes by bar 9)", part_on[SA_L_LEAD]);
     all_palettes("home");
     for (int f = 0; f < 40; ++f) {                 /* HOME as it plays, a frame every 48 ms */
         char nm[32];
