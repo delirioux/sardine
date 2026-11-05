@@ -22,7 +22,7 @@ into one of eight sets (SAVE, below).
 | SCL | the key and the chords, again: back |
 | SAVE | the sets, again: back |
 | PLAY | start, stop |
-| OCT- OCT+ | the keys' octave |
+| OCT- OCT+ | the keys' octave (the one it moved to lit) |
 
 The footer shows the layer, a dot for each of its pages (the one open lit) and what the next press does.
 
@@ -90,7 +90,8 @@ pattern the layer's own (MY STEPS); like a pattern, the steps wait for SEQ, and 
 <img src="screens/kit.png" alt="KIT" width="200">
 </p>
 
-Every drum is a row; the one picked shows its 16 steps under the rows. The home page: **DRUM** (which drum; the last
+DRUMS shows the drum KNOB 1 picked, large: which of how many, its pattern and its 16 steps (HOME shows them all). The
+home page: **DRUM** (which drum; the last
 one, **+ ADD**, adds one), **LEVEL**, **ACCENT** (how hard the accented steps hit against the rest; 50: as written)
 and **CHANCE** (how likely each hit plays: 100 % always, lower and it drops out at random). ALGORITHM turns the drum's
 pattern: OFF, the patterns, and left of OFF, REMOVE. On + ADD it picks the drum (KICK SNARE CLAP HAT OPEN HAT RIDE

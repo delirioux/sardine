@@ -951,46 +951,39 @@ static void sv_panel_synth_home(sa_ui *u)
     sv_label(10, 88, "FX: SOUND AND MORE   REC: STEPS", T_DIM);
 }
 
-/* DRUMS: the drums, a row each (the one KNOB 1 picked lit); the one picked, large: its 16 steps */
+/* DRUMS: the drum KNOB 1 picked, large: which of how many, its pattern, its 16 steps (what plays, or what SEQ drops) */
 static void sv_panel_drums(sa_ui *u)
 {
     sa_groove *g = u->g;
-    int rows[SA_LAYERS], n = sv_drum_rows(u, rows), total = sv_drow_count(u), now = sv_now(g);
-    int first = u->drow > 2 ? u->drow - 2 : 0;      /* three rows in view, the one picked among them */
-    for (int i = first; i < total && i < first + 3; ++i) {
-        int32_t y = 36 + (i - first) * 13;
-        bool sel = i == u->drow;
-        uint16_t bg = sel ? ux_mix(T_SURF, T_THEME, 18) : T_SURF;
-        if (sel) cv_rrect(5, y - 1, 230, 12, 2, bg, T_SURF);
-        if (i >= n) {
-            cv_text_on(10, y + 1, &AF_S, "+ ADD A DRUM", sel ? T_TEXT : T_DIM, bg);
-            continue;
-        }
-        int l = rows[i];
-        const sa_code *e = &g->ed[l];
-        bool pend = sa_layer_pending(g, l), mute = g->s.live[l].mute, gone = e->type == SA_T_NONE;
-        bool off = e->pat == SA_PAT_OFF && !e->own;
-        cv_free_text(10, y + 1, &AF_S, sv_layer_name(u, l), mute || gone || off ? T_DIM : sel ? T_TEXT : T_MID, bg, 66);
-        sv_strip(80, y + 2, 152, 7, gone || off ? 0 : sv_ed_bits(u, l), now, pend ? T_ACCENT : T_THEME, mute || gone);
-        if (mute) cv_rect(80, y + 5, 152, 2, T_ACCENT);
-    }
-    int l = u->layer;
+    int rows[SA_LAYERS], n = sv_drum_rows(u, rows), now = sv_now(g), l = u->layer;
+    char t[24], a[8];
     if (l < 0) {
-        cv_text_on(10, 96, &AF_S, "ALGORITHM: WHICH DRUM", T_MID, T_SURF);
+        cv_text_on(10, 14, &AF_M, "+ ADD A DRUM", T_THEME, T_SURF);
+        sv_label(10, 50, "ALGORITHM: WHICH DRUM", T_MID);
+        sv_label(10, 66, "SEQ DROPS IT IN", T_DIM);
         return;
     }
     const sa_code *e = &g->ed[l];
-    bool pend = sa_layer_pending(g, l);
-    uint16_t bits = e->type == SA_T_NONE ? 0 : sv_ed_bits(u, l);
+    bool pend = sa_layer_pending(g, l), mute = g->s.live[l].mute;
+    sv_fmt_int(t, u->drow + 1);
+    sv_cat(t, " OF ", sizeof t);
+    sv_fmt_int(a, n);
+    sv_cat(t, a, sizeof t);
+    sv_label(10, 6, t, T_MID);
+    if (e->type == SA_T_NONE) sv_cpy(t, "REMOVED", sizeof t);
+    else sa_pat_label(e, t, sizeof t);
+    cv_text_r(230, 6, &AF_S, mute ? "MUTED" : t, mute || pend ? T_ACCENT : T_THEME, T_SURF);
+    uint16_t bits = e->type == SA_T_NONE || (e->pat == SA_PAT_OFF && !e->own) ? 0 : sv_ed_bits(u, l);
     for (int k = 0; k < 16; ++k) {
         int32_t x = 8 + k * 14;
         bool on = (bits >> k) & 1u;
-        uint16_t c = on ? (pend ? T_ACCENT : T_THEME) : sv_well();
+        uint16_t c = on ? (mute ? T_DIM : pend ? T_ACCENT : T_THEME) : sv_well();
         if (k == now) c = on ? T_TEXT : ux_mix(T_SURF, T_TEXT, 30);
-        cv_rrect(x, 84, 12, 14, 2, c, T_SURF);
-        if (k % 4 == 0) cv_rect(x, 100, 12, 2, T_DIM);
+        cv_rrect(x, 30, 12, 40, 3, c, T_SURF);
+        if (k % 4 == 0) cv_rect(x, 74, 12, 2, T_DIM);
     }
-    sv_label(10, 104, u->rec ? "KEYS: ITS STEPS" : "REC: ITS STEPS ON THE KEYS", T_DIM);
+    sv_label(10, 88, pend ? "SEQ DROPS IT IN" : u->rec ? "KEYS: ITS STEPS" : "REC: ITS STEPS ON THE KEYS",
+             pend ? T_ACCENT : T_DIM);
 }
 
 static void sv_panel_layer(sa_ui *u)
@@ -1002,7 +995,6 @@ static void sv_panel_layer(sa_ui *u)
     }
     int pg = sv_page_now(u);
     if (u->view == SV_V_DRUMS && pg == SVP_HOME) {
-        sv_layer_top(u, u->layer);
         sv_panel_drums(u);
         return;
     }

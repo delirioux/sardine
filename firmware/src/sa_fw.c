@@ -490,6 +490,8 @@ static void sa_leds(void)
     bool pend = sa_pending(&sa_g) > 0;
     led_put(nl, panel.btn[B_SEQ], pend && (!sa_g.drop_armed || (fm1_ms / 125u) % 2u));   /* SEQ: what waits */
     led_put(nl, panel.btn[B_REC], sa_u.rec || (sa_u.page == SV_PG_SETS && (fm1_ms / 500u) % 2u));
+    led_put(nl, panel.btn[B_OCTDN], sa_u.oct < 0);                  /* the keys' octave moved down, or up */
+    led_put(nl, panel.btn[B_OCTUP], sa_u.oct > 0);
     uint32_t efull = 0, edim = 0;
     bool editing = sv_key_leds(&sa_u, &efull, &edim);   /* DRUMS, STEPS: the keys show what they edit */
     for (k = 0; k < NB; k++)
