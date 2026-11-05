@@ -110,8 +110,8 @@ pattern the layer's own (MY STEPS); like a pattern, the steps wait for SEQ, and 
 <img src="screens/kit.png" alt="KIT" width="200">
 </p>
 
-DRUMS shows the drum KNOB 1 picked, large: which of how many, its pattern and its 16 steps (HOME shows them all). The
-home page: **DRUM** (which drum; the last
+DRUMS shows every drum, a row each with its bar (the second colour: waiting for SEQ), the one KNOB 1 picked lit; the
+cards are that drum's. The home page: **DRUM** (which drum; the last
 one, **+ ADD**, adds one), **VOLUME**, **ACCENT** (how hard the accented steps hit against the rest; 50: as written)
 and **CHANCE** (how likely each hit plays: 100 % always, lower and it drops out at random). ALGORITHM turns the drum's
 pattern: OFF, the patterns, and left of OFF, REMOVE. On + ADD it picks the drum (KICK SNARE CLAP HAT OPEN HAT RIDE
