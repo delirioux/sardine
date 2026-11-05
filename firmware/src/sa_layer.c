@@ -72,9 +72,10 @@ static const char *const ROW_NAMES[SA_DROWS] = {"KICK", "SNARE", "CLAP", "HATS",
 int sa_dv_row(int dv) { return DV_ROW[clampi(dv, 0, SA_DVS - 1)]; }
 static const char *const DVAR_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "80", "10", "DEEP"};
 static const char *const CLAP_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "80", "77", "DEEP"};
+static const char *const METAL_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "80", "77", "DEEP"};
 const char *sa_dvar_name(int row, int v)
 {
-    return (row == SA_DR_CLAP ? CLAP_NAMES : DVAR_NAMES)[clampi(v, 0, SA_DVARS - 1)];
+    return (row == SA_DR_CLAP ? CLAP_NAMES : row == SA_DR_METAL ? METAL_NAMES : DVAR_NAMES)[clampi(v, 0, SA_DVARS - 1)];
 }
 const char *sa_row_name(int row) { return ROW_NAMES[clampi(row, 0, SA_DROWS - 1)]; }
 int sa_row_voices(int row, uint8_t *out)
@@ -1206,7 +1207,7 @@ void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p)
     case 0: code_drum(&s->code[l++], SA_DV_CLAVE, pat_find(SA_T_DRUM, "CLAVE")); break;
     case 1: code_drum(&s->code[l++], SA_DV_RIM, pat_find(SA_T_DRUM, "SYNCO")); break;
     case 2: code_drum(&s->code[l++], SA_DV_CONGA, pat_find(SA_T_DRUM, "TRESILLO")); break;
-    case 3: code_drum(&s->code[l++], SA_DV_RIDE, pat_find(SA_T_DRUM, "8THS")); break;
+    case 3: code_drum(&s->code[l++], SA_DV_TOM, pat_find(SA_T_DRUM, "SYNCO")); break;   /* (no ride: it is harsh) */
     default: break;
     }
     /* BASS always; CHORD stabs or a pad (sometimes gated, sweeping); LEAD now and then, mostly OFF */

@@ -154,7 +154,7 @@ Seven rows, always there, each on a drum channel of its own, so no two ever cut 
 Every drum comes in eight variations, all on the INSTR knob: as the kit has it, **TIGHT** (short and bright), **ROOM**
 (long and darker), **HIGH**, **LOW**, and the same drum from three other drum machines (**80**, **10**, **DEEP**),
 whatever the kit: CLAP, CLAP TIGHT, CLAP ROOM .. CLAP DEEP, then (on HATS) OPEN HAT, OPEN HAT TIGHT and so on. The
-header says the whole name as it turns. The claps are their own: all eight short hand claps (from the 80, 55, 77 and
+header says the whole name as it turns. The METAL row's (ride, crash, cowbell) are all darker and softer than the machines make them. The claps are their own: all eight short hand claps (from the 80, 55, 77 and
 66 machines and DEEP; CLAP 77 the 80 and 10 swapped for the 77), whatever the kit.
 
 Each row shows its drum and its bar (the second colour: waiting for SEQ); a row OFF is dimmed. The home page: **DRUM**
