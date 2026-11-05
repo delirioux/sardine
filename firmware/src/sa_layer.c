@@ -1125,6 +1125,7 @@ void sa_settings_fix(sa_settings *s)
         d->on = (uint8_t)(d->on % SA_3D_MODES);
         s->d3rate[p] = (uint8_t)(s->d3rate[p] % SA_PRATES);
         s->dvol = (uint8_t)clampi(s->dvol, 0, 100);
+        s->mreso = (uint8_t)clampi(s->mreso, 0, 100);
         s->dmute = (uint8_t)(s->dmute ? 1 : 0);
         d->az %= SA_AZ_STEPS;
         d->el = (int8_t)clampi(d->el, -50, 50);

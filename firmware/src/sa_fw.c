@@ -342,6 +342,8 @@ static void sa_apply(void)
     if (sw > 0) {
         swept = sa_g.s;
         swept.filter = (uint8_t)(swept.filter * (100 - sw * 2 * 85 / 100) / 100);
+        if (swept.mreso < 20 + sw * 2 * 50 / 100)                    /* (and resonant as it closes: up to 70) */
+            swept.mreso = (uint8_t)(20 + sw * 2 * 50 / 100);
         s = &swept;
     }
     if (!sa_drums_ready) {

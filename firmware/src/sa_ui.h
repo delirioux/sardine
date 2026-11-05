@@ -11,7 +11,7 @@
  *   SELECT     the tempo, everywhere
  *   PRESETS    HOME, LEAD, CHORD, BASS, DRUMS
  *   ALGORITHM  the pattern of the layer (OFF first; a drum: OFF, then REMOVE; + ADD: which drum). Waits for SEQ
- *   KNOB 1..4  HOME: FILTER FEEL PUMP SPACE. A synth layer's pages: its home CUTOFF RESO DRIVE ENV (at once);
+ *   KNOB 1..4  HOME: FILTER FEEL PUMP SPACE (FX: RESO WIDTH). A synth layer's pages: its home CUTOFF RESO DRIVE ENV (at once);
  *              SOUND (TYPE, SOUND, PUMP: at once); ARP (MODE RATE RANGE GATE); PAN (at once); 3D (MODE: OFF FIXED
  *              ORBIT RANDOM FLY, ANGLE or RATE, HEIGHT, DISTANCE: at once, headphones); PUMP (DEPTH RELEASE SOURCE ON, at once); GATE; MOD (the
  *              four modifiers); MIX (MUTE, LEVEL: at once). DRUMS: DRUM LEVEL ACCENT CHANCE; KIT (KIT TUNE TONE DECAY);
@@ -74,6 +74,7 @@ typedef struct {
     int drow;                             /* DRUMS: the row picked (the last one: + ADD) */
     int back;                             /* the page KEY goes back to */
     int mback;                            /* the page the MIXER goes back to */
+    bool home2;                           /* HOME's second page (FX): RESO, WIDTH */
     int mixmute;                          /* the MIXER's knobs: 0 VOLUME, 1 MUTE, 2 SOLO (FX turns them over) */
     int scur;                             /* REC on a synth layer, EDIT: the step the keys write */
     int fill;                             /* EDIT: KNOB 2's FILL (0 CURR: the pattern as it was) */

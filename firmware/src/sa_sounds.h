@@ -363,7 +363,7 @@ static inline void sas_synth(track_t *t, const sas_sound *snd, const sas_base *b
         t->p[P_E0 + snd->bright] = sas_clamp(base * f / 100, 0, 127);
     }
     if (snd->reso >= 0)
-        t->p[P_E0 + snd->reso] = sas_clamp(v->reso * 120 / 100, 0, 127);
+        t->p[P_E0 + snd->reso] = sas_clamp((v->reso + s->mreso * (100 - v->reso) / 100) * 120 / 100, 0, 127);   /* (+ HOME's) */
     /* (ENV>FLT runs -64..63: ENV 50 the preset's own, 0 none, 100 twice it; a preset without one gets up to 40) */
     t->p[P_ED_FLT] = sas_clamp(b->fenv > 0 ? b->fenv * v->env / 50 : v->env * 40 / 100, 0, 63);
     t->p[P_DIST] = sas_clamp(b->dist + v->drive * 70 / 100, 0, 127);

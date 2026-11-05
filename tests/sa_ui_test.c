@@ -201,6 +201,15 @@ int main(int argc, char **argv)
     CHECK(g.s.reverb == 60 && g.s.delay == 60, "SPACE: reverb and delay (%d %d)", g.s.reverb, g.s.delay);
     sv_knob(&ui, SV_K3, 5);
     CHECK(g.s.pump == 45, "PUMP (%d)", g.s.pump);
+    /* HOME, FX: RESO and WIDTH of the whole mix */
+    press(SV_B_FX);
+    sv_knob(&ui, SV_K1, 20);
+    CHECK(ui.home2 && g.s.mreso == 40, "HOME, FX: RESO (%d)", g.s.mreso);
+    shot("02c_home_reso");
+    press(SV_B_FX);
+    CHECK(!ui.home2, "FX again: FILTER FEEL PUMP SPACE");
+    sv_knob(&ui, SV_K1, 0);
+    g.s.mreso = 0;
     /* PRESETS at the ends: nothing to redraw */
     sv_draw(&ui);
     sv_knob(&ui, SV_K_PRESETS, -1);

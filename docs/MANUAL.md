@@ -42,7 +42,9 @@ The footer shows the layer, a dot for each of its pages (the one open lit) and w
 Every layer playing: LEAD, CHORD and BASS with their sound and their bar, DRUMS a thin bar for each drum; an OFF layer
 shows its sound dimmed and OFF, a muted one is crossed out. The knobs act at once: **FILTER** (the whole mix darker to the left, OPEN at the top), **FEEL**
 (the swing of the off sixteenths), **PUMP** (how deep the synth layers duck under the kick; each layer's own share on its PUMP page) and **SPACE** (the room:
-reverb and delay together; at 70 each sound has its own).
+reverb and delay together; at 70 each sound has its own). **FX** on HOME turns the knobs over to **RESO** (resonance on the whole mix's
+filter, over each synth layer's own: ride FILTER down with it up for the filter-house sweep) and **WIDTH** (the stereo
+spread, 70: each sound's own); FX again back.
 
 ## LEAD, CHORD, BASS
 
@@ -181,7 +183,7 @@ kick marks each beat (STUTTER: every sixteenth). The fills play the SNARE row's 
 
 Hold **ARP** for a **BREAK**: the drums and the bass drop out at once, LEAD and CHORD play on. Let go and ARP blinks
 until the next 1, where everything comes back in: the drop. Hold **LFO** for a **SWEEP**: the whole mix's filter closes
-over two bars (as far as FILTER at about 15); let go and it is open again at once. Together with the fill on ENV: the
+over two bars (as far as FILTER at about 15), its resonance rising as it goes; let go and it is open again at once. Together with the fill on ENV: the
 build, the fill and the drop.
 
 ## The modifiers

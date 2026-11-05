@@ -272,6 +272,13 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
     char t[20];
     switch (u->page) {
     case SV_PG_MAIN:
+        if (u->home2) {                            /* HOME, FX: the whole mix's RESO and WIDTH */
+            sv_card_num(&c[0], "RESO", s->mreso, 0, 100);
+            sv_card_num(&c[1], "WIDTH", s->width, 0, 100);
+            sv_card_off(&c[2]);
+            sv_card_off(&c[3]);
+            return;
+        }
         sv_card_txt(&c[0], "FILTER", s->filter >= 100 ? "OPEN" : "", s->filter * 10, false);
         if (s->filter < 100) sv_fmt_int(c[0].val, s->filter);
         sv_card_num(&c[1], "FEEL", s->feel, 0, 60);
@@ -517,7 +524,7 @@ static void sv_head_title(const sa_ui *u, char *t, unsigned n)
     t[0] = 0;
     if (u->msg_ms > 0) { sv_cpy(t, u->msg, n); return; }
     switch (u->page) {
-    case SV_PG_MAIN: sv_cpy(t, u->g->playing ? u->g->chord_name : "HOME", n); break;
+    case SV_PG_MAIN: sv_cpy(t, u->home2 ? "HOME  RESO WIDTH" : u->g->playing ? u->g->chord_name : "HOME", n); break;
     case SV_PG_KEY: sv_cpy(t, "KEY", n); break;
     case SV_PG_SETS: sv_cpy(t, "SETS", n); break;
     case SV_PG_MIXER: sv_cpy(t, u->mixmute == 2 ? "MIXER  SOLO" : u->mixmute ? "MIXER  MUTE" : "MIXER", n); break;
@@ -600,7 +607,7 @@ static void sv_draw_foot(sa_ui *u)
         sv_cpy(r, "FX: ", sizeof r);
         sv_cat(r, sv_page_name(pg[(sv_clampi(u->fx, 0, np - 1) + 1) % np]), sizeof r);
     } else if (u->page == SV_PG_MAIN) {
-        sv_cpy(r, "PRESETS: LAYERS", sizeof r);
+        sv_cpy(r, u->home2 ? "FX: FILTER" : "FX: RESO", sizeof r);
     } else if (u->page == SV_PG_EDIT) {
         sv_cpy(r, u->rec ? "KEYS: WRITE" : "REC: WRITE", sizeof r);
     } else if (u->page == SV_PG_MIXER) {
@@ -1274,6 +1281,7 @@ static void sv_view(sa_ui *u, int v)
     u->fx = 0;
     u->rec = false;
     u->force = true;
+    u->home2 = false;
     if (v == SV_V_HOME) {
         u->page = SV_PG_MAIN;
         u->layer = -1;
@@ -1469,6 +1477,11 @@ void sv_knob(sa_ui *u, int k, int d)
     switch (u->page) {
     case SV_PG_MAIN:
         u->changed = true;
+        if (u->home2) {
+            if (i == 0) s->mreso = (uint8_t)sv_clampi(s->mreso + d * 2, 0, 100);
+            else if (i == 1) s->width = (uint8_t)sv_clampi(s->width + d * 2, 0, 100);
+            return;
+        }
         if (i == 0) s->filter = (uint8_t)sv_clampi(s->filter + d * 2, 0, 100);
         else if (i == 1) s->feel = (uint8_t)sv_clampi(s->feel + d * 2, 0, 60);
         else if (i == 2) s->pump = (uint8_t)sv_clampi(s->pump + d * 2, 0, 100);
@@ -1697,6 +1710,11 @@ void sv_button(sa_ui *u, int b, bool down)
         }
         break;
     case SV_B_FX:
+        if (u->page == SV_PG_MAIN) {               /* HOME: its second page, RESO WIDTH */
+            u->home2 = !u->home2;
+            u->force = true;
+            break;
+        }
         if (u->page == SV_PG_MIXER) {
             u->mixmute = (u->mixmute + 1) % 3;     /* VOLUME, MUTE, SOLO */
             u->force = true;

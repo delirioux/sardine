@@ -150,6 +150,7 @@ typedef struct {
     sa_pumpl pl[SA_SYNTHS];                         /* 0.7 */
     uint8_t d3rate[SA_SYNTHS];                      /* 0.7: 3D's RATE (ORBIT, FLY) */
     uint8_t dvol, dmute;                            /* 0.7: the MIXER's DRUMS, all the drums (80: as it is) */
+    uint8_t mreso;                                  /* 0.7: HOME's RESO, on the whole mix's filter (each synth layer's) */
 } sa_settings;
 
 typedef struct {
