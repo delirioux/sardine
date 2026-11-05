@@ -41,15 +41,17 @@ typedef struct {
 
 /* ---- the own sounds (Felucca's preset layout: {name, E0..E7, ATK DEC SUS REL, ENV->FLT, mono, FX(dist, chorus,
  * delay, reverb)}; ANALOG's E: WAVE DTN MIX NOIS CUT RES DRV KTR). Sill's, as they are ---- */
-static const preset_t SAS_SUPER = {"SUPER", {0, 42, 64, 0, 110, 22, 12, 64}, {0, 64, 84, 26}, 12, 0, FX(0, 60, 25, 25)};
-static const preset_t SAS_SUPERLEAD = {"SUPER LEAD", {0, 30, 64, 0, 112, 18, 16, 64}, {1, 60, 104, 30}, 8, 1,
+/* (0.7.1) DTN at most 12..16 cents on the chord, pad and lead sounds: two saws 30..42 cents apart beat
+ * sourly in a chord (TRANCE was way off); REESE and HOOVER keep theirs, it is their sound */
+static const preset_t SAS_SUPER = {"SUPER", {0, 14, 64, 0, 110, 22, 12, 64}, {0, 64, 84, 26}, 12, 0, FX(0, 60, 25, 25)};
+static const preset_t SAS_SUPERLEAD = {"SUPER LEAD", {0, 12, 64, 0, 112, 18, 16, 64}, {1, 60, 104, 30}, 8, 1,
                                        FX(0, 50, 35, 30)};
 static const preset_t SAS_OCTAVE = {"OCTAVE", {6, 0, 40, 0, 62, 35, 20, 64}, {0, 52, 60, 14}, 30, 1, FX(5, 0, 5, 10)};
 static const preset_t SAS_REESE = {"REESE", {0, 22, 64, 0, 58, 20, 15, 64}, {0, 80, 110, 18}, 6, 1, FX(0, 0, 0, 8)};
 static const preset_t SAS_HOOVER = {"HOOVER", {4, 38, 64, 0, 96, 30, 20, 64}, {0, 70, 100, 30}, 16, 1, FX(6, 40, 20, 25)};
-static const preset_t SAS_DUBCHORD = {"DUB CHORD", {1, 20, 64, 0, 86, 32, 10, 64}, {0, 58, 46, 20}, 22, 0,
+static const preset_t SAS_DUBCHORD = {"DUB CHORD", {1, 14, 64, 0, 86, 32, 10, 64}, {0, 58, 46, 20}, 22, 0,
                                       FX(0, 40, 30, 30)};
-static const preset_t SAS_TRANCESTAB = {"TRANCE", {0, 38, 64, 0, 110, 24, 12, 64}, {0, 58, 30, 18}, 36, 0, FX(0, 50, 40, 30)};
+static const preset_t SAS_TRANCESTAB = {"TRANCE", {0, 12, 64, 0, 110, 24, 12, 64}, {0, 58, 30, 18}, 36, 0, FX(0, 50, 40, 30)};
 static const preset_t SAS_TECHBASS = {"TECH BASS", {0, 0, 0, 0, 70, 40, 12, 64}, {0, 46, 30, 10}, 34, 1, FX(0, 0, 0, 6)};
 static const preset_t SAS_SINEBASS = {"SINE BASS", {3, 0, 0, 0, 127, 0, 25, 0}, {0, 70, 100, 12}, 0, 1, FX(0, 0, 0, 4)};
 static const preset_t SAS_WHISTLE = {"WHISTLE", {3, 0, 0, 6, 127, 0, 0, 64}, {6, 70, 110, 25}, 0, 1, FX(0, 20, 40, 45)};
@@ -57,18 +59,18 @@ static const preset_t SAS_ROBOT = {"ROBOT", {0, 64, 40, 0, 127, 0, 110, 0}, {2, 
 
 /* ---- the ambient sounds (0.3): wide, slow pads, dub stabs with long tails, a rumbling bass. ANALOG's WAVE: 0 SAW
  * 1 SQR 2 TRI 3 SIN 4 PWM 5 SYNC 6 SUB ---- */
-static const preset_t SAS_WIDEPAD = {"WIDE PAD", {0, 38, 64, 0, 72, 12, 0, 32}, {70, 90, 115, 100}, 8, 0, FX(0, 100, 20, 90)};
-static const preset_t SAS_DARKPAD = {"DARK PAD", {1, 22, 64, 0, 48, 18, 0, 32}, {90, 90, 115, 105}, 6, 0, FX(0, 80, 10, 90)};
+static const preset_t SAS_WIDEPAD = {"WIDE PAD", {0, 16, 64, 0, 72, 12, 0, 32}, {70, 90, 115, 100}, 8, 0, FX(0, 100, 20, 90)};
+static const preset_t SAS_DARKPAD = {"DARK PAD", {1, 14, 64, 0, 48, 18, 0, 32}, {90, 90, 115, 105}, 6, 0, FX(0, 80, 10, 90)};
 static const preset_t SAS_GLASS = {"GLASS", {2, 14, 64, 0, 100, 8, 0, 48}, {60, 90, 110, 100}, 4, 0, FX(0, 90, 35, 95)};
-static const preset_t SAS_VAPOR = {"VAPOR", {0, 30, 64, 40, 64, 20, 0, 32}, {100, 90, 110, 110}, 10, 0, FX(0, 90, 20, 100)};
+static const preset_t SAS_VAPOR = {"VAPOR", {0, 16, 64, 40, 64, 20, 0, 32}, {100, 90, 110, 110}, 10, 0, FX(0, 90, 20, 100)};
 static const preset_t SAS_SWELL = {"SWELL", {4, 16, 50, 0, 80, 14, 0, 40}, {118, 100, 120, 110}, 20, 0, FX(0, 80, 25, 95)};
 static const preset_t SAS_NIGHT = {"NIGHT", {0, 10, 40, 0, 56, 28, 6, 32}, {85, 100, 112, 100}, 24, 0, FX(0, 70, 30, 90)};
-static const preset_t SAS_DRONEPAD = {"DRONE PAD", {6, 26, 64, 0, 60, 16, 8, 32}, {90, 100, 120, 115}, 4, 0, FX(0, 90, 10, 100)};
-static const preset_t SAS_SKY = {"SKY", {3, 30, 64, 8, 110, 0, 0, 64}, {90, 100, 115, 110}, 0, 0, FX(0, 110, 30, 110)};
+static const preset_t SAS_DRONEPAD = {"DRONE PAD", {6, 14, 64, 0, 60, 16, 8, 32}, {90, 100, 120, 115}, 4, 0, FX(0, 90, 10, 100)};
+static const preset_t SAS_SKY = {"SKY", {3, 14, 64, 8, 110, 0, 0, 64}, {90, 100, 115, 110}, 0, 0, FX(0, 110, 30, 110)};
 static const preset_t SAS_TAPEPAD = {"TAPE PAD", {0, 18, 64, 12, 58, 10, 18, 32}, {70, 90, 110, 95}, 6, 0, FX(0, 60, 10, 80)};
 static const preset_t SAS_CHOIRAIR = {"CHOIR AIR", {0, 0, 40, 0, 40, 26, 64, 6}, {60, 90, 112, 90}, 0, 0, FX(0, 90, 15, 100)};
-static const preset_t SAS_DUBSTAB = {"DUB STAB", {1, 20, 64, 0, 78, 34, 10, 64}, {0, 58, 40, 24}, 26, 0, FX(0, 50, 90, 70)};
-static const preset_t SAS_SPACESTAB = {"SPACE STAB", {0, 30, 64, 0, 96, 22, 8, 64}, {0, 52, 30, 40}, 30, 0, FX(0, 70, 60, 100)};
+static const preset_t SAS_DUBSTAB = {"DUB STAB", {1, 14, 64, 0, 78, 34, 10, 64}, {0, 58, 40, 24}, 26, 0, FX(0, 50, 90, 70)};
+static const preset_t SAS_SPACESTAB = {"SPACE STAB", {0, 14, 64, 0, 96, 22, 8, 64}, {0, 52, 30, 40}, 30, 0, FX(0, 70, 60, 100)};
 static const preset_t SAS_ECHOCHORD = {"ECHO CHORD", {4, 14, 64, 0, 84, 30, 0, 64}, {0, 50, 20, 30}, 28, 0, FX(0, 40, 100, 60)};
 static const preset_t SAS_RUMBLE = {"RUMBLE", {0, 12, 64, 0, 46, 10, 40, 32}, {0, 80, 100, 40}, 10, 1, FX(0, 0, 0, 70)};
 static const preset_t SAS_DEEPSUB = {"DEEP SUB", {3, 0, 0, 0, 127, 0, 0, 0}, {2, 80, 120, 30}, 0, 1, FX(0, 0, 0, 4)};
