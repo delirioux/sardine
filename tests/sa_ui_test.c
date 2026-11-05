@@ -258,16 +258,30 @@ int main(int argc, char **argv)
     shot("07_bass_pan");
     press(SV_B_FX);
     CHECK(sv_page_now(&ui) == SVP_3D, "FX: 3D");
-    sv_knob(&ui, SV_K1, 27);
-    sv_knob(&ui, SV_K2, 4);
-    sv_knob(&ui, SV_K3, 10);
-    CHECK(g.s.d3[SA_L_BASS].on && g.s.d3[SA_L_BASS].az == 27 && g.s.d3[SA_L_BASS].el == 20 && g.s.d3[SA_L_BASS].dist == 50,
-          "3D: ANGLE HEIGHT DISTANCE, on");
+    sv_knob(&ui, SV_K2, 27);
+    sv_knob(&ui, SV_K3, 4);
+    sv_knob(&ui, SV_K4, 10);
+    CHECK(g.s.d3[SA_L_BASS].on == SA_3D_FIXED && g.s.d3[SA_L_BASS].az == 27 && g.s.d3[SA_L_BASS].el == 20 &&
+          g.s.d3[SA_L_BASS].dist == 50, "3D: ANGLE HEIGHT DISTANCE turn it on, FIXED");
     run_ms(50);
     CHECK(g.pan_now[SA_L_BASS] > 30, "3D: behind on the right pans right (%d)", g.pan_now[SA_L_BASS]);
     shot("07b_bass_3d");
     all_palettes("bass_3d");
-    sv_knob(&ui, SV_K4, -1);
+    sv_knob(&ui, SV_K1, 1);
+    CHECK(g.s.d3[SA_L_BASS].on == SA_3D_ORBIT, "MODE: ORBIT");
+    sv_knob(&ui, SV_K2, -3);
+    CHECK(g.s.d3rate[SA_L_BASS] == SA_PRATE_QUARTER, "ORBIT: RATE a quarter bar (%d)", g.s.d3rate[SA_L_BASS]);
+    {
+        int lo = 99, hi = -99;
+        for (int k = 0; k < 80; ++k) {
+            run_ms(16);
+            if (g.pan_now[SA_L_BASS] < lo) lo = g.pan_now[SA_L_BASS];
+            if (g.pan_now[SA_L_BASS] > hi) hi = g.pan_now[SA_L_BASS];
+        }
+        CHECK(lo < -40 && hi > 40, "ORBIT: round you, left and right (%d %d)", lo, hi);
+    }
+    shot("07d_bass_orbit");
+    sv_knob(&ui, SV_K1, -5);
     CHECK(!g.s.d3[SA_L_BASS].on, "3D OFF");
     press(SV_B_FX);
     CHECK(sv_page_now(&ui) == SVP_PUMP && g.s.pl[SA_L_BASS].depth == 50, "FX: PUMP, BASS at 50 %% (%d)",

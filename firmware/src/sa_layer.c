@@ -854,6 +854,11 @@ static void pan_note(sa_groove *g, int l)
     const sa_code *c = &g->s.code[l];
     const sa_pan *p = &g->s.pan[l];
     if (c->type != SA_T_SYNTH || c->part >= SA_SYNTHS) return;
+    if (g->s.d3[c->part].on == SA_3D_RANDOM) {     /* 3D RANDOM: each note somewhere round you */
+        g->pan_rnd = g->pan_rnd * 1664525u + 1013904223u;
+        g->az_now[c->part] = (uint8_t)((g->pan_rnd >> 16) % SA_AZ_STEPS);
+        return;
+    }
     int w = p->width / 2;                          /* (WIDTH 100: 50 each way) */
     if (p->mode == SA_PAN_PINGPONG) {
         g->pan_side[l] ^= 1u;
@@ -880,8 +885,18 @@ static void pan_block(sa_groove *g)
         const sa_code *c = &g->s.code[l];
         const sa_pan *p = &g->s.pan[l];
         if (c->type != SA_T_SYNTH || c->part >= SA_SYNTHS) continue;
-        if (g->s.d3[c->part].on) {                 /* 3D: the angle pans it */
-            g->pan_now[c->part] = (int8_t)(sa_sin5(g->s.d3[c->part].az) * 63 / 127);
+        const sa_3d *d = &g->s.d3[c->part];
+        if (d->on) {                               /* 3D: where it is now; the angle pans it */
+            float len = (float)(SA_TPB / 4 * RATE_Q[g->s.d3rate[c->part] % SA_PRATES]);
+            float at = (float)((g->bar < 0 ? 0 : g->bar) * SA_TPB + (g->tick < 0 ? 0 : g->tick));
+            float ph = at / len;
+            ph -= (float)(int)ph;
+            int k = (int)(ph * (float)SA_AZ_STEPS);
+            g->el_now[c->part] = d->el;
+            if (d->on == SA_3D_FIXED) g->az_now[c->part] = d->az;
+            else if (d->on == SA_3D_ORBIT || d->on == SA_3D_FLY) g->az_now[c->part] = (uint8_t)((d->az + k) % SA_AZ_STEPS);
+            if (d->on == SA_3D_FLY) g->el_now[c->part] = (int8_t)clampi(d->el + sa_sin5(2 * k) * 30 / 127, -50, 50);
+            g->pan_now[c->part] = (int8_t)(sa_sin5(g->az_now[c->part]) * 63 / 127);
         } else if (p->mode == SA_PAN_FIXED) {
             g->pan_now[c->part] = (int8_t)pan_val(p->pos, 0);
         } else if (p->mode == SA_PAN_SWEEP) {
@@ -955,6 +970,7 @@ void sa_defaults(sa_settings *s)
         s->pan[l].width = 60;
         s->pan[l].rate = SA_PRATE_BAR;
     }
+    for (int p = 0; p < SA_SYNTHS; ++p) s->d3rate[p] = SA_PRATE_2BARS;
     for (int p = 0; p < SA_SYNTHS; ++p) {          /* LEAD 10 %, CHORD 80 %, BASS 50 % until the glue sets it by type */
         static const uint8_t DEP[SA_SYNTHS] = {10, 80, 50};
         s->pl[p].depth = DEP[p];
@@ -1099,7 +1115,8 @@ void sa_settings_fix(sa_settings *s)
     }
     for (int p = 0; p < SA_SYNTHS; ++p) {
         sa_3d *d = &s->d3[p];
-        d->on = (uint8_t)(d->on ? 1 : 0);
+        d->on = (uint8_t)(d->on % SA_3D_MODES);
+        s->d3rate[p] = (uint8_t)(s->d3rate[p] % SA_PRATES);
         d->az %= SA_AZ_STEPS;
         d->el = (int8_t)clampi(d->el, -50, 50);
         d->dist = (uint8_t)clampi(d->dist, 0, 100);

@@ -397,19 +397,28 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         break;
     }
     case SVP_3D: {
-        const sa_3d *d3 = &s->d3[sv_clampi(lc->part, 0, SA_SYNTHS - 1)];
+        int pp = sv_clampi(lc->part, 0, SA_SYNTHS - 1);
+        const sa_3d *d3 = &s->d3[pp];
+        static const char *const MODE[SA_3D_MODES] = {"OFF", "FIXED", "ORBIT", "RANDOM", "FLY"};
+        sv_card_txt(&c[0], "MODE", MODE[d3->on % SA_3D_MODES], d3->on * 1000 / (SA_3D_MODES - 1), false);
         int deg = d3->az * 5;
-        if (deg == 0) sv_cpy(t, "FRONT", sizeof t);
-        else if (deg == 180) sv_cpy(t, "BACK", sizeof t);
-        else { char a[8]; sv_cpy(t, deg < 180 ? "R " : "L ", sizeof t); sv_fmt_int(a, deg < 180 ? deg : 360 - deg);
-               sv_cat(t, a, sizeof t); }
-        sv_card_txt(&c[0], "ANGLE", t, d3->az * 1000 / (SA_AZ_STEPS - 1), false);
+        if (d3->on == SA_3D_ORBIT || d3->on == SA_3D_FLY) {
+            static const char *const R[SA_PRATES] = {"1/4", "1/2", "1 BAR", "2 BARS", "4 BARS"};
+            sv_card_txt(&c[1], "RATE", R[s->d3rate[pp] % SA_PRATES], s->d3rate[pp] * 1000 / (SA_PRATES - 1), false);
+        } else if (d3->on == SA_3D_RANDOM) {
+            sv_card_off(&c[1]);
+        } else {
+            if (deg == 0) sv_cpy(t, "FRONT", sizeof t);
+            else if (deg == 180) sv_cpy(t, "BACK", sizeof t);
+            else { char a[8]; sv_cpy(t, deg < 180 ? "R " : "L ", sizeof t); sv_fmt_int(a, deg < 180 ? deg : 360 - deg);
+                   sv_cat(t, a, sizeof t); }
+            sv_card_txt(&c[1], "ANGLE", t, d3->az * 1000 / (SA_AZ_STEPS - 1), false);
+        }
         if (d3->el == 0) sv_cpy(t, "LEVEL", sizeof t);
         else { char a[8]; sv_cpy(t, d3->el > 0 ? "UP " : "DOWN ", sizeof t); sv_fmt_int(a, d3->el > 0 ? d3->el : -d3->el);
                sv_cat(t, a, sizeof t); }
-        sv_card_txt(&c[1], "HEIGHT", t, (d3->el + 50) * 10, false);
-        sv_card_num(&c[2], "DIST", d3->dist, 0, 100);
-        sv_card_txt(&c[3], "3D", d3->on ? "ON" : "OFF", -1, false);
+        sv_card_txt(&c[2], "HEIGHT", t, (d3->el + 50) * 10, false);
+        sv_card_num(&c[3], "DIST", d3->dist, 0, 100);
         break;
     }
     case SVP_PUMP: {
@@ -972,7 +981,10 @@ static void sv_ring(int32_t cx, int32_t cy, int32_t r, uint16_t c)
 }
 static void sv_panel_3d(sa_ui *u)
 {
-    const sa_3d *d = &u->g->s.d3[sv_clampi(sv_live(u)->part, 0, SA_SYNTHS - 1)];
+    int pp = sv_clampi(sv_live(u)->part, 0, SA_SYNTHS - 1);
+    sa_3d dd = u->g->s.d3[pp];
+    const sa_3d *d = &dd;
+    if (dd.on) { dd.az = u->g->az_now[pp]; dd.el = u->g->el_now[pp]; }   /* (where it is now, moving) */
     uint16_t dot = d->on ? T_ACCENT : T_DIM;
     int32_t cx = 74, cy = 78, R = 36;
     sv_ring(cx, cy, R, T_MID);
@@ -992,7 +1004,7 @@ static void sv_panel_3d(sa_ui *u)
     int32_t hy = sy - d->el * 30 / 50, hx = sx + 22;
     cv_line_t(sx, sy, hx, hy, ux_mix(T_SURF, dot, 50), 1);
     cv_rrect(hx - 4, hy - 4, 8, 8, 4, dot, T_SURF);
-    sv_label(140, 108, d->on ? "HEADPHONES" : "3D OFF: KNOB 4", T_DIM);
+    sv_label(140, 108, d->on ? "HEADPHONES" : "MODE: KNOB 1", T_DIM);
 }
 
 /* PUMP: the layer's gain over a beat, down on the kick (or the beat) and back over RELEASE */
@@ -1360,11 +1372,15 @@ void sv_knob(sa_ui *u, int k, int d)
         break;
     }
     case SVP_3D: {                                 /* (turning ANGLE HEIGHT DISTANCE turns it on) */
-        sa_3d *d3 = &s->d3[sv_clampi(e->part, 0, SA_SYNTHS - 1)];
-        if (i == 0) d3->az = (uint8_t)sv_wrap(d3->az + d, SA_AZ_STEPS);
-        else if (i == 1) d3->el = (int8_t)sv_clampi(d3->el + d * 5, -50, 50);
-        else if (i == 2) SV_ADJ(d3->dist, 5, 0, 100);
-        d3->on = i == 3 ? (uint8_t)(d > 0) : 1;
+        int pp = sv_clampi(e->part, 0, SA_SYNTHS - 1);
+        sa_3d *d3 = &s->d3[pp];
+        if (i == 0) { d3->on = (uint8_t)sv_clampi(d3->on + d, 0, SA_3D_MODES - 1); break; }
+        if (!d3->on) d3->on = SA_3D_FIXED;        /* (turning the others turns it on) */
+        if (i == 1 && (d3->on == SA_3D_ORBIT || d3->on == SA_3D_FLY))
+            s->d3rate[pp] = (uint8_t)sv_clampi(s->d3rate[pp] + d, 0, SA_PRATES - 1);
+        else if (i == 1) d3->az = (uint8_t)sv_wrap(d3->az + d, SA_AZ_STEPS);
+        else if (i == 2) d3->el = (int8_t)sv_clampi(d3->el + d * 5, -50, 50);
+        else SV_ADJ(d3->dist, 5, 0, 100);
         break;
     }
     case SVP_PUMP: {

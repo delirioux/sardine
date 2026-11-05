@@ -50,7 +50,7 @@ LEAD lead lines and the bass lines). FX turns through its pages:
 | MIX (the first) | VOLUME (fades it in and out) | TYPE (BASS KEYS PADS LEADS FX) | INSTR (the sound, by name; the header says it whole) | MUTE | at once |
 | ARP (CHORD only) | MODE (OFF, UP, DOWN, UP-DOWN, DOWN-UP, CONVERGE, DIVERGE, RANDOM, THUMB, PINKY, STRUM) | RATE | RANGE | GATE | waits for SEQ |
 | PAN | MODE (FIXED, SWEEP, PING-PONG, RANDOM) | PAN | WIDTH | RATE (SWEEP) | at once |
-| 3D | ANGLE (around you) | HEIGHT | DIST | 3D ON / OFF | at once |
+| 3D | MODE (OFF FIXED ORBIT RANDOM FLY) | ANGLE (FIXED) or RATE (ORBIT, FLY) | HEIGHT | DIST | at once |
 | PUMP | DEPTH (of HOME's PUMP) | RELEASE | SOURCE (KICK, BEAT) | PUMP ON / OFF | at once |
 | GATE | a ready gate (or OFF) | DEPTH | WIDTH | SMOOTH | waits for SEQ |
 | MOD | MOD 1 | MOD 2 | MOD 3 | MOD 4 | waits for SEQ |
@@ -70,11 +70,13 @@ LEAD lead lines and the bass lines). FX turns through its pages:
 </p>
 
 **3D** places the layer around you, for headphones: from above (FRONT up) the dot is the layer, near you or far; beside
-it, from the side, its height. Turning ANGLE, HEIGHT or DIST turns it on; KNOB 4 turns it off. On, the angle pans the
-layer (the PAN page rests), behind and below sound darker and a little softer, above brighter, far quieter, darker and
-wetter, and the layer narrows to a point. These are cues the ear reads, not a measured head model: left, right and
-far come across best; front against back and up against down are subtler and differ from one listener to the next.
-On speakers it is panning and tone.
+it, from the side, its height; the dot moves as the layer does. **MODE**: FIXED (where ANGLE says), ORBIT (round you
+over RATE, a quarter bar to four bars), RANDOM (each note somewhere else round you) and FLY (an orbit rising and
+falling about HEIGHT). Turning ANGLE, HEIGHT or DIST from OFF turns it on, FIXED. On, the angle pans the layer (the PAN
+page rests), behind and below sound darker and a little softer, above brighter, far quieter, darker and wetter, and
+the layer narrows to a point. These are cues the ear reads, not a measured head model: left, right and far come across
+best; front against back and up against down are subtler and differ from one listener to the next. On speakers it is
+panning and tone.
 
 <p align="center">
 <img src="screens/pump.png" alt="PUMP" width="200">

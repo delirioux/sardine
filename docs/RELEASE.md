@@ -6,7 +6,8 @@ Sardine 0.7: live club mixing for the FM-1.
 - DRUMS: seven rows on channels of their own (KICK SNARE CLAP HATS TOMS RIM METAL), each drum switched at once;
   VOLUME and ACCENT per row, CHANCE beside the modifiers; the kit's TUNE, TONE and DECAY on its KIT page
 - PUMP per layer: its depth (set by the sound's type), release, and the kick or every beat
-- 3D: a synth layer placed around you for headphones (angle, height, distance), drawn on a circle
+- 3D: a synth layer placed around you for headphones (angle, height, distance), fixed or moving (ORBIT, RANDOM,
+  FLY), drawn on a circle
 - CHORD's arpeggiator, off until you turn it on; GATE, PAN and four modifiers on every layer
 - Every start a fresh groove; SETS keeps eight grooves (LOAD on the one, STORE, NEW, CLEAR) and LAST, the last groove,
   by itself

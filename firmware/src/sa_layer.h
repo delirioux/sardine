@@ -113,8 +113,11 @@ typedef struct {
 
 /* a synth layer's place around you (0.7, headphones): ANGLE (az, 5-degree steps: 0 in front, 18 right, 36 behind, 54
  * left), HEIGHT (-50 below .. 50 above), DISTANCE (0 close .. 100 far). At once. On, the angle pans the layer (the PAN
- * page rests); behind and below darker, above brighter, far quieter, darker and wetter */
-typedef struct { uint8_t on, az; int8_t el; uint8_t dist; } sa_3d;
+ * page rests); behind and below darker, above brighter, far quieter, darker and wetter. MODE (on): FIXED where ANGLE
+ * says; ORBIT round you over RATE (d3rate, SA_PRATE_*), from ANGLE; RANDOM each note somewhere round you; FLY an orbit
+ * rising and falling about HEIGHT */
+enum { SA_3D_OFF, SA_3D_FIXED, SA_3D_ORBIT, SA_3D_RANDOM, SA_3D_FLY, SA_3D_MODES };
+typedef struct { uint8_t on, az; int8_t el; uint8_t dist; } sa_3d;   /* on: the MODE (SA_3D_*; 0.7's first 1: FIXED) */
 #define SA_AZ_STEPS 72
 int sa_sin5(int k);                                 /* sin(k * 5 degrees) * 127 */
 
@@ -145,6 +148,7 @@ typedef struct {
     sa_pan pan[SA_LAYERS];                          /* 0.5 */
     sa_3d d3[SA_SYNTHS];                            /* 0.7: LEAD CHORD BASS */
     sa_pumpl pl[SA_SYNTHS];                         /* 0.7 */
+    uint8_t d3rate[SA_SYNTHS];                      /* 0.7: 3D's RATE (ORBIT, FLY) */
 } sa_settings;
 
 typedef struct {
@@ -190,6 +194,8 @@ typedef struct {
     float gate_gain[SA_SYNTHS];                     /* each synth part's gate, 0..1, as it fades */
     uint8_t gate_off[SA_SYNTHS];                    /* 0..127: how far each synth part's gate has it down now */
     int8_t pan_now[SA_SYNTHS];                      /* each synth part's pan now, -64..63 (the glue puts it in) */
+    uint8_t az_now[SA_SYNTHS];                      /* 3D: each synth part's angle and height now (moving: ORBIT RANDOM FLY) */
+    int8_t el_now[SA_SYNTHS];
     uint8_t pan_side[SA_LAYERS];                    /* PING-PONG: the side the next note goes to */
     uint32_t pan_rnd;
     char msg[24];

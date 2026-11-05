@@ -354,13 +354,20 @@ static void sa_apply(void)
         }
     }
     uint32_t sig = sv_hashb(2166136261u, s, sizeof *s);
+    sig = sv_hashb(sig, sa_g.az_now, sizeof sa_g.az_now);
+    sig = sv_hashb(sig, sa_g.el_now, sizeof sa_g.el_now);
     for (int p = 0; p < SA_SYNTHS; ++p) sig = sv_hashb(sig, &sa_loaded[p], sizeof sa_loaded[p]);
     if (sig != sa_applied_sig || !sig) {
         fm1_irq_off();
         for (int l = 0; l < SA_LAYERS; ++l) {
             const sa_code *c = &s->code[l];
             if (c->type == SA_T_SYNTH && c->part < SA_SYNTHS && sa_loaded[c->part] == c->sound)
-                sas_synth(&trk[c->part], sas_of(c->sound), &sa_base[c->part], &s->live[l], s, &s->d3[c->part]);
+            {
+                sa_3d now = s->d3[c->part];                  /* (3D where it is now: moving with ORBIT RANDOM FLY) */
+                now.az = sa_g.az_now[c->part];
+                now.el = sa_g.el_now[c->part];
+                sas_synth(&trk[c->part], sas_of(c->sound), &sa_base[c->part], &s->live[l], s, &now);
+            }
         }
         sas_drums(&trk[SA_PART_DRUMS], s);
         sas_song(s);
