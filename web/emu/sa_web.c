@@ -470,6 +470,8 @@ EXPORT const char *web_da_version(void) { return SA_VERSION; }
 EXPORT uint32_t web_da_view(void) { return (uint32_t)sa_u.view; }
 EXPORT uint32_t web_da_fx(void) { return (uint32_t)sa_u.fx; }
 EXPORT uint32_t web_da_bpm(void) { return sa_g.s.bpm; }
+EXPORT uint32_t web_da_wave(void) { return (uint32_t)sa_u.wave_n; }
+EXPORT uint32_t web_da_scope(uint32_t p) { return p < SA_SYNTHS ? sa_scope_w[p] : 0u; }
 EXPORT uint32_t web_da_groove(void) { return sv_hashb(2166136261u, sa_g.s.code, sizeof sa_g.s.code); }
 EXPORT uint32_t web_da_set_used(uint32_t k) { return k < SV_SLOTS ? sa_u.sets[k].used : 0u; }
 EXPORT uint32_t web_sample_rate(void) { return FS; }

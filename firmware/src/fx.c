@@ -878,6 +878,9 @@ static const uint16_t ENG_VCOST[NENGINES] = {163, FELUCCA_FM4 ? 181 : 0, 162, 67
 };
 #endif
 
+#if FELUCCA_SARDINE
+static void sa_scope_take(uint32_t part, const int32_t *b, uint32_t n);   /* (sa_fw.c: a layer's wave for its screen) */
+#endif
 /* one synth part into the dry mix and the sends of sm (mx[0]; mx[1] on the second core); a part with no voice sounding costs
  * the LFO tick and a cleared buffer only (after the DIST tail has run out) */
 static void mix_part(track_t *t, uint32_t n SM_DECL)
@@ -906,6 +909,9 @@ static void mix_part(track_t *t, uint32_t n SM_DECL)
             mod_end(t);
         return;
     }
+#if FELUCCA_SARDINE
+    sa_scope_take((uint32_t)(t - trk) % NTRK, b, n);
+#endif
     if (T_SPREAD(t))
         mix_spread(t, b, n SM_ARG(sm));
     else {

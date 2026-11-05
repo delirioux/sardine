@@ -48,7 +48,8 @@ spread, 70: each sound's own); FX again back.
 
 ## LEAD, CHORD, BASS
 
-A layer opens on its home page: **CUTOFF**, **RESO**, **DRIVE**, **ENV** (the filter envelope, 50: the sound's own),
+At the top of a layer's pages its sound as it plays, a wave (a flat line when it is silent), beside its pattern (the
+second colour under it: what SEQ drops). A layer opens on its home page: **CUTOFF**, **RESO**, **DRIVE**, **ENV** (the filter envelope, 50: the sound's own),
 at once. ALGORITHM turns its pattern: OFF, then the patterns of its kind (BASS the bass lines, CHORD stabs and pads,
 LEAD lead lines and the bass lines). FX turns through its pages:
 

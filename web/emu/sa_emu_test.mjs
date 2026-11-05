@@ -55,6 +55,11 @@ check("PLAY's green LED lit", (w.web_lit_buttons() >> 14) & 1);
 // PRESETS to a layer, FX through its pages, SCL the KEY page, HOME back; SELECT is the tempo
 const pages = [];
 w.web_enc(EN.PRESETS, 2); run(0.2); pages.push(w.web_da_page(), w.web_da_view());   // CHORD: LAYER
+w.web_enc(EN.PRESETS, 1); run(0.2);                  // BASS (playing)
+let wv = 0;
+for (let i = 0; i < 40; i++) { run(0.05); wv = Math.max(wv, w.web_da_wave()); }
+check(`a layer's wave while it plays (${wv} points)`, w.web_da_page() === 1 && wv === 96);
+w.web_enc(EN.PRESETS, -1); run(0.2);
 press(B.FX); pages.push(w.web_da_fx());                                                // its SOUND page
 press(B.SCL); pages.push(w.web_da_page());                                             // KEY
 check(`PRESETS, FX, SCL: CHORD, SOUND, KEY (${pages.join(" ")})`, pages[0] === 1 && pages[1] === 2 && pages[2] === 1 && pages[3] === 2);

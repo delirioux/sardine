@@ -677,23 +677,6 @@ static void sv_strip(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t bits, 
     }
 }
 
-/* the preview bits of a code (a bar of it), worked out again only when it changed */
-static uint16_t sv_preview(sa_ui *u, int slot, const sa_code *c, int layer)
-{
-    int bar = u->g->playing ? u->g->bar : 0;
-    if (u->pv_layer == layer && u->pv_bar == bar && !memcmp(&u->pv_code[slot], c, sizeof *c) && !u->force)
-        return u->pv_bits[slot];
-    SV_LOCK();
-    uint16_t b = sa_preview(u->g, c, layer, bar);
-    SV_UNLOCK();
-    u->pv_code[slot] = *c;
-    u->pv_bits[slot] = b;
-    if (slot == 1) {
-        u->pv_layer = layer;
-        u->pv_bar = bar;
-    }
-    return b;
-}
 
 static void sv_panel_steps(sa_ui *u)
 {
@@ -1008,24 +991,31 @@ static void sv_panel_home(sa_ui *u)
     }
 }
 
-/* a layer's top: what plays, and what SEQ drops when it differs */
+/* a layer's top: its sound now, as a wave (silent: a flat line); its pattern, and what SEQ drops when it differs */
 static void sv_layer_top(sa_ui *u, int l)
 {
     sa_groove *g = u->g;
-    int now = sv_now(g);
     const sa_code *e = &g->ed[l], *lv = &g->s.code[l];
     bool pend = sa_layer_pending(g, l), mute = g->s.live[l].mute;
     bool off = lv->type == SA_T_NONE || (lv->pat == SA_PAT_OFF && !lv->own);
     char t[24];
+    int32_t x0 = 80, w = 152, cy = 16, h = 12;
+    uint16_t c = mute || off ? T_DIM : pend ? T_ACCENT : T_THEME;
+    cv_rect(x0, cy, w, 1, ux_mix(T_SURF, T_LINE, 60));
+    if (u->wave_n > 1 && !mute) {
+        int32_t py = cy - u->wave[0] * h / 120;
+        for (int i = 1; i < u->wave_n; ++i) {
+            int32_t x = x0 + i * (w - 1) / (u->wave_n - 1), y = cy - u->wave[i] * h / 120;
+            cv_line_t(x0 + (i - 1) * (w - 1) / (u->wave_n - 1), py, x, y, c, 2);
+            py = y;
+        }
+    }
     sa_pat_label(lv, t, sizeof t);
     cv_free_text(10, 4, &AF_S, mute ? "MUTED" : off ? "OFF" : t, mute ? T_ACCENT : off ? T_DIM : T_MID, T_SURF, 66);
-    sv_strip(80, 5, 152, 9, off ? 0 : sv_preview(u, 0, lv, l), now, T_THEME, mute || off);
     if (pend) {
         if (e->type == SA_T_NONE) sv_cpy(t, "GOES", sizeof t);
         else sa_pat_label(e, t, sizeof t);
-        cv_free_text(10, 20, &AF_S, t, T_ACCENT, T_SURF, 66);
-        sv_strip(80, 21, 152, 9, e->type == SA_T_NONE ? 0 : sv_preview(u, 1, e, l), now, T_ACCENT,
-                 e->type == SA_T_NONE);
+        cv_free_text(10, 18, &AF_S, t, T_ACCENT, T_SURF, 66);
     }
 }
 

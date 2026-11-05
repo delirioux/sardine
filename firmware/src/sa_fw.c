@@ -29,6 +29,42 @@ static uint32_t sa_applied_sig;
 static uint8_t sa_drums_ready;
 
 /* ---- the audio ISR --------------------------------------------------------------------------------------------- */
+/* each synth part's sound as it renders (fx.c mix_part): every 4th sample, the last 256 (23 ms); and when it last
+ * sounded */
+#define SA_SCOPE 256u
+static int16_t sa_scope[SA_SYNTHS][SA_SCOPE];
+static uint16_t sa_scope_w[SA_SYNTHS];
+static uint32_t sa_scope_ms[SA_SYNTHS];
+static void sa_scope_take(uint32_t part, const int32_t *b, uint32_t n)
+{
+    if (part >= SA_SYNTHS) return;
+    uint32_t w = sa_scope_w[part];
+    for (uint32_t i = 0; i < n; i += 4u)
+        sa_scope[part][w++ & (SA_SCOPE - 1u)] = (int16_t)clamp(b[i] >> 2, -32767, 32767);
+    sa_scope_w[part] = (uint16_t)w;
+    sa_scope_ms[part] = fm1_ms;
+}
+/* the open synth layer's wave for its screen: from a rising zero crossing, scaled to its own peak */
+static void sa_wave(void)
+{
+    sa_u.wave_n = 0;
+    if ((sa_u.page != SV_PG_LAYER && sa_u.page != SV_PG_EDIT) || sa_u.view < SV_V_LEAD || sa_u.view > SV_V_BASS)
+        return;
+    uint32_t p = sa_g.s.code[sa_u.layer].part % SA_SYNTHS, st = sa_u.view == SV_V_BASS ? 2u : 1u;   /* (the bass: twice
+                                                                                                   * as long) */
+    if (fm1_ms - sa_scope_ms[p] > 120u) return;                 /* (silent) */
+    int16_t s[SA_SCOPE];
+    uint32_t w = sa_scope_w[p];
+    for (uint32_t i = 0; i < SA_SCOPE; ++i) s[i] = sa_scope[p][(w + i) & (SA_SCOPE - 1u)];
+    uint32_t at = 0;
+    for (uint32_t i = 1; i + 96u * st < SA_SCOPE; ++i)
+        if (s[i - 1] < 0 && s[i] >= 0) { at = i; break; }
+    int pk = 1;
+    for (uint32_t i = 0; i < 96u; ++i) { int a = s[at + i * st] < 0 ? -s[at + i * st] : s[at + i * st]; if (a > pk) pk = a; }
+    if (pk < 8) return;
+    for (uint32_t i = 0; i < 96u; ++i) sa_u.wave[i] = (int8_t)(s[at + i * st] * 120 / pk);
+    sa_u.wave_n = 96;
+}
 static void sa_sound(void *ctx, const sa_event *e)
 {
     (void)ctx;
@@ -639,6 +675,7 @@ static void sa_frame(void)
             sa_u.shed = (int)shed_count;
         }
     }
+    sa_wave();
     sv_tick(&sa_u, dt > 100u ? 100 : (int)dt);
     if (first) {
         sv_draw_all(&sa_u);

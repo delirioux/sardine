@@ -90,6 +90,8 @@ typedef struct {
     int key_sent[27];
     uint32_t frame;
     int batt;
+    int8_t wave[96];                      /* the open synth layer's sound now, a cycle or two (the glue fills it) */
+    int wave_n;                           /* how many (0: silent, a flat line) */
     int cpu, cpu_peak, shed;              /* MENU: the audio's load now (its average) and its worst, in %; voices shed */
     bool changed;                         /* a setting changed: the glue applies it (and keeps the look) */
     sv_set_info sets[SV_SLOTS];           /* what each set holds, and LAST (the glue fills it) */

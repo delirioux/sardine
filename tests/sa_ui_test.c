@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -222,6 +223,9 @@ int main(int argc, char **argv)
     shot("03_lead_off");
     sv_knob(&ui, SV_K_PRESETS, 1);
     CHECK(ui.view == SV_V_CHORD && ui.layer == SA_L_CHORD, "PRESETS: CHORD");
+    for (int i = 0; i < 96; ++i)                   /* (the glue's wave: here a sine and its octave) */
+        ui.wave[i] = (int8_t)(80.0 * sin(i * 6.2832 / 32.0) + 30.0 * sin(i * 6.2832 / 16.0));
+    ui.wave_n = 96;
     shot("04_chord");
     all_palettes("chord");
     sv_knob(&ui, SV_K_PRESETS, 1);
