@@ -61,6 +61,23 @@ static const char *const DV_NAMES[SA_DVS] = {"KICK", "SNARE", "CLAP", "HAT", "OP
                                              "TOM", "LOW TOM", "CONGA", "COWBELL", "CLAVE", "SHAKER"};
 static const uint8_t DV_GM[SA_DVS] = {36, 38, 39, 42, 46, 51, 49, 37, 45, 41, 63, 56, 75, 70};
 const char *sa_dv_name(int dv) { return DV_NAMES[clampi(dv, 0, SA_DVS - 1)]; }
+/* KICK SNARE CLAP HAT OPEN HAT RIDE CRASH RIM TOM LOW TOM CONGA COWBELL CLAVE SHAKER -> their rows (the drum engine's
+ * channels: the shaker is a closed hat, the conga a tom, the clave a rim, ride crash and cowbell its bell) */
+static const uint8_t DV_ROW[SA_DVS] = {SA_DR_KICK, SA_DR_SNARE, SA_DR_CLAP, SA_DR_HATS, SA_DR_HATS, SA_DR_METAL,
+                                       SA_DR_METAL, SA_DR_RIM, SA_DR_TOMS, SA_DR_TOMS, SA_DR_TOMS, SA_DR_METAL,
+                                       SA_DR_RIM, SA_DR_HATS};
+static const uint8_t ROW_DEF[SA_DROWS] = {SA_DV_KICK, SA_DV_SNARE, SA_DV_CLAP, SA_DV_HAT, SA_DV_TOM, SA_DV_RIM,
+                                          SA_DV_RIDE};
+static const char *const ROW_NAMES[SA_DROWS] = {"KICK", "SNARE", "CLAP", "HATS", "TOMS", "RIM", "METAL"};
+int sa_dv_row(int dv) { return DV_ROW[clampi(dv, 0, SA_DVS - 1)]; }
+const char *sa_row_name(int row) { return ROW_NAMES[clampi(row, 0, SA_DROWS - 1)]; }
+int sa_row_voices(int row, uint8_t *out)
+{
+    int n = 0;
+    for (int v = 0; v < SA_DVS; ++v)
+        if (DV_ROW[v] == row) out[n++] = (uint8_t)v;
+    return n;
+}
 uint8_t sa_dv_gm(int dv) { return DV_GM[clampi(dv, 0, SA_DVS - 1)]; }
 static const char *const ARP_NAMES[SA_AR_MODES] = {"OFF", "UP", "DOWN", "UP-DOWN", "DOWN-UP", "CONVERGE", "DIVERGE",
                                                    "RANDOM", "THUMB", "PINKY", "STRUM"};
@@ -948,9 +965,11 @@ void sa_defaults(sa_settings *s)
     code_synth(&s->code[SA_L_LEAD], SA_DEF_BASS, SA_PAT_OFF, SA_L_LEAD);
     code_synth(&s->code[SA_L_CHORD], SA_DEF_STAB, 13, SA_L_CHORD);   /* STAB 2 */
     code_synth(&s->code[SA_L_BASS], SA_DEF_BASS, 1, SA_L_BASS);      /* ROLLER */
-    code_drum(&s->code[SA_L_DRUM0], SA_DV_KICK, 0);                  /* 4 FLOOR */
-    code_drum(&s->code[SA_L_DRUM0 + 1], SA_DV_HAT, 1);               /* OFFBEAT */
-    code_drum(&s->code[SA_L_DRUM0 + 2], SA_DV_CLAP, 2);              /* 2 + 4 */
+    for (int r = 0; r < SA_DROWS; ++r)
+        code_drum(&s->code[SA_L_DRUM0 + r], ROW_DEF[r], SA_PAT_OFF);
+    s->code[SA_L_DRUM0 + SA_DR_KICK].pat = 0;                         /* 4 FLOOR */
+    s->code[SA_L_DRUM0 + SA_DR_HATS].pat = 1;                         /* OFFBEAT */
+    s->code[SA_L_DRUM0 + SA_DR_CLAP].pat = 2;                         /* 2 + 4 */
 }
 
 /* the fixed layers: LEAD CHORD BASS in slots 0..2 on parts 0..2 (a synth layer elsewhere, or a drum there, moves:
@@ -961,8 +980,7 @@ static void canon(sa_settings *s)
     sa_live v[SA_LAYERS];
     sa_gate gt[SA_LAYERS];
     sa_pan pn[SA_LAYERS];
-    bool have[3] = {false, false, false};
-    int nd = SA_L_DRUM0;
+    bool have[3] = {false, false, false}, row[SA_DROWS] = {false};
     memset(c, 0, sizeof c);
     for (int l = 0; l < SA_LAYERS; ++l) {
         live_default(&v[l]);
@@ -975,9 +993,10 @@ static void canon(sa_settings *s)
         const sa_code *o = &s->code[l];
         int to = -1;
         if (o->type == SA_T_SYNTH && o->part < 3 && !have[o->part]) to = o->part;
-        else if (o->type == SA_T_DRUM && nd < SA_LAYERS) to = nd++;
-        if (to < 0) continue;
+        else if (o->type == SA_T_DRUM && !row[DV_ROW[o->sound % SA_DVS]]) to = SA_L_DRUM0 + DV_ROW[o->sound % SA_DVS];
+        if (to < 0) continue;                      /* (a second drum on a row's channel: it goes) */
         if (o->type == SA_T_SYNTH) have[to] = true;
+        else row[to - SA_L_DRUM0] = true;
         c[to] = *o;
         v[to] = s->live[l];
         gt[to] = s->gate[l];
@@ -985,6 +1004,8 @@ static void canon(sa_settings *s)
     }
     for (int p = 0; p < 3; ++p)
         if (!have[p]) code_synth(&c[p], 0, SA_PAT_OFF, p);
+    for (int r = 0; r < SA_DROWS; ++r)              /* every row there: OFF if the groove has none */
+        if (!row[r]) code_drum(&c[SA_L_DRUM0 + r], ROW_DEF[r], SA_PAT_OFF);
     memcpy(s->code, c, sizeof c);
     memcpy(s->live, v, sizeof v);
     memcpy(s->gate, gt, sizeof gt);
@@ -993,6 +1014,7 @@ static void canon(sa_settings *s)
 
 void sa_settings_fix(sa_settings *s)
 {
+    canon(s);                                      /* (first: the clamps below then hold for every slot) */
     s->bpm = (uint8_t)clampi(s->bpm, 60, 200);
     s->filter = (uint8_t)clampi(s->filter, 0, 100);
     s->feel = (uint8_t)clampi(s->feel, 0, 60);
@@ -1082,7 +1104,6 @@ void sa_settings_fix(sa_settings *s)
         d->el = (int8_t)clampi(d->el, -50, 50);
         d->dist = (uint8_t)clampi(d->dist, 0, 100);
     }
-    canon(s);
 }
 
 /* ---- a fresh groove ---------------------------------------------------------------------------------------------- */
@@ -1142,12 +1163,11 @@ void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p)
     /* the drums: a kick, hats, a clap or a snare on 2 and 4; sometimes an open hat, a shaker, a rim, a conga, a ride */
     code_drum(&s->code[l++], SA_DV_KICK, pat_find(SA_T_DRUM, rnd(&r, 8) ? "4 FLOOR" : rnd(&r, 2) ? "2-STEP" : "BROKEN"));
     int hat = pick_pat(&r, SA_T_DRUM, HATS, (int)(sizeof HATS / sizeof HATS[0]));
-    code_drum(&s->code[l++], SA_DV_HAT, hat);
+    code_drum(&s->code[l++], rnd(&r, 5) ? SA_DV_HAT : SA_DV_SHAKER, hat);
     code_drum(&s->code[l++], rnd(&r, 3) ? SA_DV_CLAP : SA_DV_SNARE, pat_find(SA_T_DRUM, "2 + 4"));
-    if (hat != pat_find(SA_T_DRUM, "OFFBEAT") && rnd(&r, 2))
-        code_drum(&s->code[l++], SA_DV_OPEN, pat_find(SA_T_DRUM, "OFFBEAT"));
-    switch (rnd(&r, 6)) {
-    case 0: code_drum(&s->code[l++], SA_DV_SHAKER, pat_find(SA_T_DRUM, "SHAKE")); break;
+    (void)hat;
+    switch (rnd(&r, 6)) {                          /* (one more, on a row of its own) */
+    case 0: code_drum(&s->code[l++], SA_DV_CLAVE, pat_find(SA_T_DRUM, "CLAVE")); break;
     case 1: code_drum(&s->code[l++], SA_DV_RIM, pat_find(SA_T_DRUM, "SYNCO")); break;
     case 2: code_drum(&s->code[l++], SA_DV_CONGA, pat_find(SA_T_DRUM, "TRESILLO")); break;
     case 3: code_drum(&s->code[l++], SA_DV_RIDE, pat_find(SA_T_DRUM, "8THS")); break;

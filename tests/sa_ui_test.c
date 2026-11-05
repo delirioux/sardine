@@ -336,9 +336,9 @@ int main(int argc, char **argv)
     bars(2);
     CHECK(part_on[SA_L_LEAD] > 0, "LEAD plays its steps (%d)", part_on[SA_L_LEAD]);
     press(SV_B_REC);
-    /* DRUMS: KNOB 1 the drum, the keys its steps under REC, + ADD a drum */
+    /* DRUMS: seven rows; KNOB 1 the row, KNOB 2 its INSTR (at once), the keys its steps under REC */
     sv_knob(&ui, SV_K_PRESETS, 4);
-    CHECK(ui.view == SV_V_DRUMS && ui.layer == SA_L_DRUM0, "DRUMS: the first drum");
+    CHECK(ui.view == SV_V_DRUMS && ui.layer == SA_L_DRUM0 + SA_DR_KICK, "DRUMS: the kick row");
     CHECK(sv_play_keys(&ui) == 1u << (60 - SV_KEY_LO), "DRUMS: the kick's own note (C, folded up) lit (%x)",
           sv_play_keys(&ui));
     {
@@ -350,11 +350,16 @@ int main(int argc, char **argv)
     }
     shot("13_drums");
     all_palettes("drums");
-    sv_knob(&ui, SV_K1, 1);
-    CHECK(ui.layer == SA_L_DRUM0 + 1, "DRUM: the next drum");
-    sv_knob(&ui, SV_K3, 10);
-    sv_knob(&ui, SV_K4, -10);
-    CHECK(g.s.live[ui.layer].env == 70 && g.s.live[ui.layer].cut == 50, "ACCENT and CHANCE");
+    sv_knob(&ui, SV_K1, 3);
+    CHECK(ui.layer == SA_L_DRUM0 + SA_DR_HATS && g.s.code[ui.layer].sound == SA_DV_HAT, "DRUM: the HATS row, a HAT");
+    sv_knob(&ui, SV_K2, 1);
+    CHECK(g.s.code[ui.layer].sound == SA_DV_OPEN && g.ed[ui.layer].sound == SA_DV_OPEN && !sa_pending(&g),
+          "INSTR: the open hat, at once");
+    sv_knob(&ui, SV_K2, 5);
+    CHECK(g.s.code[ui.layer].sound == SA_DV_SHAKER, "INSTR stops at the row's last (%d)", g.s.code[ui.layer].sound);
+    sv_knob(&ui, SV_K2, -5);
+    sv_knob(&ui, SV_K4, 10);
+    CHECK(g.s.live[ui.layer].env == 70, "ACCENT");
     press(SV_B_REC);
     uint32_t fl, dl;
     CHECK(sv_key_leds(&ui, &fl, &dl) && dl == 0xFFFFu, "REC: the step keys lit");
@@ -364,13 +369,20 @@ int main(int argc, char **argv)
     shot("14_drums_rec");
     press(SV_B_SEQ);
     press(SV_B_REC);
-    sv_knob(&ui, SV_K1, 10);
-    CHECK(ui.layer < 0, "DRUM past the last: + ADD");
-    sv_knob(&ui, SV_K_ALGO, 1);
-    CHECK(ui.layer >= SA_L_DRUM0 && g.ed[ui.layer].type == SA_T_DRUM, "+ ADD: ALGORITHM a drum");
-    shot("15_drums_add");
+    /* a row OFF: ALGORITHM gives it a pattern */
+    sv_knob(&ui, SV_K1, 1);
+    CHECK(ui.layer == SA_L_DRUM0 + SA_DR_TOMS && g.s.code[ui.layer].pat == SA_PAT_OFF, "TOMS: OFF");
+    sv_knob(&ui, SV_K2, 2);
+    sv_knob(&ui, SV_K_ALGO, 11);
+    CHECK(g.ed[ui.layer].pat != SA_PAT_OFF && g.s.code[ui.layer].sound == SA_DV_CONGA, "a conga, a pattern waiting");
+    shot("15_drums_on");
     press(SV_B_SEQ);
     bars(1);
+    fx_to(SVP_MOD);
+    sv_knob(&ui, SV_K4, -10);
+    CHECK(g.s.live[ui.layer].cut == 50, "CHANCE: on MOD, beside the modifiers (%d)", g.s.live[ui.layer].cut);
+    shot("15b_drums_mod");
+    sv_knob(&ui, SV_K4, 10);
     fx_to(SVP_KIT);
     sv_knob(&ui, SV_K1, 3);
     CHECK(g.s.kit == SA_KIT_HARD, "KIT +3: HARD (%d)", g.s.kit);

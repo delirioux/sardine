@@ -11,8 +11,8 @@ second colour, until SEQ drops them in on the one.
 
 <p align="center"><img src="docs/sardine-main.gif" alt="MAIN, playing" width="240"></p>
 
-- Every drum on the DRUMS layer, each with its level, accent and chance; their steps, and the synth layers' notes, on
-  the keys with REC
+- Seven drum rows that never cut each other off, each drum switched at once; their steps, and the synth layers'
+  notes, on the keys with REC
 - 81 synth sounds on Felucca's engines (bass, keys, pads, leads, FX, and an AMBIENT set of wide pads, dub stabs and a
   rumbling bass in a big hall) and twenty synthesised drum kits
 - 24 drum patterns and 29 synth patterns, straight, broken and triplet; FEEL swings them all together

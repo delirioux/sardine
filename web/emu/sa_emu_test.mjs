@@ -42,7 +42,7 @@ const press = (b) => { w.web_buttons(1 << b); run(0.05); w.web_buttons(0); run(0
 
 run(2);
 check(`boots Sardine ${str(w.web_da_version())} on MAIN, stopped`, w.web_da_page() === 0 && !w.web_playing());
-check(`a fresh groove is in (${w.web_da_style()} layers)`, w.web_da_style() >= 5 && w.web_da_style() <= 8);
+check(`a fresh groove is in (${w.web_da_style()} layers)`, w.web_da_style() === 10);   // LEAD CHORD BASS and the seven drum rows
 const groove1 = w.web_da_groove();
 check("silent while stopped", peak < 1e-3);
 
@@ -94,7 +94,7 @@ const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice
   new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).set(nor);
   w.web_boot();
   run(1);
-  check("the next start: another groove", w.web_da_groove() !== groove1 && w.web_da_style() >= 5);
+  check("the next start: another groove", w.web_da_groove() !== groove1 && w.web_da_style() === 10);
   check("the next start: sets 1 and 3 still there", w.web_da_set_used(2) === 1 && w.web_da_set_used(0) === 1);
   press(B.SAVE);
   w.web_enc(EN.K1, 2); run(0.1);

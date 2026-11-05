@@ -106,21 +106,32 @@ pattern the layer's own (MY STEPS); like a pattern, the steps wait for SEQ, and 
 
 <p align="center">
 <img src="screens/drums.png" alt="DRUMS" width="200">
-<img src="screens/drums_add.png" alt="+ ADD A DRUM" width="200">
+<img src="screens/drums_add.png" alt="A row turned on" width="200">
 <img src="screens/kit.png" alt="KIT" width="200">
 </p>
 
-DRUMS shows every drum, a row each with its bar (the second colour: waiting for SEQ), the one KNOB 1 picked lit; the
-cards are that drum's. The home page: **DRUM** (which drum; the last
-one, **+ ADD**, adds one), **VOLUME**, **ACCENT** (how hard the accented steps hit against the rest; 50: as written)
-and **CHANCE** (how likely each hit plays: 100 % always, lower and it drops out at random). ALGORITHM turns the drum's
-pattern: OFF, the patterns, and left of OFF, REMOVE. On + ADD it picks the drum (KICK SNARE CLAP HAT OPEN HAT RIDE
-CRASH RIM TOM LOW TOM CONGA COWBELL CLAVE SHAKER); SEQ drops it in. Without REC every key plays the drum picked; with REC the 16 lowest keys
-are its steps, the keys above play it.
+Seven rows, always there, each on a drum channel of its own, so no two ever cut each other off:
 
-FX: **MIX** (VOLUME, MUTE), **KIT** (KIT, TUNE, TONE, DECAY: the whole kit, every drum plays on it) and **MOD**
-(the drum's modifiers). The kits, all synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY, CLASSIC,
-ROOM, VINTAGE, MINIMAL, VOLT (electro), GARAGE, DISCO, BREAKS, DUB, LOFI, IRON (industrial), ACID.
+| Row | INSTR |
+| --- | --- |
+| KICK | KICK |
+| SNARE | SNARE |
+| CLAP | CLAP |
+| HATS | HAT, OPEN HAT, SHAKER |
+| TOMS | TOM, LOW TOM, CONGA |
+| RIM | RIM, CLAVE |
+| METAL | RIDE, CRASH, COWBELL |
+
+Each row shows its drum and its bar (the second colour: waiting for SEQ); a row OFF is dimmed. The home page: **DRUM**
+(KNOB 1, the row), **INSTR** (its drum, at once), **VOLUME** and **ACCENT** (how hard the accented steps hit against
+the rest; 50: as written). ALGORITHM turns the row's pattern, OFF first: a pattern turns the row on, OFF turns it off;
+SEQ drops it in. Without REC every key plays the row's drum; with REC the 16 lowest keys are its steps, the keys above
+play it.
+
+FX: **MIX** (VOLUME, KIT, INSTR, MUTE), **KIT** (KIT, TUNE, TONE, DECAY: the whole kit, every drum plays on it) and
+**MOD** (three modifiers, and **CHANCE**: how likely each hit plays, 100 % always; lower and hits drop out at random,
+so the pattern changes as it plays). The kits, all synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY,
+CLASSIC, ROOM, VINTAGE, MINIMAL, VOLT (electro), GARAGE, DISCO, BREAKS, DUB, LOFI, IRON (industrial), ACID.
 
 ## The modifiers
 

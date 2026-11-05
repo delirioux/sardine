@@ -164,26 +164,27 @@ static const char *sv_layer_name(const sa_ui *u, int l)
     return sas_name(c->type, c->sound);
 }
 
-/* DRUMS' rows: the drum layers (in the copy or playing) in slot order; after them + ADD (while a slot is free) */
+/* DRUMS' rows: seven, always there (KICK SNARE CLAP HATS TOMS RIM METAL), each on a drum channel of its own */
 static int sv_drum_rows(const sa_ui *u, int *rows)
 {
-    int n = 0;
-    for (int l = SA_L_DRUM0; l < SA_LAYERS; ++l)
-        if (u->g->ed[l].type == SA_T_DRUM || u->g->s.code[l].type == SA_T_DRUM) rows[n++] = l;
-    return n;
+    (void)u;
+    for (int r = 0; r < SA_DROWS; ++r) rows[r] = SA_L_DRUM0 + r;
+    return SA_DROWS;
 }
-static int sv_free_drum(const sa_ui *u)
+static int sv_drow_count(const sa_ui *u) { (void)u; return SA_DROWS; }
+/* a row's INSTR, turned: another drum of its channel, at once */
+static void sv_instr_turn(sa_ui *u, int d)
 {
-    for (int l = SA_L_DRUM0; l < SA_LAYERS; ++l)
-        if (!sa_used(u->g, l)) return l;
-    return -1;
+    sa_groove *g = u->g;
+    int l = u->layer;
+    uint8_t list[SA_DVS];
+    int n = sa_row_voices(l - SA_L_DRUM0, list), at = 0;
+    for (int i = 0; i < n; ++i) if (list[i] == g->ed[l].sound) at = i;
+    at = sv_clampi(at + d, 0, n - 1);
+    g->ed[l].sound = g->s.code[l].sound = list[at];
+    g->sound_sig++;
 }
-static int sv_drow_count(const sa_ui *u)
-{
-    int rows[SA_LAYERS], n = sv_drum_rows(u, rows);
-    return n + (sv_free_drum(u) >= 0 ? 1 : 0);
-}
-static void sv_drum_sync(sa_ui *u)               /* the drum picked: its slot (+ ADD: -1) */
+static void sv_drum_sync(sa_ui *u)               /* the row picked: its slot */
 {
     int rows[SA_LAYERS], n = sv_drum_rows(u, rows), total = sv_drow_count(u);
     u->drow = sv_clampi(u->drow, 0, total > 0 ? total - 1 : 0);
@@ -338,12 +339,10 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
     switch (sv_page_now(u)) {
     case SVP_HOME:
         if (u->view == SV_V_DRUMS) {
-            sv_card_txt(&c[0], "DRUM", sv_layer_name(u, l), -1, false);
-            sv_card_num(&c[1], "VOLUME", v->level, 0, 100);
-            sv_card_num(&c[2], "ACCENT", v->env, 0, 100);
-            sv_fmt_int(t, v->cut);
-            sv_cat(t, " %", sizeof t);
-            sv_card_txt(&c[3], "CHANCE", t, v->cut * 10, false);
+            sv_card_txt(&c[0], "DRUM", sa_row_name(l - SA_L_DRUM0), (l - SA_L_DRUM0) * 1000 / (SA_DROWS - 1), false);
+            sv_card_txt(&c[1], "INSTR", sv_layer_name(u, l), -1, false);
+            sv_card_num(&c[2], "VOLUME", v->level, 0, 100);
+            sv_card_num(&c[3], "ACCENT", v->env, 0, 100);
         } else {
             sv_card_num(&c[0], "CUTOFF", v->cut, 0, 100);
             sv_card_num(&c[1], "RESO", v->reso, 0, 100);
@@ -424,6 +423,12 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
     }
     case SVP_MOD:
         for (int i = 0; i < SA_MODS; ++i) {
+            if (i == 3 && u->view == SV_V_DRUMS) {   /* (a drum's CHANCE: out of the way, beside its modifiers) */
+                sv_fmt_int(t, v->cut);
+                sv_cat(t, " %", sizeof t);
+                sv_card_txt(&c[3], "CHANCE", t, v->cut * 10, false);
+                break;
+            }
             char lb[8] = "MOD 1";
             lb[4] = (char)('1' + i);
             sa_mod_name(e->mod[i], t, sizeof t);
@@ -433,8 +438,8 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
     case SVP_MIX:                                  /* VOLUME TYPE INSTR MUTE (a drum: VOLUME, MUTE) */
         sv_card_num(&c[0], "VOLUME", v->level, 0, 100);
         if (u->view == SV_V_DRUMS) {
-            sv_card_off(&c[1]);
-            sv_card_off(&c[2]);
+            sv_card_txt(&c[1], "KIT", sa_kit_name(s->kit), s->kit * 1000 / (SA_KITS - 1), false);
+            sv_card_txt(&c[2], "INSTR", sv_layer_name(u, l), -1, false);
         } else {
             static const char *const ROLE[SAS_ROLES] = {"BASS", "KEYS", "PADS", "LEADS", "FX"};
             int role = sas_of(lc->sound)->role % SAS_ROLES;
@@ -929,8 +934,9 @@ static void sv_layer_top(sa_ui *u, int l)
 static void sv_panel_mod(sa_ui *u)
 {
     const sa_code *e = sv_ed(u);
-    int n = 0;
-    for (int i = 0; i < SA_MODS; ++i) {
+    bool drum = u->view == SV_V_DRUMS;
+    int n = 0, nm = drum ? 3 : SA_MODS;
+    for (int i = 0; i < nm; ++i) {
         char t[20], a[4];
         sv_fmt_int(a, i + 1);
         sv_label(10, 40 + i * 16, a, T_DIM);
@@ -939,10 +945,19 @@ static void sv_panel_mod(sa_ui *u)
         n += on;
         cv_text_on(26, 40 + i * 16, &AF_S, t, on ? T_TEXT : T_DIM, T_SURF);
     }
-    sv_label(120, 40, n ? "IN ORDER, EACH ON" : "FAST SLOW REV EVERY", T_DIM);
-    sv_label(120, 56, n ? "WHAT CAME BEFORE" : "THIN EUCLID SHIFT", T_DIM);
-    sv_label(120, 72, n ? "" : "LEN OCT PLY", T_DIM);
-    sv_label(120, 98, "SEQ DROPS THEM", T_DIM);
+    if (drum) {
+        char t[20];
+        sv_cpy(t, "CHANCE ", sizeof t);
+        char a[8];
+        sv_fmt_int(a, u->g->s.live[u->layer].cut);
+        sv_cat(t, a, sizeof t);
+        sv_cat(t, " %", sizeof t);
+        cv_text_on(10, 40 + 3 * 16, &AF_S, t, u->g->s.live[u->layer].cut < 100 ? T_ACCENT : T_DIM, T_SURF);
+    }
+    static const char *const HINT[2][4] = {{"FAST SLOW REV", "EVERY THIN", "EUCLID SHIFT", "LEN OCT PLY"},
+                                           {"IN ORDER,", "EACH ON WHAT", "CAME BEFORE", ""}};
+    for (int i = 0; i < 4; ++i) sv_label(124, 40 + i * 16, HINT[n ? 1 : 0][i], T_DIM);
+    sv_label(124, 106, "SEQ DROPS THEM", T_DIM);
 }
 
 /* 3D: you from above (FRONT up), the layer a dot around you, near the centre or far; beside it, from the side, its
@@ -1018,7 +1033,7 @@ static void sv_panel_synth_home(sa_ui *u)
     sv_label(10, 88, "FX: VOLUME, SOUND AND MORE", T_DIM);
 }
 
-/* DRUMS: every drum a row (its name, its bar, the bar playing through it), KNOB 1's pick lit; + ADD A DRUM last */
+/* DRUMS: every row (its drum, its bar, the bar playing through it; OFF dimmed), KNOB 1's pick lit */
 static void sv_panel_drums(sa_ui *u)
 {
     sa_groove *g = u->g;
@@ -1029,11 +1044,6 @@ static void sv_panel_drums(sa_ui *u)
         int32_t y = 5 + (i - first) * 16;
         bool sel = i == u->drow;
         uint16_t bg = sel ? ux_mix(T_SURF, T_THEME, 22) : T_SURF;
-        if (i >= n) {
-            cv_text_on(10, y + 1, &AF_S, "+ ADD A DRUM", sel ? T_TEXT : T_DIM, bg);
-            if (sel) cv_text_r(230, y + 1, &AF_S, "ALGORITHM: WHICH", T_MID, bg);
-            continue;
-        }
         int l = rows[i];
         const sa_code *e = &g->ed[l];
         bool pend = sa_layer_pending(g, l), mute = g->s.live[l].mute, gone = e->type == SA_T_NONE;
@@ -1193,33 +1203,10 @@ void sv_init(sa_ui *u, sa_groove *g)
     sv_apply_style(u);
 }
 
-/* ALGORITHM on a layer: its pattern (in the copy, waits for SEQ). A drum: left of OFF REMOVE; + ADD: which drum */
-static const uint8_t SV_DRUM_PAT[SA_DVS] = {0, 2, 2, 1, 1, 3, 19, 17, 16, 16, 11, 10, 10, 22};
+/* ALGORITHM on a layer: its pattern (OFF first; in the copy, waits for SEQ) */
 static void sv_algo(sa_ui *u, int d)
 {
     sa_groove *g = u->g;
-    if (u->view == SV_V_DRUMS) {
-        int l = u->layer;
-        if (l < 0 || g->s.code[l].type == SA_T_NONE) {   /* + ADD, or added and not dropped yet: which drum */
-            if (l < 0) l = sv_free_drum(u);
-            if (l < 0) return;
-            sa_code *e = &g->ed[l];
-            int dv = e->type == SA_T_DRUM ? sv_wrap(e->sound + d, SA_DVS) : (d > 0 ? 0 : SA_DVS - 1);
-            memset(e, 0, sizeof *e);
-            e->type = SA_T_DRUM;
-            e->sound = (uint8_t)dv;
-            e->pat = SV_DRUM_PAT[dv];
-            e->part = SA_PART_DRUMS;
-            e->arate = SA_RATE_16;
-            e->arange = 1;
-            e->agate = 60;
-            int rows[SA_LAYERS], n = sv_drum_rows(u, rows);
-            for (int i = 0; i < n; ++i) if (rows[i] == l) u->drow = i;
-            sv_drum_sync(u);
-            u->changed = true;
-            return;
-        }
-    }
     if (u->layer < 0) return;
     sa_code *e = sv_ed(u);
     uint8_t list[64];
@@ -1227,7 +1214,7 @@ static void sv_algo(sa_ui *u, int d)
     if (e->type == SA_T_NONE) at = -1;
     else for (int i = 0; i < n; ++i) if (list[i] == e->pat) at = i;
     if (at < 0 && e->type != SA_T_NONE) at = 0;
-    int to = at + d, lo = u->view == SV_V_DRUMS ? -1 : 0;
+    int to = at + d, lo = 0;
     to = sv_clampi(to, lo, n - 1);
     if (to < 0) {                                  /* REMOVE (a drum): it goes with SEQ */
         e->type = SA_T_NONE;
@@ -1322,7 +1309,7 @@ void sv_knob(sa_ui *u, int k, int d)
     default: break;
     }
     /* a layer */
-    if (u->view == SV_V_DRUMS && i == 0 && sv_page_now(u) == SVP_HOME) {   /* DRUM: which drum (+ ADD last) */
+    if (u->view == SV_V_DRUMS && i == 0 && sv_page_now(u) == SVP_HOME) {   /* DRUM: which row */
         u->drow = sv_clampi(u->drow + d, 0, sv_drow_count(u) - 1);
         sv_drum_sync(u);
         return;
@@ -1341,9 +1328,9 @@ void sv_knob(sa_ui *u, int k, int d)
     switch (sv_page_now(u)) {
     case SVP_HOME:
         if (u->view == SV_V_DRUMS) {
-            if (i == 1) SV_ADJ(v->level, 2, 0, 100);
-            else if (i == 2) SV_ADJ(v->env, 2, 0, 100);
-            else SV_ADJ(v->cut, 5, 0, 100);
+            if (i == 1) sv_instr_turn(u, d);
+            else if (i == 2) SV_ADJ(v->level, 2, 0, 100);
+            else SV_ADJ(v->env, 2, 0, 100);
         } else {
             uint8_t *f = i == 0 ? &v->cut : i == 1 ? &v->reso : i == 2 ? &v->drive : &v->env;
             SV_ADJ(*f, 2, 0, 100);
@@ -1389,6 +1376,7 @@ void sv_knob(sa_ui *u, int k, int d)
         break;
     }
     case SVP_MOD: {
+        if (i == 3 && u->view == SV_V_DRUMS) { SV_ADJ(v->cut, 5, 0, 100); break; }   /* CHANCE */
         int t = e->type == SA_T_DRUM ? SA_T_DRUM : SA_T_SYNTH;
         int at = sa_mod_index(t, e->mod[i]);
         e->mod[i] = sa_mod_opt(t, sv_clampi(at + d, 0, sa_mod_opts(t) - 1));
@@ -1398,6 +1386,8 @@ void sv_knob(sa_ui *u, int k, int d)
         if (i == 0) SV_ADJ(v->level, 2, 0, 100);
         else if (i == 3) sa_mute(g, l, d > 0);
         else if (u->view != SV_V_DRUMS) sv_sound_turn(u, i - 1, d);   /* TYPE, INSTR: at once */
+        else if (i == 1) s->kit = (uint8_t)sv_clampi(s->kit + d, 0, SA_KITS - 1);
+        else sv_instr_turn(u, d);
         break;
     case SVP_KIT:
         if (i == 0) s->kit = (uint8_t)sv_clampi(s->kit + d, 0, SA_KITS - 1);

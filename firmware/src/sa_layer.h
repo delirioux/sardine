@@ -72,6 +72,12 @@ typedef struct {
 #define SA_PAT_OFF 255                              /* a layer's pattern OFF: it plays nothing (a ready pattern's place) */
 /* the fixed layers (0.7): LEAD, CHORD and BASS on the synth parts of the same number; the drums in the slots after */
 enum { SA_L_LEAD, SA_L_CHORD, SA_L_BASS, SA_L_DRUM0 };
+/* the drum rows (0.7): seven, always there, each on a drum channel of its own (none choke another); a row's INSTR one
+ * of its channel's drums */
+enum { SA_DR_KICK, SA_DR_SNARE, SA_DR_CLAP, SA_DR_HATS, SA_DR_TOMS, SA_DR_RIM, SA_DR_METAL, SA_DROWS };
+int sa_dv_row(int dv);                              /* the row a drum voice plays on */
+int sa_row_voices(int row, uint8_t *out);           /* a row's drum voices (its INSTR list) */
+const char *sa_row_name(int row);
 
 /* a layer's sound: at once */
 typedef struct {
