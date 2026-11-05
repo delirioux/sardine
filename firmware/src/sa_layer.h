@@ -81,7 +81,7 @@ const char *sa_row_name(int row);
 /* a drum row's variation (its code's amode, 0.7): the kit's own drum (0), TIGHT ROOM HIGH LOW (it, reshaped), or another
  * drum machine's (80 10 DEEP); the glue sets the drum engine's lane by it */
 #define SA_DVARS 8
-const char *sa_dvar_name(int v);                    /* "", "TIGHT" .. */
+const char *sa_dvar_name(int row, int v);           /* "", "TIGHT" .. (CLAP: its own eight, all short) */
 
 /* a layer's sound: at once */
 typedef struct {

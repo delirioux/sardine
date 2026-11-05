@@ -169,7 +169,7 @@ static const char *sv_layer_name(const sa_ui *u, int l)
         char *b = nb[at++ & 3];
         sv_cpy(b, sa_dv_name(c->sound), 24);
         sv_cat(b, " ", 24);
-        sv_cat(b, sa_dvar_name(c->amode % SA_DVARS), 24);
+        sv_cat(b, sa_dvar_name(sa_dv_row(c->sound), c->amode % SA_DVARS), 24);
         return b;
     }
     return sas_name(c->type, c->sound);

@@ -71,7 +71,11 @@ static const uint8_t ROW_DEF[SA_DROWS] = {SA_DV_KICK, SA_DV_SNARE, SA_DV_CLAP, S
 static const char *const ROW_NAMES[SA_DROWS] = {"KICK", "SNARE", "CLAP", "HATS", "TOMS", "RIM", "METAL"};
 int sa_dv_row(int dv) { return DV_ROW[clampi(dv, 0, SA_DVS - 1)]; }
 static const char *const DVAR_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "80", "10", "DEEP"};
-const char *sa_dvar_name(int v) { return DVAR_NAMES[clampi(v, 0, SA_DVARS - 1)]; }
+static const char *const CLAP_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "80", "77", "DEEP"};
+const char *sa_dvar_name(int row, int v)
+{
+    return (row == SA_DR_CLAP ? CLAP_NAMES : DVAR_NAMES)[clampi(v, 0, SA_DVARS - 1)];
+}
 const char *sa_row_name(int row) { return ROW_NAMES[clampi(row, 0, SA_DROWS - 1)]; }
 int sa_row_voices(int row, uint8_t *out)
 {
