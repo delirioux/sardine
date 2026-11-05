@@ -72,7 +72,7 @@ static const char *const ROW_NAMES[SA_DROWS] = {"KICK", "SNARE", "CLAP", "HATS",
 int sa_dv_row(int dv) { return DV_ROW[clampi(dv, 0, SA_DVS - 1)]; }
 static const char *const DVAR_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "80", "10", "DEEP"};
 static const char *const CLAP_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "80", "77", "DEEP"};
-static const char *const METAL_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "80", "77", "DEEP"};
+static const char *const METAL_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "DARK", "BRIGHT", "OLD"};
 const char *sa_dvar_name(int row, int v)
 {
     return (row == SA_DR_CLAP ? CLAP_NAMES : row == SA_DR_METAL ? METAL_NAMES : DVAR_NAMES)[clampi(v, 0, SA_DVARS - 1)];
@@ -1207,7 +1207,7 @@ void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p)
     case 0: code_drum(&s->code[l++], SA_DV_CLAVE, pat_find(SA_T_DRUM, "CLAVE")); break;
     case 1: code_drum(&s->code[l++], SA_DV_RIM, pat_find(SA_T_DRUM, "SYNCO")); break;
     case 2: code_drum(&s->code[l++], SA_DV_CONGA, pat_find(SA_T_DRUM, "TRESILLO")); break;
-    case 3: code_drum(&s->code[l++], SA_DV_TOM, pat_find(SA_T_DRUM, "SYNCO")); break;   /* (no ride: it is harsh) */
+    case 3: code_drum(&s->code[l++], SA_DV_RIDE, pat_find(SA_T_DRUM, "8THS")); break;
     default: break;
     }
     /* BASS always; CHORD stabs or a pad (sometimes gated, sweeping); LEAD now and then, mostly OFF */
@@ -1429,6 +1429,9 @@ void sa_set_arm(sa_groove *g, const sa_settings *s)
 }
 
 static void arrange(sa_groove *g);
+/* after a long BREAK, the beat of the two bars each drum row is back on: KICK (and the bass) on the 1, the hats,
+ * the metal, the rim, the snare on the second bar's 1, the clap, the toms */
+static const uint8_t BACK_BEAT[SA_DROWS] = {0, 4, 5, 1, 6, 3, 2};   /* KICK SNARE CLAP HATS TOMS RIM METAL */
 static void bar_line(sa_groove *g)
 {
     for (int l = 0; l < SA_LAYERS; ++l) {
@@ -1437,9 +1440,14 @@ static void bar_line(sa_groove *g)
     }
     if (g->arr_fill && !g->fill_held) g->fill_on = 0;   /* (ARC's roll: over on the 1, its crash there) */
     arrange(g);
-    if (g->brk_on && !g->brk_held) {               /* BREAK let go: everything back on this 1 */
+    if (g->back_on && ++g->back_bar >= 2) g->back_on = 0;   /* (the build back in: two bars) */
+    if (g->brk_on && g->brk_held && g->brk_bars < 255) g->brk_bars++;
+    if (g->brk_on && !g->brk_held) {               /* BREAK let go: everything back on this 1; after 4 bars or
+                                                    * more the drums one by one over two bars (BACK_BEAT) */
         g->brk_on = false;
-        msg(g, "DROP");
+        g->back_on = g->brk_bars >= 4;
+        g->back_bar = 0;
+        msg(g, g->back_on ? "BACK IN" : "DROP");
     }
     if (g->set_next) {
         set_now(g);
@@ -1463,6 +1471,7 @@ void sa_play(sa_groove *g, bool on)
     g->arr_out = 0;
     g->arr_brk = g->arr_fill = false;
     g->arr_sw0 = g->arr_sw1 = 0.0f;
+    g->back_on = 0;
     if (!on) {
         g->tick = -1;
         g->bar = 0;
@@ -1556,6 +1565,7 @@ void sa_break(sa_groove *g, bool down)
     g->brk_held = down;
     if (down && !g->brk_on) {                      /* out at once: let go of what sounds */
         g->brk_on = true;
+        g->brk_bars = 0;
         part_off(g, SA_PART_DRUMS);
         part_off(g, g->s.code[SA_L_BASS].part);
         msg(g, "BREAK");
@@ -1674,6 +1684,8 @@ static void do_tick(sa_groove *g)
         if (c->type == SA_T_DRUM && g->fill_on) continue;   /* (the fill plays in place of the drums) */
         if ((g->brk_on || g->arr_brk) && (c->type == SA_T_DRUM || b->layer == SA_L_BASS)) continue;   /* BREAK: out */
         if ((g->arr_out >> b->layer) & 1u) continue;   /* INTRO: not in yet */
+        if (g->back_on && c->type == SA_T_DRUM && b->layer >= SA_L_DRUM0 &&
+            g->back_bar * 4 + t / 24 < BACK_BEAT[(b->layer - SA_L_DRUM0) % SA_DROWS]) continue;   /* back one by one */
         if (g->solo && !((g->solo >> (c->type == SA_T_DRUM ? 3 : b->layer)) & 1u)) continue;   /* SOLO: the others out */
         int part = c->type == SA_T_DRUM ? SA_PART_DRUMS : c->part;
         uint32_t len = c->type == SA_T_DRUM ? (uint32_t)(g->sr * (c->sound == SA_DV_CRASH ? 1.0f :

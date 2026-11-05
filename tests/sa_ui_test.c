@@ -512,6 +512,29 @@ int main(int argc, char **argv)
         CHECK(g.brk_on, "let go: still out until the 1");
         bars(1);
         CHECK(!g.brk_on && part_on[SA_PART_DRUMS] > d0, "on the 1: the drop");
+        CHECK(!g.back_on, "a short BREAK: everything back at once");
+    }
+    /* BREAK held over 4 bars: let go, the drums back one by one over two bars (the kick first) */
+    {
+        bars(1);
+        int n0 = part_on[SA_PART_DRUMS];
+        bars(1);
+        int full = part_on[SA_PART_DRUMS] - n0;
+        sv_button(&ui, SV_B_ARP, true);
+        bars(5);
+        sv_button(&ui, SV_B_ARP, false);
+        int a = part_on[SA_PART_DRUMS];
+        bars(1);
+        int b1 = part_on[SA_PART_DRUMS] - a;
+        CHECK(!g.brk_on && g.back_on, "a long BREAK let go: back in (%d)", g.brk_bars);
+        a = part_on[SA_PART_DRUMS];
+        bars(1);
+        int b2 = part_on[SA_PART_DRUMS] - a;
+        a = part_on[SA_PART_DRUMS];
+        bars(1);
+        int b3 = part_on[SA_PART_DRUMS] - a;
+        CHECK(b1 > 0 && b1 < b2 && b2 < full && b3 > b2 && !g.back_on,
+              "one by one: %d then %d drum hits, then the whole beat (%d of %d)", b1, b2, b3, full);
     }
     /* LFO held: SWEEP, the filter closing; let go: open */
     sv_button(&ui, SV_B_LFO, true);

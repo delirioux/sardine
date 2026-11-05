@@ -49,6 +49,7 @@ static uint32_t drum_kit_plays(int32_t v) { return DK_PLAYS[clamp(v, 0, DK_COUNT
 static const uint8_t DK_SWAP[DV_NKIT] = {0, 4, 1, 0, 2 | 4, 4, 0, 1 | 2};
 static const uint8_t DV_TYPE_LANE[DVT_COUNT] = {
     DV_KICK, DV_KICK, DV_SNARE, DV_CLAP, DV_HATC, DV_HATO, DV_TOM, DV_TOM, DV_RIM, DV_RIM, DV_BELL, DV_BELL,
+    DV_BELL, DV_BELL, DV_BELL,
 };
 
 typedef struct {
@@ -90,6 +91,7 @@ static const int8_t DRUM_GM[47][2] = {
 /* (Sardine) a lane's own variation over the KIT knob, per part: kit 0 the KIT's, 1 STD, 2.. the model kits (DK_80 ..);
  * semitones, TONE and DECAY added to the knobs'. All 0: as Felucca plays it */
 typedef struct { uint8_t kit; int8_t semi, tone, decay; } drum_lane_ov_t;
+#define DRUM_OV_FM 15u                            /* kit: the FM metals (ride, crash, bell: drum_voice.c DV_FM) */
 static drum_lane_ov_t drum_lane_ov[NPART][DV_NLANE];
 static uint32_t drum_gm_part;                     /* (the part drum_gm is asked for: drum_note_on sets it) */
 static uint32_t drum_gm(const int16_t *p, uint32_t note, int32_t *st)
@@ -97,6 +99,9 @@ static uint32_t drum_gm(const int16_t *p, uint32_t note, int32_t *st)
     uint32_t n = note >= 35u && note <= 81u ? note : 36u + (note + 120u - 36u) % 12u, t = (uint32_t)DRUM_GM[n - 35u][0];
     uint32_t kit = drum_kit_plays(p[P_E0]);           /* STD, the model kits */
     uint32_t ov = drum_lane_ov[drum_gm_part % NPART][DV_TYPE_LANE[t]].kit;
+    *st = DRUM_GM[n - 35u][1];
+    if (ov == DRUM_OV_FM && (t == DVT_CYM || t == DVT_BELL))   /* (Sardine) the FM metals */
+        return t == DVT_BELL ? DVT_FMBELL : n == 51u || n == 59u ? DVT_FMRIDE : DVT_FMCRASH;
     if (ov == 1u) kit = DK_STD;
     else if (ov >= 2u && DK_80 + ov - 2u < DK_COUNT) kit = DK_80 + ov - 2u;
     *st = DRUM_GM[n - 35u][1];

@@ -207,6 +207,9 @@ typedef struct {
                                                      * by turns); the step of its bar */
     uint8_t crash_next;                             /* a crash on the next beat (a fill over) */
     bool brk_held, brk_on;                          /* ARP held: BREAK, the drums and the bass out; back on the next 1 */
+    uint8_t brk_bars;                               /* the bar lines BREAK has been held over */
+    uint8_t back_on, back_bar;                      /* after a long BREAK (4 bars or more): the drums back one by one
+                                                     * over two bars (back_bar: which of the two) */
     uint8_t solo;                                   /* the MIXER's SOLO: bit 0 LEAD 1 CHORD 2 BASS 3 DRUMS; none: all */
     bool sweep_held;                                /* LFO held: SWEEP, the mix's filter closing over two bars */
     float sweep;                                    /* 0..1: how far the filter is closed now (SWEEP held, INTRO, ARC) */

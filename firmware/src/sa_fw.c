@@ -436,11 +436,11 @@ static void sa_apply(void)
              * claps (80 55 77 66), the hiss down (kit: 2 the 80, 4 the 66, 5 the 55, 6 the 77, 7 DEEP) */
             static const drum_lane_ov_t CLAP[SA_DVARS] = {{2, 0, -6, -10}, {5, 0, -8, -30}, {6, 0, -10, 0}, {4, 3, 0, -12},
                                                            {2, -3, -10, -6}, {2, 0, 0, 0}, {6, 0, 0, 0}, {7, 0, 0, 0}};
-            /* METAL (ride, crash, cowbell): the synthesised metal is harsh as it is; every one darker (TONE well
-             * down) and softer, from the machines' own: STD, 77, DEEP, 80 */
-            static const drum_lane_ov_t METAL[SA_DVARS] = {{1, -2, -30, 4}, {6, 0, -26, -16}, {7, -3, -34, 20},
-                                                            {1, 2, -22, -6}, {7, -5, -36, 10}, {2, 0, -24, 0},
-                                                            {6, -2, -30, 6}, {7, 0, -28, 0}};
+            /* METAL (ride, crash, cowbell): FM, three sine pairs at inharmonic ratios (kit 15: drum_voice.c DV_FM),
+             * no samples; OLD the 77's synthesised metal, darker */
+            static const drum_lane_ov_t METAL[SA_DVARS] = {{15, 0, 0, 0}, {15, 0, -6, -30}, {15, -2, -4, 24},
+                                                            {15, 4, 10, -6}, {15, -5, -10, 10}, {15, 0, -24, 6},
+                                                            {15, 2, 20, 0}, {6, -2, -30, 6}};
             for (int r = 0; r < SA_DROWS; ++r) {
                 const sa_code *c = &s->code[SA_L_DRUM0 + r];
                 int vv = c->type == SA_T_DRUM ? c->amode % SA_DVARS : 0;
