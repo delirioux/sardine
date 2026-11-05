@@ -2,7 +2,7 @@
 
 # Sardine
 
-Live club mixing for the FM-1, six lanes packed in one can.
+Live club mixing for the FM-1, four layers packed in one can.
 
 Sardine is a custom firmware for the M-VAVE FM-1. Four layers, always there: LEAD, CHORD, BASS and DRUMS. PRESETS
 takes you from one to the next, FX through a layer's pages, and HOME back to all of them playing. A layer's sound acts
@@ -16,9 +16,12 @@ second colour, until SEQ drops them in on the one.
 - 81 synth sounds on Felucca's engines (bass, keys, pads, leads, FX, and an AMBIENT set of wide pads, dub stabs and a
   rumbling bass in a big hall) and twenty synthesised drum kits
 - 24 drum patterns and 29 synth patterns, straight, broken and triplet; FEEL swings them all together
+- FM metals (crash, cowbell), no samples; 3D sound: a layer in front, behind, above or flying around you
 - Held moves: a drum fill (ENV), a BREAK that drops back in on the 1 (ARP), a filter SWEEP (LFO)
 - Twenty styles, from NIGHT (slow and dark) to GABBER, a groove in one in a press; INTRO and ARC arrange it
-- A MIXER on GLO: every layer's volume and mute on the knobs
+- GLO: a MIXER (every layer's volume, mute and solo on the knobs), STYLE, and SONG: eight steps of sets played in turn
+- Tunes, not loops: the synth layers phrase over four bars (A A A' B); every groove has a PART B, its own lines and
+  chords, switched by hand or every 8 or 16 bars
 - The synth layers pump under the kick (PUMP), with REVERB, DELAY and WIDTH for the space they sit in
 - GATE: a held pad cut to a rhythm (twelve ready gates, edited on the keys); PAN: fixed, sweeping, ping-pong or random
 - An arpeggiator on every synth layer, off until you want it: ten modes, triplet rates, up to four octaves, always in the key
