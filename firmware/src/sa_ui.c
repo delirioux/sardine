@@ -319,6 +319,17 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         return;
     }
     case SV_PG_MIXER:
+        if (u->mixmute == 3) {                     /* STYLE INTRO ARC */
+            static const char *const IN[SA_INTROS] = {"OFF", "4 BARS", "8 BARS", "16 BARS"};
+            static const char *const AR[SA_ARCS] = {"OFF", "16 BARS", "32 BARS", "64 BARS"};
+            int k = sv_clampi(u->style_pick, 0, SAS_NSTYLES - 1);
+            sv_card_txt(&c[0], "STYLE", SAS_STYLE[k].name, k * 1000 / (SAS_NSTYLES - 1), k != s->style);
+            c[0].name = true;
+            sv_card_txt(&c[1], "INTRO", IN[s->intro % SA_INTROS], s->intro * 1000 / (SA_INTROS - 1), false);
+            sv_card_txt(&c[2], "ARC", AR[s->arc % SA_ARCS], s->arc * 1000 / (SA_ARCS - 1), false);
+            sv_card_off(&c[3]);
+            return;
+        }
         for (int i = 0; i < 4; ++i) {
             static const char *const N[4] = {"LEAD", "CHORD", "BASS", "DRUMS"};
             bool m = i < 3 ? s->live[i].mute : s->dmute, so = (g->solo >> i) & 1u;
@@ -541,7 +552,7 @@ static void sv_head_title(const sa_ui *u, char *t, unsigned n)
     case SV_PG_MAIN: sv_cpy(t, u->home2 ? "HOME  RESO WIDTH" : u->g->playing ? u->g->chord_name : "HOME", n); break;
     case SV_PG_KEY: sv_cpy(t, "KEY", n); break;
     case SV_PG_SETS: sv_cpy(t, "SETS", n); break;
-    case SV_PG_MIXER: sv_cpy(t, u->mixmute == 2 ? "MIXER  SOLO" : u->mixmute ? "MIXER  MUTE" : "MIXER", n); break;
+    case SV_PG_MIXER: sv_cpy(t, u->mixmute == 3 ? "STYLE" : u->mixmute == 2 ? "MIXER  SOLO" : u->mixmute ? "MIXER  MUTE" : "MIXER", n); break;
     case SV_PG_EDIT:
         sv_cpy(t, SV_VIEW_NAME[u->view], n);
         sv_cat(t, u->rec ? "  EDIT  REC" : "  EDIT", n);
@@ -625,7 +636,8 @@ static void sv_draw_foot(sa_ui *u)
     } else if (u->page == SV_PG_EDIT) {
         sv_cpy(r, u->rec ? "KEYS: WRITE" : "REC: WRITE", sizeof r);
     } else if (u->page == SV_PG_MIXER) {
-        sv_cpy(r, u->mixmute == 2 ? "FX: VOLUME" : u->mixmute ? "FX: SOLO" : "FX: MUTE", sizeof r);
+        sv_cpy(r, u->mixmute == 3 ? (u->g->set_next ? "IN ON THE 1" : "SEQ: A NEW GROOVE") : u->mixmute == 2 ? "FX: STYLE" :
+                  u->mixmute ? "FX: SOLO" : "FX: MUTE", sizeof r);
     }
     uint32_t sig = sv_hash(sv_hash((uint32_t)(now + 1) * 7u + (uint32_t)g->playing * 3u + ux.gen * 11u +
                                    (uint32_t)u->fx * 101u + (uint32_t)np * 1009u, l), r);
@@ -1176,8 +1188,27 @@ static void sv_panel_layer(sa_ui *u)
 }
 
 /* the MIXER: a fader each (LEAD CHORD BASS DRUMS), a dot lit as it plays; muted ones dark */
+static void sv_panel_style(sa_ui *u)
+{
+    const sa_settings *s = &u->g->s;
+    int k = sv_clampi(u->style_pick, 0, SAS_NSTYLES - 1);
+    char t[40], a[8];
+    cv_free_text(10, 6, &AF_M, SAS_STYLE[k].name, T_THEME, T_SURF, 220);
+    cv_free_text(10, 30, &AF_S, SAS_STYLE[k].say, T_TEXT, T_SURF, 220);
+    sv_fmt_int(t, SAS_STYLE[k].bpm_lo);
+    sv_cat(t, "-", sizeof t);
+    sv_fmt_int(a, SAS_STYLE[k].bpm_hi);
+    sv_cat(t, a, sizeof t);
+    sv_cat(t, " BPM", sizeof t);
+    sv_label(10, 46, t, T_MID);
+    sv_label(10, 66, "SEQ: A FRESH GROOVE IN IT, ON THE 1", T_DIM);
+    sv_label(10, 86, s->intro ? "INTRO: THE LAYERS COME IN FROM PLAY" : "INTRO OFF: ALL IN FROM PLAY", T_DIM);
+    sv_label(10, 102, s->arc ? "ARC: GROOVE, BREAK, BUILD, DROP" : "ARC OFF: THE GROOVE AS IT IS", T_DIM);
+}
+
 static void sv_panel_mixer(sa_ui *u)
 {
+    if (u->mixmute == 3) { sv_panel_style(u); return; }
     const sa_groove *g = u->g;
     const sa_settings *s = &g->s;
     static const char *const N[4] = {"LEAD", "CHORD", "BASS", "DRUMS"};
@@ -1530,6 +1561,12 @@ void sv_knob(sa_ui *u, int k, int d)
         return;
     case SV_PG_MIXER:
         u->changed = true;
+        if (u->mixmute == 3) {                     /* STYLE (SEQ makes it), INTRO, ARC */
+            if (i == 0) u->style_pick = sv_clampi(u->style_pick + d, 0, SAS_NSTYLES - 1);
+            else if (i == 1) s->intro = (uint8_t)sv_clampi(s->intro + d, 0, SA_INTROS - 1);
+            else if (i == 2) s->arc = (uint8_t)sv_clampi(s->arc + d, 0, SA_ARCS - 1);
+            return;
+        }
         if (u->mixmute == 2) {                     /* SOLO: right on, left off (not kept: a live move) */
             if (d > 0) g->solo |= (uint8_t)(1u << i);
             else g->solo &= (uint8_t)~(1u << i);
@@ -1689,7 +1726,12 @@ void sv_button(sa_ui *u, int b, bool down)
         return;
     switch (b) {
     case SV_B_PLAY: sa_play(g, !g->playing); break;
-    case SV_B_SEQ:                                 /* drop what waits */
+    case SV_B_SEQ:                                 /* drop what waits; on STYLE: a fresh groove in it */
+        if (u->page == SV_PG_MIXER && u->mixmute == 3) {
+            u->req_act = SV_SA_STYLE;
+            u->req_slot = sv_clampi(u->style_pick, 0, SAS_NSTYLES - 1);
+            break;
+        }
         sa_drop(g);
         u->changed = true;
         break;
@@ -1743,7 +1785,8 @@ void sv_button(sa_ui *u, int b, bool down)
             break;
         }
         if (u->page == SV_PG_MIXER) {
-            u->mixmute = (u->mixmute + 1) % 3;     /* VOLUME, MUTE, SOLO */
+            u->mixmute = (u->mixmute + 1) % 4;     /* VOLUME, MUTE, SOLO, STYLE */
+            if (u->mixmute == 3) u->style_pick = g->s.style;
             u->force = true;
             break;
         }

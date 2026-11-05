@@ -303,6 +303,31 @@ int main(void)
         sa_play(&g, false);
     }
 
+    /* INTRO: the kick first, the others coming in; ARC: its break, and the drop */
+    sa_init(&g, SR);
+    sa_set_sound(&g, snd, 0);
+    g.s.intro = 2;                                  /* 8 bars */
+    g.s.arc = 1;                                    /* 16 bars */
+    sa_play(&g, true);
+    clear_log();
+    run_bars(&g, 1);
+    CHECK(LG.on[3][36] == 4 && LG.per_part[2] == 0 && LG.per_part[1] == 0, "INTRO bar 1: the kick alone (%d %d %d)",
+          LG.on[3][36], LG.per_part[2], LG.per_part[1]);
+    CHECK(g.sweep > 0.5f, "INTRO: the filter closed at first");
+    run_bars(&g, 7);
+    clear_log();
+    run_bars(&g, 1);
+    CHECK(LG.per_part[2] > 0 && LG.per_part[1] > 0, "after INTRO: bass and chord in");
+    run_bars(&g, 8);
+    clear_log();
+    run_bars(&g, 2);
+    CHECK(LG.on[3][36] == 0 && LG.per_part[2] == 0 && LG.per_part[1] > 0, "ARC: the break, the chord alone");
+    run_bars(&g, 6);
+    clear_log();
+    run_bars(&g, 1);
+    CHECK(LG.on[3][36] == 4, "ARC: the drop, the kick back");
+    sa_play(&g, false);
+
     /* every pattern with every modifier, two bars: no crash, notes within the bar */
     sa_init(&g, SR);
     sa_set_sound(&g, snd, 0);

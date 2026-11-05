@@ -1133,6 +1133,8 @@ void sa_settings_fix(sa_settings *s)
         s->d3rate[p] = (uint8_t)(s->d3rate[p] % SA_PRATES);
         s->dvol = (uint8_t)clampi(s->dvol, 0, 100);
         s->mreso = (uint8_t)clampi(s->mreso, 0, 100);
+        s->intro %= SA_INTROS;
+        s->arc %= SA_ARCS;
         s->dmute = (uint8_t)(s->dmute ? 1 : 0);
         d->az %= SA_AZ_STEPS;
         d->el = (int8_t)clampi(d->el, -50, 50);
@@ -1425,12 +1427,15 @@ void sa_set_arm(sa_groove *g, const sa_settings *s)
     }
 }
 
+static void arrange(sa_groove *g);
 static void bar_line(sa_groove *g)
 {
     for (int l = 0; l < SA_LAYERS; ++l) {
         g->hits_last[l] = g->hits[l];
         g->hits[l] = 0;
     }
+    if (g->arr_fill && !g->fill_held) g->fill_on = 0;   /* (ARC's roll: over on the 1) */
+    arrange(g);
     if (g->brk_on && !g->brk_held) {               /* BREAK let go: everything back on this 1 */
         g->brk_on = false;
         msg(g, "DROP");
@@ -1454,6 +1459,9 @@ void sa_play(sa_groove *g, bool on)
     g->wait = 0.0f;
     g->tick = SA_TPB - 1;                          /* the first tick wraps into bar 0 (its bar line) */
     g->bar = -1;
+    g->arr_out = 0;
+    g->arr_brk = g->arr_fill = false;
+    g->arr_sw0 = g->arr_sw1 = 0.0f;
     if (!on) {
         g->tick = -1;
         g->bar = 0;
@@ -1496,7 +1504,37 @@ void sa_break(sa_groove *g, bool down)
 void sa_sweep(sa_groove *g, bool down)
 {
     g->sweep_held = down;
-    if (!down) g->sweep = 0.0f;                    /* (let go: open at once) */
+    if (!down) g->sweep_man = 0.0f;                /* (let go: open at once) */
+}
+int sa_intro_bars(int i) { static const uint8_t B[SA_INTROS] = {0, 4, 8, 16}; return B[clampi(i, 0, SA_INTROS - 1)]; }
+int sa_arc_bars(int i) { static const uint8_t B[SA_ARCS] = {0, 16, 32, 64}; return B[clampi(i, 0, SA_ARCS - 1)]; }
+/* INTRO and ARC, on each bar line: INTRO, from PLAY: the kick first, the other drums at a quarter of it, BASS at half,
+ * CHORD at three quarters, LEAD at its end, the filter opening over it. ARC, after it, a cycle: the groove for half,
+ * a break (drums and bass out) for a quarter, a build (the filter closing) for the last quarter, a roll on its last
+ * half bar, and the drop on the next 1 */
+static void arrange(sa_groove *g)
+{
+    int n = sa_intro_bars(g->s.intro), len = sa_arc_bars(g->s.arc), b = g->bar < 0 ? 0 : g->bar;
+    g->arr_out = 0;
+    g->arr_brk = g->arr_fill = false;
+    g->arr_sw0 = g->arr_sw1 = 0.0f;
+    if (b < n) {
+        for (int l = 0; l < SA_LAYERS; ++l) {
+            int at = l == SA_L_DRUM0 + SA_DR_KICK ? 0 : l >= SA_L_DRUM0 ? n / 4 : l == SA_L_BASS ? n / 2 :
+                     l == SA_L_CHORD ? 3 * n / 4 : n;
+            if (b < at) g->arr_out |= (uint16_t)(1u << l);
+        }
+        g->arr_sw0 = 0.8f * (1.0f - (float)b / (float)n);
+        g->arr_sw1 = 0.8f * (1.0f - (float)(b + 1) / (float)n);
+    } else if (len) {
+        int p = (b - n) % len, q = len / 4;
+        if (p >= len / 2 && p < 3 * q) g->arr_brk = true;
+        if (p >= 3 * q) {
+            g->arr_sw0 = 0.7f * (float)(p - 3 * q) / (float)q;
+            g->arr_sw1 = 0.7f * (float)(p - 3 * q + 1) / (float)q;
+        }
+        if (p == len - 1) g->arr_fill = true;
+    }
 }
 static int row_gm(const sa_groove *g, int row, int dv)   /* the row's drum as it is, or dv when the row has none */
 {
@@ -1530,6 +1568,11 @@ static void do_tick(sa_groove *g)
     }
     int t = g->tick;
     float tf = tick_frames(g);
+    if (t == 48 && g->arr_fill && !g->fill_on) {   /* ARC: a roll on the last half bar */
+        g->fill_on = 1;
+        g->fill_step = 8;
+        g->fill_kind = 0;
+    }
     if (t % 24 == 0 && g->fill_held && !g->fill_on) {   /* the fill: from the beat after ENV went down */
         g->fill_on = 1;
         g->fill_step = 0;
@@ -1549,7 +1592,8 @@ static void do_tick(sa_groove *g)
         const sa_code *c = &g->s.code[b->layer];
         if (c->type == SA_T_NONE || g->s.live[b->layer].mute) continue;
         if (c->type == SA_T_DRUM && g->fill_on) continue;   /* (the fill plays in place of the drums) */
-        if (g->brk_on && (c->type == SA_T_DRUM || b->layer == SA_L_BASS)) continue;   /* BREAK: out */
+        if ((g->brk_on || g->arr_brk) && (c->type == SA_T_DRUM || b->layer == SA_L_BASS)) continue;   /* BREAK: out */
+        if ((g->arr_out >> b->layer) & 1u) continue;   /* INTRO: not in yet */
         if (g->solo && !((g->solo >> (c->type == SA_T_DRUM ? 3 : b->layer)) & 1u)) continue;   /* SOLO: the others out */
         int part = c->type == SA_T_DRUM ? SA_PART_DRUMS : c->part;
         uint32_t len = c->type == SA_T_DRUM ? (uint32_t)(g->sr * (c->sound == SA_DV_CRASH ? 1.0f :
@@ -1601,10 +1645,15 @@ static void pump_block(sa_groove *g)
 
 void sa_process(sa_groove *g, int frames)
 {
-    if (g->sweep_held && g->sweep < 1.0f) {        /* SWEEP: closing over two bars */
+    if (g->sweep_held && g->sweep_man < 1.0f) {    /* SWEEP: closing over two bars */
         float bars2 = 2.0f * 4.0f * 60.0f / (float)clampi(g->s.bpm, 60, 200) * g->sr;
-        g->sweep += (float)frames / bars2;
-        if (g->sweep > 1.0f) g->sweep = 1.0f;
+        g->sweep_man += (float)frames / bars2;
+        if (g->sweep_man > 1.0f) g->sweep_man = 1.0f;
+    }
+    {   /* INTRO, ARC: their sweep over the bar; the deeper of the two */
+        float a = g->playing ? g->arr_sw0 + (g->arr_sw1 - g->arr_sw0) * (float)(g->tick < 0 ? 0 : g->tick) / (float)SA_TPB
+                             : 0.0f;
+        g->sweep = g->sweep_man > a ? g->sweep_man : a;
     }
     if (!g->playing) {
         for (int p = 0; p < SA_SYNTHS; ++p) { g->duck[p] = 0; g->gate_gain[p] = 1.0f; g->gate_off[p] = 0; }

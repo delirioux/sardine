@@ -155,6 +155,8 @@ typedef struct {
     uint8_t d3rate[SA_SYNTHS];                      /* 0.7: 3D's RATE (ORBIT, FLY) */
     uint8_t dvol, dmute;                            /* 0.7: the MIXER's DRUMS, all the drums (80: as it is) */
     uint8_t mreso;                                  /* 0.7: HOME's RESO, on the whole mix's filter (each synth layer's) */
+    uint8_t style, intro, arc;                      /* 0.7: the STYLE last dropped; INTRO 0 OFF, 1..3 4 8 16 bars; ARC 0 OFF,
+                                                     * 1..3 a cycle of 16 32 64 bars */
 } sa_settings;
 
 typedef struct {
@@ -205,7 +207,11 @@ typedef struct {
     bool brk_held, brk_on;                          /* ARP held: BREAK, the drums and the bass out; back on the next 1 */
     uint8_t solo;                                   /* the MIXER's SOLO: bit 0 LEAD 1 CHORD 2 BASS 3 DRUMS; none: all */
     bool sweep_held;                                /* LFO held: SWEEP, the mix's filter closing over two bars */
-    float sweep;                                    /* 0..1: how far it has closed (let go: open at once) */
+    float sweep;                                    /* 0..1: how far the filter is closed now (SWEEP held, INTRO, ARC) */
+    float sweep_man;                                /* SWEEP held: its own (let go: 0) */
+    float arr_sw0, arr_sw1;                         /* INTRO, ARC: the sweep over this bar, from .. to */
+    uint16_t arr_out;                               /* INTRO: the layers not in yet (a bit per slot) */
+    bool arr_brk, arr_fill;                         /* ARC: its break (drums and bass out), its fill (the last half bar) */
     uint8_t az_now[SA_SYNTHS];                      /* 3D: each synth part's angle and height now (moving: ORBIT RANDOM FLY) */
     int8_t el_now[SA_SYNTHS];
     uint8_t pan_side[SA_LAYERS];                    /* PING-PONG: the side the next note goes to */
@@ -247,7 +253,11 @@ void sa_fill(sa_groove *g, bool down);              /* the drum fill button: hel
                                                      * the drums; let go: the groove again */
 const char *sa_fill_name(int kind);
 void sa_break(sa_groove *g, bool down);             /* BREAK: held, the drums and the bass out at once; let go: in on the 1 */
-void sa_sweep(sa_groove *g, bool down);             /* SWEEP: held, the filter closes over two bars; let go: open at once */
+void sa_sweep(sa_groove *g, bool down);
+#define SA_INTROS 4                                 /* INTRO: OFF, 4, 8, 16 bars */
+#define SA_ARCS 4                                   /* ARC: OFF, 16, 32, 64 bars */
+int sa_intro_bars(int i);
+int sa_arc_bars(int i);             /* SWEEP: held, the filter closes over two bars; let go: open at once */
 /* a whole groove in (a set loaded, a fresh one): playing, on the next bar line; stopped, at once. What waits for REC
  * goes, the colour and the look stay. s is read on the bar line: the caller keeps it until then */
 void sa_set_arm(sa_groove *g, const sa_settings *s);

@@ -17,6 +17,7 @@ second colour, until SEQ drops them in on the one.
   rumbling bass in a big hall) and twenty synthesised drum kits
 - 24 drum patterns and 29 synth patterns, straight, broken and triplet; FEEL swings them all together
 - Held moves: a drum fill (ENV), a BREAK that drops back in on the 1 (ARP), a filter SWEEP (LFO)
+- Twenty styles, from NIGHT (slow and dark) to GABBER, a groove in one in a press; INTRO and ARC arrange it
 - A MIXER on GLO: every layer's volume and mute on the knobs
 - The synth layers pump under the kick (PUMP), with REVERB, DELAY and WIDTH for the space they sit in
 - GATE: a held pad cut to a rhythm (twelve ready gates, edited on the keys); PAN: fixed, sweeping, ping-pong or random

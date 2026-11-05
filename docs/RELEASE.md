@@ -6,6 +6,8 @@ Sardine 0.7: live club mixing for the FM-1.
   the keys write the steps
 - ENV held: a drum fill from the next beat, a different one each time; ARP held: BREAK, the drums and bass out,
   back in on the 1; LFO held: SWEEP, the filter closing over two bars
+- STYLE: twenty styles (NIGHT, FILTER, DEEP, TECH, MINIMAL, TECHNO, HARD, GABBER, ACID, TRANCE, PROG, DISCO, AFRO,
+  GARAGE, BREAKS, DUB, AMBIENT, ELECTRO, HAPPY, LOFI), a fresh groove in one on SEQ; INTRO and ARC
 - GLO: a MIXER, the four layers' volumes and mutes
 - SELECT is the tempo, ALGORITHM the pattern; SEQ drops what waits on the one; REC records steps on the keys
 - DRUMS: seven rows on channels of their own (KICK SNARE CLAP HATS TOMS RIM METAL), each drum switched at once, in eight variations (TIGHT ROOM HIGH LOW, 80 10 DEEP);

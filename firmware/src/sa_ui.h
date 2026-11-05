@@ -30,7 +30,8 @@
  *              BUILD TOMS STUTTER); let go: the groove again
  *   ARP        held: BREAK, the drums and the bass out at once; let go: back in on the next 1
  *   LFO        held: SWEEP, the whole mix's filter closing over two bars; let go: open at once
- *   GLO        the MIXER (LEAD CHORD BASS DRUMS: their VOLUME; FX: their MUTE, again: their SOLO), again: back
+ *   GLO        the MIXER (LEAD CHORD BASS DRUMS: their VOLUME; FX: their MUTE, again: their SOLO, again: STYLE INTRO
+ *              ARC: SEQ a fresh groove in the STYLE, on the 1), again: back
  *   HOME       HOME; held: MENU (colour, look)
  *   keys       the layer open, live (HOME: LEAD), snapped to the scale; REC: its steps. Music and steps only
  *   OCT- OCT+  the keys' octave */
@@ -57,7 +58,7 @@ enum { SVP_HOME, SVP_SOUND, SVP_ARP, SVP_PAN, SVP_GATE, SVP_MOD, SVP_MIX, SVP_KI
 #define SV_SETS 8
 #define SV_LAST SV_SETS                       /* the ninth slot: the last groove, kept by itself (LOAD only) */
 #define SV_SLOTS (SV_SETS + 1)
-enum { SV_SA_LOAD, SV_SA_STORE, SV_SA_NEW, SV_SA_CLEAR, SV_SA_ACTS };
+enum { SV_SA_LOAD, SV_SA_STORE, SV_SA_NEW, SV_SA_CLEAR, SV_SA_ACTS, SV_SA_STYLE = 9 };   /* (STYLE: the MIXER's 4th page) */
 typedef struct {
     uint8_t used, bpm, key, scale, kit, nsyn;
     uint8_t snd[SA_SYNTHS];                           /* its synth layers' sounds */
@@ -75,7 +76,8 @@ typedef struct {
     int back;                             /* the page KEY goes back to */
     int mback;                            /* the page the MIXER goes back to */
     bool home2;                           /* HOME's second page (FX): RESO, WIDTH */
-    int mixmute;                          /* the MIXER's knobs: 0 VOLUME, 1 MUTE, 2 SOLO (FX turns them over) */
+    int mixmute;                          /* the MIXER's knobs: 0 VOLUME, 1 MUTE, 2 SOLO, 3 STYLE (FX turns them over) */
+    int style_pick;                       /* the MIXER's STYLE page: the style SEQ makes a groove in */
     int scur;                             /* REC on a synth layer, EDIT: the step the keys write */
     int fill;                             /* EDIT: KNOB 2's FILL (0 CURR: the pattern as it was) */
     sa_code fill_orig;                    /* EDIT: the pattern as it was when EDIT opened (CURR) */

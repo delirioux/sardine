@@ -514,7 +514,29 @@ int main(int argc, char **argv)
     bars(1);
     CHECK(g.sweep > 0.3f && g.sweep < 0.8f, "SWEEP: half closed after a bar (%d %%)", (int)(g.sweep * 100.0f));
     sv_button(&ui, SV_B_LFO, false);
-    CHECK(g.sweep == 0.0f, "let go: open");
+    CHECK(g.sweep_man == 0.0f, "let go: open");
+    /* the STYLEs: every name they use there */
+    for (int k = 0; k < SAS_NSTYLES; ++k) {
+        const sas_style *y = &SAS_STYLE[k];
+        const char *snd[6] = {y->bass[0], y->bass[1], y->chord[0], y->chord[1], y->lead[0], y->lead[1]};
+        const char *pat[6] = {y->bpat[0], y->bpat[1], y->cpat[0], y->cpat[1], y->lpat[0], y->lpat[1]};
+        for (int i = 0; i < 6; ++i) {
+            CHECK(!snd[i] || sas_find(snd[i]) >= 0, "style %s: the sound %s", y->name, snd[i] ? snd[i] : "");
+            CHECK(!pat[i] || sas_pat(SA_T_SYNTH, pat[i]) >= 0, "style %s: the pattern %s", y->name, pat[i] ? pat[i] : "");
+        }
+        CHECK(sas_pat(SA_T_DRUM, y->kick) >= 0 && sas_pat(SA_T_DRUM, y->hats) >= 0 && (!y->xpat || sas_pat(SA_T_DRUM, y->xpat) >= 0),
+              "style %s: its drum patterns", y->name);
+        CHECK(y->bpm_lo <= y->bpm_hi && y->bpm_hi <= 200, "style %s: its tempo", y->name);
+    }
+    CHECK(SAS_NSTYLES == 20, "twenty styles (%d)", SAS_NSTYLES);
+    {
+        sa_pool pool;
+        sa_settings t;
+        sas_pool_make(&pool);
+        sas_style_apply(&t, 8, 3, &pool);          /* ACID */
+        CHECK(!strcmp(sas_of(t.code[SA_L_BASS].sound)->name, "ACID") && t.bpm >= 128 && t.bpm <= 134 && t.style == 8,
+              "ACID: the ACID bass, its tempo (%s %d)", sas_of(t.code[SA_L_BASS].sound)->name, t.bpm);
+    }
     /* the MIXER on GLO: the four volumes, FX: their mutes */
     press(SV_B_GLO);
     CHECK(ui.page == SV_PG_MIXER && sv_page_button(&ui) == SV_B_GLO, "GLO: MIXER");
@@ -540,6 +562,19 @@ int main(int argc, char **argv)
     shot("18g_mixer_solo");
     sv_knob(&ui, SV_K3, -1);
     CHECK(g.solo == 0, "SOLO off: all");
+    press(SV_B_FX);
+    CHECK(ui.mixmute == 3, "MIXER, FX three times: STYLE");
+    sv_knob(&ui, SV_K1, 5);
+    sv_knob(&ui, SV_K2, 2);
+    sv_knob(&ui, SV_K3, 1);
+    CHECK(g.s.intro == 2 && g.s.arc == 1, "INTRO 8 BARS, ARC 16 BARS");
+    shot("18h_style");
+    all_palettes("style");
+    press(SV_B_SEQ);
+    CHECK(ui.req_act == SV_SA_STYLE && ui.req_slot == ui.style_pick, "SEQ: a groove in the style asked");
+    ui.req_act = -1;
+    g.s.intro = g.s.arc = 0;
+    press(SV_B_FX);
     press(SV_B_GLO);
     CHECK(ui.page == SV_PG_MAIN, "GLO again: back HOME");
     g.s.dvol = 80;

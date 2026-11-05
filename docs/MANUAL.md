@@ -192,6 +192,34 @@ until the next 1, where everything comes back in: the drop. Hold **LFO** for a *
 over two bars (as far as FILTER at about 15), its resonance rising as it goes; let go and it is open again at once. Together with the fill on ENV: the
 build, the fill and the drop.
 
+## STYLE, INTRO and ARC
+
+<p align="center">
+<img src="screens/style.png" alt="STYLE" width="200">
+</p>
+
+On the MIXER (GLO), **FX** a third time: **STYLE**, **INTRO**, **ARC**. **KNOB 1** picks a style, **SEQ** makes a fresh
+groove in it, on the next 1 (stopped: at once): its tempo, kit, scale, swing, pump, room and filter, a bass, a chord
+and now and then a lead of its kind, its drums.
+
+| Style | | Style | |
+| --- | --- | --- | --- |
+| NIGHT | slow, dark, filtered (98-104) | DISCO | bright, strings and bass (116-120) |
+| FILTER | French touch, filtered disco (122-126) | AFRO | afro house, percussive (120-124) |
+| DEEP | warm, soft deep house (120-122) | GARAGE | 2-step, swung (130-134) |
+| TECH | tech house, rolling (124-127) | BREAKS | broken beats, rave (128-132) |
+| MINIMAL | sparse, clicky (124-126) | DUB | dub techno, echoes (118-122) |
+| TECHNO | dark, driving (128-132) | AMBIENT | space, barely a beat (88-96) |
+| HARD | hard techno (140-148) | ELECTRO | robotic, broken (126-130) |
+| GABBER | hardcore, distorted (170-180) | HAPPY | bright, euro, hands up (138-142) |
+| ACID | a 303 line (128-134) | LOFI | lo-fi house, dusty (116-120) |
+| TRANCE | uplifting, wide (136-140) | PROG | progressive, building (122-124) |
+
+**INTRO** (OFF, 4, 8, 16 bars): from PLAY the layers come in one by one, the kick first, the other drums at a quarter,
+BASS at half, CHORD at three quarters, LEAD at the end, the filter opening over it. **ARC** (OFF, 16, 32, 64 bars):
+after the intro a cycle, the groove for half, a break (drums and bass out) for a quarter, a build (the filter closing)
+for the last quarter with a roll on its last half bar, and the drop on the next 1. Both are kept with the groove.
+
 ## The modifiers
 
 They act in order, each on what the ones before it made, and on time itself, not on single steps:
