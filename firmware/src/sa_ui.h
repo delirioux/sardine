@@ -3,32 +3,37 @@
  * family's frame (the header, four knob cards, the panel, the footer). Compiled after gfx.c in one unit (the firmware's
  * felucca.c through sa_fw.c, or a host test).
  *
- * The screens: MAIN (the whole stack), DRUMS (every drum layer, a row each, their steps on the keys), one screen per
- * synth layer, NEW (a synth layer, past the last one); on a synth layer its ARP and STEPS pages; the KEY page; SETS;
- * MENU.
+ * The layers (0.7), always there, each can be OFF: LEAD, CHORD, BASS (a synth part each) and DRUMS (every drum on the
+ * kit). HOME shows them all playing. On a layer the FX button turns through its pages, from its home page; another
+ * layer always opens on its home page.
  *
  * The controls
- *   SELECT     through the screens: MAIN, DRUMS, each synth layer, NEW
- *   MASTER     volume (Felucca's)
- *   KNOB 1..4  MAIN: TEMPO FILTER FEEL KIT; SPACE (HOME on MAIN): PUMP REVERB DELAY WIDTH. A synth layer: CUTOFF RESO DRIVE ENV; a drum layer: LEVEL, and the kit's
- *              TUNE TONE DECAY. At once
- *   PRESETS    a layer: picks a chip of its code (SOUND, PATTERN, the modifiers, +, ARP); DRUMS: picks a row
- *   ALGORITHM  a layer: changes the chip picked; DRUMS: the row's pattern (+ ADD A DRUM: a new drum). In the copy:
- *              REC drops it
- *   EDIT       DRUMS: the row picked as a layer screen (its modifiers), again: back
- *   SEQ        a synth layer: STEPS (KNOB 1 the step, KNOB 2 its length, a key its note), again: back
- *   LFO        a synth layer: PAN (MODE: FIXED SWEEP PING-PONG RANDOM, PAN, WIDTH, RATE; at once), again: back
- *   ENV        a synth layer: GATE (KNOB 1 a ready gate, DEPTH WIDTH SMOOTH; the lowest 16 keys its steps), again: back
- *   REC        drop the copy in: playing, on the next bar line; stopped, at once
+ *   SELECT     the tempo, everywhere
+ *   PRESETS    HOME, LEAD, CHORD, BASS, DRUMS
+ *   ALGORITHM  the pattern of the layer (OFF first; a drum: OFF, then REMOVE; + ADD: which drum). Waits for SEQ
+ *   KNOB 1..4  HOME: FILTER FEEL PUMP SPACE (FX: RESO WIDTH). A synth layer's pages: its home CUTOFF RESO DRIVE ENV (at once);
+ *              SOUND (TYPE, SOUND, PUMP: at once); ARP (MODE RATE RANGE GATE); PAN (at once); 3D (MODE: OFF FIXED
+ *              ORBIT RANDOM FLY, ANGLE or RATE, HEIGHT, DISTANCE: at once, headphones); PUMP (DEPTH RELEASE SOURCE ON, at once); GATE; MOD (the
+ *              four modifiers); MIX (MUTE, LEVEL: at once). DRUMS: DRUM LEVEL ACCENT CHANCE; KIT (KIT TUNE TONE DECAY);
+ *              MOD; MIX
+ *   FX         a layer: its next page (the last: back to its home)
+ *   SEQ        drop what waits (pattern, steps, modifiers, ARP, GATE, the key): playing, on the next bar line
+ *   REC        step recording on a layer, on and off: a synth layer's steps (KNOB 1 the step, KNOB 2 its length, a
+ *              key its note), a drum's 16 steps on the lowest keys, on GATE the gate's steps
  *   PLAY       start / stop
- *   FX         a layer, a DRUMS row: mute it (at once)
- *   ARP        a synth layer: its ARP page (MODE RATE RANGE GATE), again: back
  *   SCL        the KEY page (KEY SCALE CHORDS BARS), again: back
- *   SAVE       SETS: eight grooves kept in the flash and LAST, the last one kept by itself (KNOB 1 or PRESETS the
- *              set, KNOB 2 LOAD STORE NEW CLEAR, REC does it; a load or a new groove goes in on the one), again: back
- *   HOME       MAIN, on MAIN: SPACE and back; held: MENU (colour, look)
- *   keys       the open layer, live (snapped to the scale); DRUMS: the lowest 16 are the row's steps (a hit on, off),
- *              the others play it; STEPS: the step's note. Music and steps only
+ *   SAVE       SETS (eight sets and LAST), again: back
+ *   EDIT       a layer's pattern editor: KNOB 1 the step, KNOB 2 FILL (CURR, the pattern as it was, or a ready fill:
+ *              a line, a drum fill), KNOB 3 its LENGTH (a drum: its HIT); REC: a key writes the step (a drum: the 16
+ *              lowest keys its steps, lit); again: back
+ *   ENV        held: a drum fill from the next beat, in place of the drums, a different one each time (ROLL SNARE
+ *              BUILD TOMS STUTTER); let go: the groove again
+ *   ARP        held: BREAK, the drums and the bass out at once; let go: back in on the next 1
+ *   LFO        held: SWEEP, the whole mix's filter closing over two bars; let go: open at once
+ *   GLO        GLOBAL, each press its next page: the MIXER (LEAD CHORD BASS DRUMS: their VOLUME), their MUTE, their
+ *              SOLO, STYLE INTRO ARC (SEQ: a fresh groove in the STYLE, on the 1); past the last: back
+ *   HOME       HOME; held: MENU (colour, look)
+ *   keys       the layer open, live (HOME: LEAD), snapped to the scale; REC: its steps. Music and steps only
  *   OCT- OCT+  the keys' octave */
 #ifndef SA_UI_H
 #define SA_UI_H
@@ -43,8 +48,9 @@ enum {
     SV_B_HOME, SV_B_SAVE, SV_B_ARP, SV_B_SEQ, SV_B_PLAY, SV_B_REC,
     SV_B_OCTDN, SV_B_OCTUP, SV_BUTTONS
 };
-enum { SV_PG_MAIN, SV_PG_LAYER, SV_PG_ARP, SV_PG_KEY, SV_PG_MENU, SV_PG_DRUMS, SV_PG_STEPS, SV_PG_GATE, SV_PG_PAN,
-       SV_PG_SETS, SV_PAGES };
+enum { SV_PG_MAIN, SV_PG_LAYER, SV_PG_KEY, SV_PG_MENU, SV_PG_SETS, SV_PG_MIXER, SV_PG_EDIT, SV_PAGES };
+enum { SV_V_HOME, SV_V_LEAD, SV_V_CHORD, SV_V_BASS, SV_V_DRUMS, SV_VIEWS };       /* what PRESETS turns through */
+enum { SVP_HOME, SVP_SOUND, SVP_ARP, SVP_PAN, SVP_GATE, SVP_MOD, SVP_MIX, SVP_KIT, SVP_3D, SVP_PUMP };  /* a layer's pages (FX) */
 #define SV_KEY_LO 53                      /* F3: the FM-1's lowest key */
 #define SV_KEY_HI 79                      /* G5 */
 
@@ -52,23 +58,44 @@ enum { SV_PG_MAIN, SV_PG_LAYER, SV_PG_ARP, SV_PG_KEY, SV_PG_MENU, SV_PG_DRUMS, S
 #define SV_SETS 8
 #define SV_LAST SV_SETS                       /* the ninth slot: the last groove, kept by itself (LOAD only) */
 #define SV_SLOTS (SV_SETS + 1)
-enum { SV_SA_LOAD, SV_SA_STORE, SV_SA_NEW, SV_SA_CLEAR, SV_SA_ACTS };
+enum { SV_SA_LOAD, SV_SA_STORE, SV_SA_NEW, SV_SA_CLEAR, SV_SA_ACTS, SV_SA_STYLE = 9 };   /* (STYLE: the MIXER's 4th page) */
 typedef struct {
     uint8_t used, bpm, key, scale, kit, nsyn;
     uint8_t snd[SA_SYNTHS];                           /* its synth layers' sounds */
     uint8_t wait;                                     /* stored while playing: written once stopped */
 } sv_set_info;
 
+/* SONG (GLO's 5th page): up to eight steps, each a set for a number of bars, played in turn round and round
+ * while SONG is ON (the glue loads each on its bar line); kept with the preferences */
+#define SV_STEPS 8
+#define SV_SONG_BARS 5                        /* 4 8 16 32 64 */
+typedef struct {
+    uint8_t set[SV_STEPS];                    /* 0: END (nothing), 1..8 the set */
+    uint8_t bars[SV_STEPS];                   /* 0..4: 4 8 16 32 64 bars */
+    uint8_t on, pad[3];
+} sv_song;
+int sv_song_bars(int i);
+void sv_song_default(sv_song *s);
+
 typedef struct {
     sa_groove *g;
     int page;
-    int layer;                            /* the layer open (SV_PG_LAYER, SV_PG_ARP); -1 on MAIN */
+    int view;                             /* SV_V_*: the layer open (HOME: none) */
+    int fx;                               /* the page of it FX turned to (0: its home) */
+    bool rec;                             /* REC: step recording */
+    int layer;                            /* the layer's slot (DRUMS: the drum picked; -1: + ADD) */
+    int drow;                             /* DRUMS: the row picked (the last one: + ADD) */
     int back;                             /* the page KEY goes back to */
-    int drow;                             /* DRUMS: the row picked (the last one: + ADD A DRUM) */
-    bool space;                           /* MAIN's second page: SPACE (PUMP REVERB DELAY WIDTH) */
-    bool from_drums;                      /* the layer open came from DRUMS (EDIT goes back there) */
-    int scur;                             /* STEPS: the step the keys write */
-    int chip;                             /* the chip PRESETS picked */
+    int mback;                            /* the page the MIXER goes back to */
+    bool home2;                           /* HOME's second page (FX): RESO, WIDTH */
+    int mixmute;                          /* GLO's page: 0 VOLUME, 1 MUTE, 2 SOLO, 3 STYLE, 4 SONG (GLO turns them over) */
+    sv_song song;                         /* SONG (the glue keeps it) */
+    int song_pick;                        /* SONG: the step KNOB 1 picked */
+    int song_step;                        /* SONG: the step playing (-1: none; the glue sets it) */
+    int style_pick;                       /* the MIXER's STYLE page: the style SEQ makes a groove in */
+    int scur;                             /* REC on a synth layer, EDIT: the step the keys write */
+    int fill;                             /* EDIT: KNOB 2's FILL (0 CURR: the pattern as it was) */
+    sa_code fill_orig;                    /* EDIT: the pattern as it was when EDIT opened (CURR) */
     int hot, hot_ms;                      /* the knob just turned (its card lit); 9: the chip */
     char msg[32];
     int msg_ms;
@@ -78,12 +105,16 @@ typedef struct {
     int key_sent[27];
     uint32_t frame;
     int batt;
+    int8_t wave[96];                      /* the open synth layer's sound now, a cycle or two (the glue fills it) */
+    int wave_n;                           /* how many (0: silent, a flat line) */
+    int cpu, cpu_peak, shed;              /* MENU: the audio's load now (its average) and its worst, in %; voices shed */
     bool changed;                         /* a setting changed: the glue applies it (and keeps the look) */
     sv_set_info sets[SV_SLOTS];           /* what each set holds, and LAST (the glue fills it) */
     int set_slot, set_act;                /* SETS: the set picked, the action (SV_SA_*) */
     int req_act, req_slot;                /* REC on SETS: what the glue is to do (req_act -1: nothing) */
     int sback, sback_layer;               /* the page SAVE goes back to */
-    uint32_t sig_head, sig_card[4], sig_foot;
+    uint32_t sig_head, sig_card[4], sig_foot, sig_panel;
+    uint32_t bg_gen;                      /* the look the background was last drawn in (+1; 0: never) */
     bool force;
     /* the previews (the code's bar, a bit a sixteenth), worked out again when the code changes */
     sa_code pv_code[2];
@@ -107,5 +138,10 @@ int sv_page_button(const sa_ui *u);       /* the button whose LED shows the page
 /* the keys' LEDs while editing (bit k: the key SV_KEY_LO + k): DRUMS lights the 16 step keys dim and the steps set
  * full; STEPS lights the scale's keys dim and the step's note full. False: no editing (the glue's own) */
 bool sv_key_leds(const sa_ui *u, uint32_t *full, uint32_t *dim);
+/* DRUMS: the drum picked's key; else the notes the open synth layer sounds now, on the keys (bit k: SV_KEY_LO + k; an octave out of the keys' reach
+ * folded into it). 0: not on a synth layer */
+uint32_t sv_play_keys(const sa_ui *u);
+/* (0.7: nothing; kept for the glue) */
+uint32_t sv_play_dim(const sa_ui *u);
 
 #endif

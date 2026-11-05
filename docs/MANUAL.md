@@ -1,111 +1,248 @@
 # Sardine manual
 
-Sardine 0.6. Live club mixing on the FM-1: a stack of layers, each a line of code you build with the knobs. A layer
-is a sound and a pattern, bent by modifiers and, on a synth layer, an arpeggiator. You change the code, and REC drops
-your changes in on the one: the next bar line. The sound of a layer (its filter, drive, level) and the mutes act at
-once, as you turn.
+Sardine 0.8. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+**BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
+once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
+one: the next bar line.
 
 Every start is a fresh groove: other sounds, patterns, kit, key and tempo, ready to play. What you want to keep goes
 into one of eight sets (SAVE, below).
 
-## The screens
+## Finding your way
 
-SELECT goes through them: **MAIN**, **DRUMS** (every drum on one screen), then one screen per synth layer, then
-**NEW** (a new synth layer, while there is room for one).
+| Control | What it does |
+| --- | --- |
+| HOME | HOME, from anywhere; held: MENU |
+| PRESETS | HOME, LEAD, CHORD, BASS, DRUMS: a layer always opens on its home page |
+| FX | the layer's next page; past the last, back to its home page |
+| SELECT | the tempo, everywhere |
+| ALGORITHM | the layer's pattern (OFF first); it waits for SEQ |
+| SEQ | drops what waits, on the next bar line (stopped: at once) |
+| REC | step recording on the layer, on and off |
+| SCL | the key and the chords, again: back |
+| SAVE | the sets, again: back |
+| EDIT | the layer's pattern editor, again: back |
+| ENV | held: a drum fill (below) |
+| ARP | held: BREAK (below) |
+| LFO | held: SWEEP (below) |
+| GLO | GLOBAL: the MIXER, each press its next page (MUTE, SOLO, STYLE), past the last back |
+| PLAY | start, stop |
+| OCT- OCT+ | the keys' octave (the one it moved to lit) |
+
+The footer shows the layer, a dot for each of its pages (the one open lit) and what the next press does.
 
 <p align="center">
-<img src="screens/main.png" alt="MAIN" width="200">
+<img src="screens/home.png" alt="HOME" width="200">
 <img src="screens/layer.png" alt="A layer" width="200">
-<img src="screens/pending.png" alt="Waiting for REC" width="200">
+<img src="screens/pending.png" alt="Waiting for SEQ" width="200">
 </p>
 
-**MAIN** shows the whole stack: every layer, what it plays this bar, the muted ones crossed out. Its knobs act at
-once: **TEMPO**, **FILTER** (the whole mix darker to the left, OPEN at the top), **FEEL** (the swing of the off
-sixteenths; every layer follows it) and **KIT** (the drum kit).
+## HOME
 
-**HOME on MAIN** turns it to **SPACE**, HOME again back: **PUMP** (how deep the synth layers duck under the kick),
-**REVERB**, **DELAY** and **WIDTH** (at 70 each sound has its own sends and stereo spread; lower dries and narrows the
-mix, higher opens it up). The pump follows the kick layer's hits as they play: mute the kick, or give it a broken
-pattern, and the pump follows. The drums never duck. On a synth layer the last chip, **PUMP ON / OFF**, lets that
-layer stay out of it (at once, not code).
+Every layer playing: LEAD, CHORD and BASS with their sound and their bar, DRUMS a thin bar for each drum; an OFF layer
+shows its sound dimmed and OFF, a muted one is crossed out. The knobs act at once: **FILTER** (the whole mix darker to the left, OPEN at the top), **FEEL**
+(the swing of the off sixteenths), **PUMP** (how deep the synth layers duck under the kick; each layer's own share on its PUMP page) and **SPACE** (the room:
+reverb and delay together; at 70 each sound has its own). **FX** on HOME turns the knobs over to **RESO** (resonance on the whole mix's
+filter, over each synth layer's own: ride FILTER down with it up for the filter-house sweep) and **WIDTH** (the stereo
+spread, 70: each sound's own), **PHRASE** and **A/B** (below); FX again back.
+
+### Phrases, PART A and B
+
+The synth layers play in four-bar phrases, the way a tune is built: A A A' B. Bar 3 lifts its second half a step (each
+chord tone to the next, an own note a step up the scale), bar 4 answers: LEAD's first note of its second half lands on
+the chord's root and is held, nothing after it; BASS and CHORD leave the last beat empty, room for the drum fill, and
+the bass's last note is the root. **PHRASE** (HOME, FX) OFF plays every bar as written.
+
+Every groove has two parts. **PART B** is each synth layer's second line (another of its kind: another lead line,
+bass line, stab or pad; in a STYLE, the style's other line), busier hats and a progression of its own. **ALGORITHM**
+on HOME turns PART to A (left) or B (right): playing, it comes in on the next phrase (the header shows A, >B, B, B>A);
+stopped, at once. **A/B** (HOME, FX) OFF, 8 or 16 bars: the parts take turns by themselves. While B is picked,
+ALGORITHM on a layer page picks that layer's B line (the top shows it) and KEY's third knob is **B CHORDS**; both wait for
+SEQ like any pattern. An edited (own) pattern is A's; B plays its line, or A's when B is "as A". An older set
+gets a B made from its A when it loads. PART goes back to A when a set comes in.
+
+## LEAD, CHORD, BASS
+
+At the top of a layer's pages its pattern and its bar, the step playing lit (under it, in the second colour: what SEQ
+drops). Its home page shows the sound's name and, across the bottom, the scope: the sound as it plays, a wave (a flat
+line when it is silent). A layer opens on its home page: **CUTOFF**, **RESO**, **DRIVE**, **ENV** (the filter envelope, 50: the sound's own),
+at once. ALGORITHM turns its pattern: OFF, then the patterns of its kind (BASS the bass lines, CHORD stabs and pads,
+LEAD lead lines and the bass lines). FX turns through its pages:
+
+| Page | KNOB 1 | KNOB 2 | KNOB 3 | KNOB 4 | |
+| --- | --- | --- | --- | --- | --- |
+| MIX (the first) | VOLUME (fades it in and out) | TYPE (BASS KEYS PADS LEADS FX) | INSTR (the sound, by name; the header says it whole) | MUTE | at once |
+| ARP | MODE (OFF, UP, DOWN, UP-DOWN, DOWN-UP, CONVERGE, DIVERGE, RANDOM, THUMB, PINKY, STRUM) | RATE | RANGE | GATE | waits for SEQ |
+| PAN | MODE (FIXED, SWEEP, PING-PONG, RANDOM) | PAN | WIDTH | RATE (SWEEP) | at once |
+| 3D | MODE (OFF FIXED ORBIT RANDOM FLY) | ANGLE (FIXED) or RATE (ORBIT, FLY) | HEIGHT | DIST | at once |
+| PUMP | DEPTH (of HOME's PUMP) | RELEASE | SOURCE (KICK, BEAT) | PUMP ON / OFF | at once |
+| GATE | a ready gate (or OFF) | DEPTH | WIDTH | SMOOTH | waits for SEQ |
+| MOD | MOD 1 | MOD 2 | MOD 3 | MOD 4 | waits for SEQ |
 
 <p align="center">
-<img src="screens/space.png" alt="SPACE" width="200">
+<img src="screens/mix.png" alt="MIX" width="200">
+<img src="screens/arp.png" alt="ARP" width="200">
+<img src="screens/pan.png" alt="PAN" width="200">
 </p>
+<p align="center">
+<img src="screens/gate.png" alt="GATE" width="200">
+<img src="screens/mod.png" alt="MOD" width="200">
+</p>
+
+<p align="center">
+<img src="screens/3d.png" alt="3D" width="200">
+</p>
+
+**3D** places the layer around you, for headphones: from above (FRONT up) the dot is the layer, near you or far; beside
+it, from the side, its height; the dot moves as the layer does. **MODE**: FIXED (where ANGLE says), ORBIT (round you
+over RATE, a quarter bar to four bars), RANDOM (each note somewhere else round you) and FLY (an orbit rising and
+falling about HEIGHT). Turning ANGLE, HEIGHT or DIST from OFF turns it on, FIXED. On, the angle pans the layer (the PAN
+page rests), behind sounds a touch darker and softer, below darker, above brighter, far quieter, darker and wetter, and
+the layer narrows to a point. These are cues the ear reads, not a measured head model: left, right and far come across
+best; front against back and up against down are subtler and differ from one listener to the next. On speakers it is
+panning and tone.
+
+<p align="center">
+<img src="screens/pump.png" alt="PUMP" width="200">
+</p>
+
+**PUMP** is how this layer ducks: HOME's PUMP is the whole mix's amount, DEPTH this layer's share of it. A sound's
+type sets its DEPTH when you pick it: PADS 100 %, KEYS 80 %, BASS 50 %, LEADS 10 %, FX 0. RELEASE is how fast it comes
+back (50: over most of a beat), SOURCE whether it follows the kick layer's hits (KICK: mute the kick and it stops) or
+every beat (BEAT). The drums never duck.
+
+Every synth layer has an arpeggiator: OFF until you turn MODE. It plays the chord of the bar over the notes the pattern holds,
+so it is always in key, and swings with FEEL. GATE cuts a held chord to a rhythm by its volume, without a new attack.
+
+## Steps (REC)
+
+<p align="center">
+<img src="screens/steps.png" alt="Steps" width="200">
+<img src="screens/drums_rec.png" alt="Drum steps" width="200">
+</p>
+
+**REC** on a layer turns step recording on (REC lit), again off; another layer turns it off. On LEAD and BASS
+**KNOB 1** picks the step, **a key** writes its note there (snapped to the scale) and the cursor moves on, so a line
+goes in as fast as you play it; the same note again takes the step off. **KNOB 2** is the step's length. On CHORD a
+key puts the chord on the step or takes it off: it plays the chord of the bar. On the GATE page the 16 lowest keys
+are the gate's steps. The keys of the scale (or the step keys) glow dim, what is set full. The first edit makes the
+pattern the layer's own (MY STEPS); like a pattern, the steps wait for SEQ, and the modifiers still act on them.
+
+## EDIT
+
+<p align="center">
+<img src="screens/edit.png" alt="EDIT" width="200">
+<img src="screens/edit_drum.png" alt="EDIT, a drum" width="200">
+</p>
+
+**EDIT** on a layer opens its pattern editor: its 16 steps, the step **KNOB 1** is on framed. **KNOB 2** is **FILL**:
+CURR (the pattern as it was when you opened EDIT) and ready fills that rewrite the steps; turn back to CURR and the
+pattern is as it was. On DRUMS: ROLL (the last beat in sixteenths), BUILD, SNARE, BREAK (the first half only), STUTTER,
+GALLOP, FLAM and DOUBLE, over the drum's own hits or in place of them. On LEAD and BASS ready lines in the key: ROOT
+8THS, ARP UP, ARP DOWN, OCTAVES, WALK, RIFF, CALL, PULSE 16. On CHORD the chord's rhythm: STABS, OFFBEATS, PUSH,
+PULSE, 8THS, 16THS, DOTTED, HOLD. **KNOB 3** is the step's LENGTH (on DRUMS its HIT, on or off).
+
+With **REC** on, LEAD, BASS and CHORD: a key writes at the framed step (the note snapped to the scale, the same note
+again takes it off; on CHORD the chord) and the frame moves on. DRUMS: the 16 lowest keys are the steps, glowing dim,
+the hits set full; a key turns its step on or off, the keys above play the drum. Without REC the keys play the layer,
+lit with what it plays. Like a pattern, the steps wait for SEQ. EDIT again goes back.
 
 ## DRUMS
 
 <p align="center">
 <img src="screens/drums.png" alt="DRUMS" width="200">
-<img src="screens/drums_edited.png" alt="A row edited" width="200">
-<img src="screens/drums_add.png" alt="+ ADD A DRUM" width="200">
+<img src="screens/drums_add.png" alt="A row turned on" width="200">
+<img src="screens/kit.png" alt="KIT" width="200">
 </p>
 
-Every drum is a row of one screen: its name, its bar, its first modifier. **PRESETS** picks a row; the row picked
-shows large under the rows, its 16 steps. **The 16 lowest keys are those steps**: a key puts a hit on, the same key
-takes it off. While DRUMS is open the step keys glow dim and the steps that are set glow full, so you see which key is
-which. The first edit makes the ready pattern the row's own (its name says EDIT); **ALGORITHM** turns the row to
-another ready pattern (and lets the own one go). The keys above the 16 play the row's drum.
+Seven rows, always there, each on a drum channel of its own, so no two ever cut each other off:
 
-The knobs: the row's **LEVEL**, and the kit's **TUNE**, **TONE** and **DECAY**. **FX** mutes the row at once.
+| Row | INSTR |
+| --- | --- |
+| KICK | KICK |
+| SNARE | SNARE |
+| CLAP | CLAP |
+| HATS | HAT, OPEN HAT, SHAKER |
+| TOMS | TOM, LOW TOM, CONGA |
+| RIM | RIM, CLAVE |
+| METAL | RIDE, CRASH, COWBELL |
 
-The last row, **+ ADD A DRUM**: ALGORITHM picks a drum (KICK SNARE CLAP HAT OPEN HAT RIDE CRASH RIM TOM LOW TOM CONGA
-COWBELL CLAVE SHAKER) in a pattern that suits it. Until REC drops it in, ALGORITHM still changes which drum it is.
+Every drum comes in eight variations, all on the INSTR knob: as the kit has it, **TIGHT** (short and bright), **ROOM**
+(long and darker), **HIGH**, **LOW**, and the same drum from three other drum machines (**80**, **10**, **DEEP**),
+whatever the kit: CLAP, CLAP TIGHT, CLAP ROOM .. CLAP DEEP, then (on HATS) OPEN HAT, OPEN HAT TIGHT and so on. The
+header says the whole name as it turns. The METAL row's (ride, crash, cowbell) are FM: three sine pairs at inharmonic ratios, the way the classic FM synths made cymbals and bells, no samples (TIGHT ROOM HIGH LOW DARK BRIGHT; OLD is the 77's analog metal, darkened). The claps are their own: all eight short hand claps (from the 80, 55, 77 and
+66 machines and DEEP; CLAP 77 the 80 and 10 swapped for the 77), whatever the kit.
 
-**EDIT** opens the row picked as a layer screen: its modifiers, or REMOVE. EDIT again goes back to DRUMS.
+Each row shows its drum and its bar (the second colour: waiting for SEQ); a row OFF is dimmed. The home page: **DRUM**
+(KNOB 1, the row), **INSTR** (its drum, at once), **VOLUME** and **ACCENT** (how hard the accented steps hit against
+the rest; 50: as written). ALGORITHM turns the row's pattern, OFF first: a pattern turns the row on, OFF turns it off;
+SEQ drops it in. Without REC every key plays the row's drum; with REC the 16 lowest keys are its steps, the keys above
+play it.
 
-## A synth layer
+FX: **MIX** (VOLUME, KIT, INSTR, MUTE), **KIT** (KIT, TUNE, TONE, DECAY: the whole kit, every drum plays on it) and
+**MOD** (three modifiers, and **CHANCE**: how likely each hit plays, 100 % always; lower and hits drop out at random,
+so the pattern changes as it plays). The kits, all synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY,
+CLASSIC, ROOM, VINTAGE, MINIMAL, VOLT (electro), GARAGE, DISCO, BREAKS, DUB, LOFI, IRON (industrial), ACID.
 
-**A layer** has two halves. The knobs below are its sound, at once:
-
-| Layer | KNOB 1 | KNOB 2 | KNOB 3 | KNOB 4 |
-| --- | --- | --- | --- | --- |
-| synth | CUTOFF | RESO | DRIVE | ENV (the filter envelope, 50: the sound's own) |
-| drum (from DRUMS, EDIT) | LEVEL | TUNE | TONE | DECAY |
-
-A drum's TUNE, TONE and DECAY move the whole kit: every drum plays on it.
-
-The panel is its code, as chips: **SOUND**, **PATTERN**, up to four **modifiers**, **+** (room for one more) and, on
-a synth layer, **ARP**. PRESETS picks a chip, ALGORITHM changes it. A changed chip turns the second colour, the header
-counts what waits (**2 TO DROP**), the panel shows the bar as it plays and as it will after REC. Press **REC**: the
-header says **ON THE 1** and REC blinks; on the next bar line it all goes in at once. Stopped, REC drops at once.
-
-**FX** mutes the layer open (at once; again: back in). Turning SOUND down past its first entry says **REMOVE**: the
-layer goes on the drop.
-
-## STEPS
+## MIXER
 
 <p align="center">
-<img src="screens/steps.png" alt="STEPS" width="200">
+<img src="screens/mixer.png" alt="MIXER" width="200">
 </p>
 
-On a synth layer **SEQ** opens STEPS: the layer's notes over the bar. **KNOB 1** picks the step, **a key** writes its
-note there (snapped to the scale) and the cursor moves on to the next step, so a line goes in as fast as you play it;
-the same note again takes the step off. **KNOB 2** is the step's length. On a chord layer (stabs, pads) a key puts the
-chord on the step or takes it off: it plays the chord of the bar, so it follows the progression. The keys of the scale
-glow dim, the step's note full. As on DRUMS the first edit makes the pattern the layer's own, the edits wait for REC,
-and the modifiers and the arpeggiator still act on it. SEQ again goes back.
+**GLO** opens the MIXER: a fader for each layer, LEAD, CHORD, BASS and DRUMS (all the drums together), on the four
+knobs, at once (80: as it is); the dot under a fader lights as the layer plays. **GLO** again turns the knobs over to their
+MUTE, GLO again to their **SOLO** (turn right: that layer, with any others soloed, alone; left: back), GLO again
+to STYLE (below), GLO again to SONG (below), GLO once more back. SOLO is a live move: not kept with the groove. A layer's VOLUME here is the same as on its own first FX page.
 
-## GATE
+## The drum fill
+
+Hold **ENV**: from the next beat the drums give way to a fill (ENV blinks until the beat, then stays lit), for as
+long as you hold it; let go and the groove is back at once, with a crash on the next beat. A fill is a bar: started
+on beat 3 it plays from its third beat, so it always peaks on the bar's last sixteenth. Each time another, by turns:
+ROLL (the snare in sixteenths, rising, 32nds at the end), TOMS (a run from the high tom down), BUILD (eighths, then
+sixteenths, then 32nds, an open hat on top), STUTTER (kick and hat on every sixteenth, claps), FLAM (flammed
+backbeats over ghost notes), SYNCO (3-3-2 accents, toms to end), CLAPS (claps building to 32nds) and GHOST (ghost
+notes and rim around a flammed snare). They play the SNARE row's drum; the synth layers play on.
+
+## BREAK and SWEEP
+
+Hold **ARP** for a **BREAK**: the drums and the bass drop out at once, LEAD and CHORD play on. Let go and ARP blinks
+until the next 1, where everything comes back in: the drop. Held 4 bars or more, the drums come back one by one over
+two bars instead: the kick (and the bass) on the 1, then the hats, the metal, the rim, the snare on the second bar's
+1, the clap, the toms. Hold **LFO** for a **SWEEP**: the whole mix's filter closes
+over two bars (as far as FILTER at about 15), its resonance rising as it goes; let go and it is open again at once. Together with the fill on ENV: the
+build, the fill and the drop.
+
+## STYLE, INTRO and ARC
 
 <p align="center">
-<img src="screens/gate.png" alt="GATE" width="200">
-<img src="screens/pan.png" alt="PAN" width="200">
+<img src="screens/style.png" alt="STYLE" width="200">
 </p>
 
-On a synth layer **ENV** opens GATE: the layer's volume cut to a rhythm on the sixteenths while its notes are held, so
-a pad pulses without a new attack each time. **KNOB 1** picks a ready gate (16THS, 8THS, OFFBEATS, PULSE 4, TRANCE A,
-TRANCE B, DOTTED, SYNCO, BREATH, STUTTER, HALVES, SPARSE, or OFF), **DEPTH** how far it closes, **WIDTH** how much of
-each step it stays open, **SMOOTH** how soft its edges are. **The 16 lowest keys are its steps**, lit as on DRUMS: a key
-turns a step on or off, and the ready gate becomes your own. The gate follows FEEL, and it is code: it drops with REC.
-The layer's GATE chip turns through the ready gates too. ENV again goes back.
+**GLO** four times: **STYLE**, **INTRO**, **ARC**. **KNOB 1** picks a style, **SEQ** makes a fresh
+groove in it, on the next 1 (stopped: at once): its tempo, kit, scale, swing, pump, room and filter, a bass, a chord
+and now and then a lead of its kind, its drums.
 
-## PAN
+| Style | | Style | |
+| --- | --- | --- | --- |
+| NIGHT | slow, dark, filtered (98-104) | DISCO | bright, strings and bass (116-120) |
+| FILTER | French touch, filtered disco (122-126) | AFRO | afro house, percussive (120-124) |
+| DEEP | warm, soft deep house (120-122) | GARAGE | 2-step, swung (130-134) |
+| TECH | tech house, rolling (124-127) | BREAKS | broken beats, rave (128-132) |
+| MINIMAL | sparse, clicky (124-126) | DUB | dub techno, echoes (118-122) |
+| TECHNO | dark, driving (128-132) | AMBIENT | space, barely a beat (88-96) |
+| HARD | hard techno (140-148) | ELECTRO | robotic, broken (126-130) |
+| GABBER | hardcore, distorted (170-180) | HAPPY | bright, euro, hands up (138-142) |
+| ACID | a 303 line (128-134) | LOFI | lo-fi house, dusty (116-120) |
+| TRANCE | uplifting, wide (136-140) | PROG | progressive, building (122-124) |
 
-On a synth layer **LFO** opens PAN, at once like the layer's sound: **MODE** FIXED (where PAN says), SWEEP (from side
-to side and back over **RATE**, a quarter bar to four bars), PING-PONG (each note on the other side) or RANDOM (each
-note somewhere in the width); **PAN** the centre, **WIDTH** how far it moves. The drums all play on one part, so the
-kit stays in the middle. LFO again goes back.
+**INTRO** (OFF, 4, 8, 16 bars): from PLAY the layers come in one by one, the kick first, the other drums at a quarter,
+BASS at half, CHORD at three quarters, LEAD at the end, the filter opening over it. With INTRO OFF the LEAD still
+waits one pattern (the chord progression once round, 4 to 8 bars) after PLAY, then comes in. Every new groove and
+style has a lead. LEAD is polyphonic: its patterns are single lines, a chord on the keys sounds whole. **ARC** (OFF, 16, 32, 64 bars):
+after the intro a cycle, the groove for half, a break (drums and bass out) for a quarter, a build (the filter closing)
+for the last quarter with a roll on its last half bar, and the drop on the next 1. Both are kept with the groove.
 
 ## The modifiers
 
@@ -124,46 +261,31 @@ They act in order, each on what the ones before it made, and on time itself, not
 | OCT -2..+2 | octaves (synth layers) |
 | PLY 2 3 4 | each note 2, 3 or 4 times in its own length |
 
-## The arpeggiator
+## SONG
 
-On a synth layer, **ARP** opens its page: **MODE** (UP, DOWN, UP-DOWN, DOWN-UP, CONVERGE, DIVERGE, RANDOM, THUMB,
-PINKY, STRUM), **RATE** (1/4 to 1/32, with 1/8 and 1/16 triplets), **RANGE** (1 to 4 octaves) and **GATE**. It plays
-the chord of the bar over the notes the pattern holds, so it is always in key; it swings with FEEL. ARP again goes
-back. The arpeggiator is code too: it drops with REC.
-
-<p align="center">
-<img src="screens/arp.png" alt="ARP" width="200">
-<img src="screens/key.png" alt="KEY" width="200">
-<img src="screens/new.png" alt="NEW" width="200">
-</p>
+**GLO** five times: **SONG**, the sets as the sections of a song. Eight steps, each a set and its length: **STEP** (1 to 8),
+**SET** (1 to 8, or END), **BARS** (4, 8, 16, 32, 64) and **SONG** (OFF, ON). ON, the steps play in turn, round and round:
+each set comes in on its bar line (read a bar ahead), empty sets and END steps are passed. Stopped, SONG ON loads the
+first step's set, PLAY starts the song from it; switched ON while playing, the first step comes in on the next 1. Out
+of the box: sets 1 to 4, 16 bars each. The steps are kept (with the look); SONG itself starts OFF.
 
 ## The key and the chords
 
-**SCL** opens the KEY page: **KEY**, **SCALE** (MINOR, DORIAN, PHRYGIAN, MAJOR), **CHORDS** (ten progressions, from
-ONE CHORD to four chords) and **BARS** (each chord 1, 2 or 4 bars). Every synth layer follows the chord of the bar;
-the drums do not. A key change is code: it drops with REC, on the one. SCL again goes back.
+<p align="center">
+<img src="screens/key.png" alt="KEY" width="200">
+</p>
 
-## A new synth layer
-
-Turn SELECT past the last synth layer: **NEW**. KNOB 1 picks its sound (BASS, KEYS, PADS, LEADS, FX, AMBIENT: 81 of them),
-KNOB 2 its pattern. Up to three synth layers, each with its own sound and filter (the FM-1 runs four parts); every drum
-plays on the kit. Up to twelve layers in all, drums and synths together.
+**SCL** opens KEY: **KEY**, **SCALE** (MINOR, DORIAN, PHRYGIAN, MAJOR), **CHORDS** (ten progressions, from ONE
+CHORD to four chords) and **BARS** (each chord 1, 2 or 4 bars). The synth layers follow the chord of the bar; the
+drums do not. A key change waits for SEQ. SCL again goes back.
 
 ## The keys
 
-The keys play the layer open, live, snapped to the scale; on MAIN the first synth layer. On DRUMS and STEPS they edit
-the steps (above). OCT- and OCT+ move their octave. The keys never change a setting.
-
-## AMBIENT
-
-The last sixteen sounds are for wide, deep club nights: pads (WIDE PAD, DARK PAD, GLASS, VAPOR, SWELL, NIGHT, DRONE
-PAD, SKY, TAPE PAD, CHOIR AIR), dub stabs with long tails (DUB STAB, SPACE STAB, ECHO CHORD), RUMBLE (a low bass sent
-into the hall), DEEP SUB and AIR LEAD. Each spreads its voices across the stereo field and has its own reverb and
-delay. The room every layer plays in is a big hall; the drums send little into it.
-
-## The kits
-
-All synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY, CLASSIC.
+The keys play the layer open, live, snapped to the scale (on HOME: LEAD); the header says what, briefly (KEYS: LEAD,
+SAW LEAD). On LEAD, CHORD and BASS the keys light up with the notes the layer plays (a bass line folded up into
+the keys' reach). On DRUMS every key plays the drum picked, and its own note (its General MIDI note, moved into
+the keys' reach) is lit. With REC they write its steps. They never
+change a setting.
 
 ## SETS
 
@@ -172,11 +294,12 @@ All synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY, CLASSIC.
 </p>
 
 **SAVE** opens SETS: eight grooves kept in the flash and **LAST** (L), a row each with its tempo and key; beside the
-rows, what the set picked holds (its kit, its synth sounds). **KNOB 1** (or PRESETS) picks a set, **KNOB 2** the action, **REC** does it:
+rows, what the set picked holds (its kit, its synth sounds). **KNOB 1** (or PRESETS) picks a set, **KNOB 2** the action,
+**REC** does it:
 
 | Action | What REC does |
 | --- | --- |
-| LOAD | the set in, on the one while playing (at once when stopped); what waited for REC goes |
+| LOAD | the set in, on the one while playing (at once when stopped); what waited for SEQ goes |
 | STORE | what plays into the set (over what was there) |
 | NEW | a fresh groove, as at a start, on the one |
 | CLEAR | the set empty |
@@ -185,19 +308,32 @@ The flash is written only while stopped: a STORE or CLEAR while playing is kept 
 WAITS; one set at a time). SAVE again goes back.
 
 **LAST** keeps itself: three seconds after a change, stopped (and three seconds after you stop), the groove as it is
-goes into LAST. It never comes back on its own (a start is still a fresh groove), but LOAD brings it back: after a
-power cut, or the morning after. STORE and CLEAR leave it alone. Every set stays as it is until you STORE over it or
-CLEAR it, and loads as often as you like.
+goes into LAST. It never comes back on its own, but LOAD brings it back. STORE and CLEAR leave it alone. Every set
+stays as it is until you STORE over it or CLEAR it, and loads as often as you like. A set stored with 0.6 loads into
+the layers by its sounds: a bass sound to BASS, keys and pads to CHORD, leads and FX to LEAD.
+
+## AMBIENT
+
+The last sixteen sounds are for wide, deep club nights: pads (WIDE PAD, DARK PAD, GLASS, VAPOR, SWELL, NIGHT, DRONE
+PAD, SKY, TAPE PAD, CHOIR AIR), dub stabs with long tails (DUB STAB, SPACE STAB, ECHO CHORD), RUMBLE (a low bass sent
+into the hall), DEEP SUB and AIR LEAD. Each spreads its voices across the stereo field and has its own reverb and
+delay. The room every layer plays in is a big hall; the drums send little into it.
 
 ## MENU
 
-HOME held: the colour (SHOAL by default, and Felucca's) and the look (FLAT, LINE).
+<p align="center">
+<img src="screens/menu.png" alt="MENU" width="200">
+</p>
+
+HOME held: the colour (SHOAL by default, and Felucca's) and the look (FLAT, LINE). Below them the **CPU**: the audio's load
+now (its average over a tenth of a second; above 85 % it turns the second colour), its PEAK since the start, and how
+many voices the load guard had to let go (SHED), if any.
 
 ## MIDI out
 
-The synth layers' parts on channels 1, 2 and 3, the kit on 10 with General MIDI notes.
+LEAD, CHORD and BASS on channels 1, 2 and 3, the kit on 10 with General MIDI notes.
 
 ## Saving
 
-A start is a fresh groove; what you keep goes into SETS, and the last groove into LAST by itself. The colour and the look are kept.
-0.5's saved groove comes back once, as set 1.
+A start is a fresh groove; what you keep goes into SETS, and the last groove into LAST by itself. The colour and the
+look are kept.

@@ -18,6 +18,18 @@ const str = (p) => { const m = new Uint8Array(w.memory.buffer); let s = ""; whil
 
 w._initialize();
 w.web_nor_erase();
+// another firmware's project in the first sets' object (Felucca's slot B, type 2), its sequence high
+const crc32 = (b) => { let c = ~0; for (const x of b) { c ^= x; for (let k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ 0xEDB88320 : c >>> 1; } return ~c >>> 0; };
+{
+  const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()), base = 0x9A000;   // its copy B
+  const body = new Uint8Array(64).fill(7), h = new DataView(new ArrayBuffer(32));
+  h.setUint32(0, 0x554C4546, true); h.setUint16(4, 2, true); h.setUint16(6, 1, true);
+  h.setUint32(8, 100, true); h.setUint32(12, body.length, true); h.setUint32(16, crc32(body), true);
+  h.setUint32(20, 0xFFFFFFFF, true); h.setUint32(24, 0xFFFFFFFF, true);
+  h.setUint32(28, crc32(new Uint8Array(h.buffer, 0, 28)), true);
+  nor.set(new Uint8Array(h.buffer), base);
+  nor.set(body, base + 256);
+}
 w.web_boot();
 let peak = 0;
 const run = (sec) => {
@@ -30,7 +42,7 @@ const press = (b) => { w.web_buttons(1 << b); run(0.05); w.web_buttons(0); run(0
 
 run(2);
 check(`boots Sardine ${str(w.web_da_version())} on MAIN, stopped`, w.web_da_page() === 0 && !w.web_playing());
-check(`a fresh groove is in (${w.web_da_style()} layers)`, w.web_da_style() >= 5 && w.web_da_style() <= 8);
+check(`a fresh groove is in (${w.web_da_style()} layers)`, w.web_da_style() === 10);   // LEAD CHORD BASS and the seven drum rows
 const groove1 = w.web_da_groove();
 check("silent while stopped", peak < 1e-3);
 
@@ -40,17 +52,23 @@ run(8);
 check(`PLAY plays (peak ${peak.toFixed(3)}, bar ${w.web_da_bar()})`, w.web_playing() && peak > 0.02 && peak <= 1 && w.web_da_bar() >= 3);
 check("PLAY's green LED lit", (w.web_lit_buttons() >> 14) & 1);
 
-// SELECT to a layer, ARP opens its page, SCL the KEY page, HOME back to MAIN
+// PRESETS to a layer, FX through its pages, SCL the KEY page, HOME back; SELECT is the tempo
 const pages = [];
-w.web_enc(EN.SELECT, 2); run(0.2); pages.push(w.web_da_page());   // MAIN, DRUMS, the bass layer: LAYER
-press(B.ARP); pages.push(w.web_da_page());                          // ARP
-press(B.SCL); pages.push(w.web_da_page());                          // KEY
-check(`SELECT, ARP, SCL open LAYER, ARP, KEY (${pages.join(" ")})`, pages[0] === 1 && pages[1] === 2 && pages[2] === 3);
+w.web_enc(EN.PRESETS, 2); run(0.2); pages.push(w.web_da_page(), w.web_da_view());   // CHORD: LAYER
+w.web_enc(EN.PRESETS, 1); run(0.2);                  // BASS (playing)
+let wv = 0;
+for (let i = 0; i < 40; i++) { run(0.05); wv = Math.max(wv, w.web_da_wave()); }
+check(`a layer's wave while it plays (${wv} points)`, w.web_da_page() === 1 && wv === 96);
+w.web_enc(EN.PRESETS, -1); run(0.2);
+press(B.FX); pages.push(w.web_da_fx());                                                // its SOUND page
+press(B.SCL); pages.push(w.web_da_page());                                             // KEY
+check(`PRESETS, FX, SCL: CHORD, SOUND, KEY (${pages.join(" ")})`, pages[0] === 1 && pages[1] === 2 && pages[2] === 1 && pages[3] === 2);
 press(B.HOME);
 run(0.5);
-check("HOME returns to MAIN", w.web_da_page() === 0);
+check("HOME returns HOME", w.web_da_page() === 0);
+const bpm = w.web_da_bpm();
 w.web_enc(EN.SELECT, 1); run(0.2);
-check("SELECT after MAIN: DRUMS", w.web_da_page() === 5);
+check("SELECT: the tempo", w.web_da_bpm() === bpm + 1 && w.web_da_page() === 0);
 press(B.HOME); run(0.3);
 
 press(B.PLAY);
@@ -60,16 +78,19 @@ run(1);
 check(`PLAY again stops (tail peak ${peak.toFixed(4)})`, !w.web_playing() && peak < 1e-3);
 
 const writes = w.web_flash_writes_count();
-w.web_enc(EN.K1, 2);  // TEMPO
+w.web_enc(EN.K1, -2);  // FILTER
 run(4);
 check("a setting changed, stopped: LAST keeps it", w.web_flash_writes_count() > writes && w.web_da_set_used(8) === 1);
 const groove1b = w.web_da_groove();
 press(B.SAVE);
-check("SAVE opens SETS", w.web_da_page() === 9);
+check("SAVE opens SETS", w.web_da_page() === 4);
 w.web_enc(EN.K2, 1); run(0.1);  // STORE
 w.web_enc(EN.K1, 2); run(0.1);  // set 3
 press(B.REC); run(0.2);
 check("REC: STORE writes set 3", w.web_da_set_used(2) && !w.web_da_set_used(0));
+w.web_enc(EN.K1, -2); run(0.1);  // set 1 (over the old project)
+press(B.REC); run(0.2);
+w.web_enc(EN.K1, 2); run(0.1);
 const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice();
 {
   const again = await WebAssembly.instantiate(bytes, { wasi_snapshot_preview1: stub });
@@ -78,8 +99,8 @@ const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice
   new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).set(nor);
   w.web_boot();
   run(1);
-  check("the next start: another groove", w.web_da_groove() !== groove1 && w.web_da_style() >= 5);
-  check("the next start: set 3 still there", w.web_da_set_used(2) === 1);
+  check("the next start: another groove", w.web_da_groove() !== groove1 && w.web_da_style() === 10);
+  check("the next start: sets 1 and 3 still there", w.web_da_set_used(2) === 1 && w.web_da_set_used(0) === 1);
   press(B.SAVE);
   w.web_enc(EN.K1, 2); run(0.1);
   press(B.REC); run(0.2);
@@ -87,6 +108,12 @@ const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice
   w.web_enc(EN.K1, 9); run(0.1);
   press(B.REC); run(0.2);
   check("REC: LOAD LAST brings the last groove back", w.web_da_groove() === groove1b);
+  press(B.SAVE); run(0.2);                                   // (back from SETS)
+  press(B.GLO); press(B.GLO); press(B.GLO); press(B.GLO);    // GLO's STYLE page
+  w.web_enc(EN.K1, -20); run(0.1); w.web_enc(EN.K1, 7); run(0.1);   // the 8th style: GABBER (170..180)
+  const g0 = w.web_da_groove();
+  press(B.SEQ); run(0.3);
+  check(`STYLE: SEQ, a groove in it (${w.web_da_bpm()} BPM)`, w.web_da_groove() !== g0 && w.web_da_bpm() >= 170 && w.web_da_bpm() <= 180);
 }
 
 console.log(fails ? `sardine emu: ${fails} FAILED` : "sardine emu: all passed");

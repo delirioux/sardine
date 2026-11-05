@@ -42,7 +42,8 @@
 
 static int fails;
 static const char *const TN[DVT_COUNT] = {"KICK PUNCH", "KICK ROUND", "SNARE", "CLAP", "HAT CL", "HAT OP",
-                                          "TOM", "CONGA", "RIM", "CLAVE", "BELL", "CYM"};
+                                          "TOM", "CONGA", "RIM", "CLAVE", "BELL", "CYM", "FM RIDE",
+                                          "FM CRASH", "FM BELL"};
 #define NMAX (FS * 12)
 
 /* ------------------------------------------------------------- render --- */
@@ -250,10 +251,13 @@ static const struct {
     {0.03, 5800, -20.8},                        /* CLAVE */
     {0.35, 1990, -20.0},                        /* BELL */
     {2.28, 6050, -23.5},                        /* CYM: the strike, then the ring (tau 0.95 s) */
+    {3.12, 4490, -23.5},                        /* FM RIDE (Sardine): the FM pairs, darker than CYM */
+    {1.99, 6520, -23.5},                        /* FM CRASH */
+    {0.34, 2400, -20.0},                        /* FM BELL */
 };
 
-static uint32_t len_of(uint32_t t) { return t == DVT_CYM ? NMAX : FS * 2u; }
-static int pitched(uint32_t t) { return t != DVT_CLAP && t != DVT_HATC && t != DVT_HATO && t != DVT_CYM; }
+static uint32_t len_of(uint32_t t) { return t == DVT_CYM || t == DVT_FMRIDE || t == DVT_FMCRASH ? NMAX : FS * 2u; }
+static int pitched(uint32_t t) { return t != DVT_CLAP && t != DVT_HATC && t != DVT_HATO && t != DVT_CYM && t != DVT_FMRIDE && t != DVT_FMCRASH; }
 /* the designed frequency (BELL: its upper square, 1.48 f, the band-pass's partial) */
 static double design_hz(uint32_t t, int32_t tune)
 {

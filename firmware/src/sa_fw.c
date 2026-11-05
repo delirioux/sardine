@@ -29,6 +29,42 @@ static uint32_t sa_applied_sig;
 static uint8_t sa_drums_ready;
 
 /* ---- the audio ISR --------------------------------------------------------------------------------------------- */
+/* each synth part's sound as it renders (fx.c mix_part): every 4th sample, the last 256 (23 ms); and when it last
+ * sounded */
+#define SA_SCOPE 256u
+static int16_t sa_scope[SA_SYNTHS][SA_SCOPE];
+static uint16_t sa_scope_w[SA_SYNTHS];
+static uint32_t sa_scope_ms[SA_SYNTHS];
+static void sa_scope_take(uint32_t part, const int32_t *b, uint32_t n)
+{
+    if (part >= SA_SYNTHS) return;
+    uint32_t w = sa_scope_w[part];
+    for (uint32_t i = 0; i < n; i += 4u)
+        sa_scope[part][w++ & (SA_SCOPE - 1u)] = (int16_t)clamp(b[i] >> 2, -32767, 32767);
+    sa_scope_w[part] = (uint16_t)w;
+    sa_scope_ms[part] = fm1_ms;
+}
+/* the open synth layer's wave for its screen: from a rising zero crossing, scaled to its own peak */
+static void sa_wave(void)
+{
+    sa_u.wave_n = 0;
+    if ((sa_u.page != SV_PG_LAYER && sa_u.page != SV_PG_EDIT) || sa_u.view < SV_V_LEAD || sa_u.view > SV_V_BASS)
+        return;
+    uint32_t p = sa_g.s.code[sa_u.layer].part % SA_SYNTHS, st = sa_u.view == SV_V_BASS ? 2u : 1u;   /* (the bass: twice
+                                                                                                   * as long) */
+    if (fm1_ms - sa_scope_ms[p] > 120u) return;                 /* (silent) */
+    int16_t s[SA_SCOPE];
+    uint32_t w = sa_scope_w[p];
+    for (uint32_t i = 0; i < SA_SCOPE; ++i) s[i] = sa_scope[p][(w + i) & (SA_SCOPE - 1u)];
+    uint32_t at = 0;
+    for (uint32_t i = 1; i + 96u * st < SA_SCOPE; ++i)
+        if (s[i - 1] < 0 && s[i] >= 0) { at = i; break; }
+    int pk = 1;
+    for (uint32_t i = 0; i < 96u; ++i) { int a = s[at + i * st] < 0 ? -s[at + i * st] : s[at + i * st]; if (a > pk) pk = a; }
+    if (pk < 8) return;
+    for (uint32_t i = 0; i < 96u; ++i) sa_u.wave[i] = (int8_t)(s[at + i * st] * 120 / pk);
+    sa_u.wave_n = 96;
+}
 static void sa_sound(void *ctx, const sa_event *e)
 {
     (void)ctx;
@@ -62,7 +98,8 @@ static void sa_audio_post(int32_t *out, uint32_t n)
 #define SA_PREF_MAGIC 0x31504153u                            /* "SAP1" */
 #define SA_SET_MAGIC 0x31534153u                             /* "SAS1" */
 #define SA_REC_MAGIC 0x32524153u                             /* "SAR2": 0.2..0.5's groove, moved into set 1 once */
-typedef struct { uint32_t magic, boots; uint8_t look, pad[3]; } sa_prefs;
+typedef struct { uint32_t magic, boots; uint8_t look, pad[3]; sv_song song; } sa_prefs;   /* (song: appended) */
+#define SA_PREFS_OLD 12u                                     /* (0.7's: no song) */
 typedef struct { uint32_t magic; uint16_t size, ver; sa_settings s; } sa_record;
 #define SA_SET_PER 3u                                        /* sets to an object */
 #define SA_SET_STRIDE 1280u                                  /* the room a set has (sa_settings may grow into it) */
@@ -128,7 +165,7 @@ static bool sa_set_read(int k, sa_settings *s)
         return false;
     sa_defaults(s);
     memcpy(s, st_buf + off + 8u, r.size < sizeof *s ? r.size : sizeof *s);
-    sa_settings_fix(s);
+    sas_fix(s);
     return true;
 #else
     (void)k;
@@ -198,6 +235,7 @@ static void sa_prefs_save(void)
 #if FELUCCA_FLASH
     sa_pref.magic = SA_PREF_MAGIC;
     sa_pref.look = sa_g.s.look;
+    sa_pref.song = sa_u.song;
     if (flash_ok && st_save(OBJ_PROJECT0, &sa_pref, sizeof sa_pref) == 0)
         sa_pref_look = sa_pref.look;
 #endif
@@ -210,14 +248,14 @@ static void sa_prefs_load(void)
     if (!flash_ok)
         return;
     int n = st_load(OBJ_PROJECT0, &sa_wait, sizeof sa_wait);
-    if (n >= (int)sizeof(sa_prefs) && sa_wait.magic == SA_PREF_MAGIC) {
-        memcpy(&sa_pref, &sa_wait, sizeof sa_pref);
+    if (n >= (int)SA_PREFS_OLD && sa_wait.magic == SA_PREF_MAGIC) {
+        memcpy(&sa_pref, &sa_wait, (uint32_t)n < sizeof sa_pref ? (uint32_t)n : sizeof sa_pref);
     } else if (n >= (int)(sizeof sa_wait - sizeof sa_wait.s) && sa_wait.magic == SA_REC_MAGIC &&
                !sa_set_read(0, &sa_next)) {
         uint32_t k = sa_wait.size < sizeof sa_next ? sa_wait.size : sizeof sa_next;
         sa_defaults(&sa_next);
         memcpy(&sa_next, &sa_wait.s, k);
-        sa_settings_fix(&sa_next);
+        sas_fix(&sa_next);
         sa_pref.look = sa_next.look;
         sa_set_write(0, &sa_next);
     }
@@ -229,7 +267,8 @@ static void sa_prefs_load(void)
 static void sa_set_do(int act, int k)
 {
     char m[32];
-    k = k < 0 ? 0 : k >= SV_SLOTS ? SV_SLOTS - 1 : k;
+    if (act != SV_SA_STYLE) k = k < 0 ? 0 : k >= SV_SLOTS ? SV_SLOTS - 1 : k;
+    else k = 0;
     sv_cpy(m, "SET ", sizeof m);
     m[4] = (char)('1' + k);
     m[5] = 0;
@@ -238,10 +277,23 @@ static void sa_set_do(int act, int k)
         sv_cpy(m, "LAST", sizeof m);
     }
     switch (act) {
+    case SV_SA_STYLE: {                                      /* a fresh groove in a STYLE, INTRO and ARC kept */
+        int k = sa_u.req_slot;
+        sas_style_apply(&sa_next, k, sa_pref.boots * 7919u + fm1_ms * 31u + sa_u.frame, &sa_pl);
+        sa_next.intro = sa_g.s.intro;
+        sa_next.arc = sa_g.s.arc;
+        fm1_irq_off();
+        sa_set_arm(&sa_g, &sa_next);
+        fm1_irq_on();
+        sv_cpy(m, SAS_STYLE[k % SAS_NSTYLES].name, sizeof m);
+        sv_cat(m, sa_g.playing ? ": ON THE 1" : " IN", sizeof m);
+        break;
+    }
     case SV_SA_LOAD:
     case SV_SA_NEW:
         if (act == SV_SA_NEW) {
             sa_random(&sa_next, sa_pref.boots * 7919u + fm1_ms * 31u + sa_u.frame, &sa_pl);
+            sas_fix(&sa_next);
             sv_cpy(m, "A NEW GROOVE", sizeof m);
         } else if (k == sa_wait_slot) {
             if (sa_wait_clear) { sv_msg(&sa_u, "THAT SET IS EMPTY"); return; }
@@ -325,6 +377,12 @@ static void sa_load_synth(uint32_t part, int sound)
     fm1_irq_off();
     if (snd->own)
         sa_apply_own(trk[part].p, snd->own);
+    if (snd->engine == SAS_ANALOG) {                         /* (0.7.1) the engine presets detuned 20..30 cents beat
+                                                              * sourly in a chord: down to 12 (DTN, E1) */
+        static const char *const TAME[] = {"RAVE", "STRINGS", "SOFT PAD"};
+        for (unsigned k = 0; k < sizeof TAME / sizeof TAME[0]; ++k)
+            if (sound == sas_find(TAME[k])) trk[part].p[P_E0 + 1] = 12;
+    }
     if (snd->fm6)
         sa_fm6_load(&trk[part], snd->fm6);
     sa_base[part].bright = snd->bright >= 0 ? trk[part].p[P_E0 + snd->bright] : 0;
@@ -335,7 +393,16 @@ static void sa_load_synth(uint32_t part, int sound)
 
 static void sa_apply(void)
 {
+    static sa_settings swept;                                /* (SWEEP held: the settings with the filter closing) */
     const sa_settings *s = &sa_g.s;
+    int sw = (int)(sa_g.sweep * 50.0f);                      /* (in 2 % steps: the parts set again as it moves) */
+    if (sw > 0) {
+        swept = sa_g.s;
+        swept.filter = (uint8_t)(swept.filter * (100 - sw * 2 * 85 / 100) / 100);
+        if (swept.mreso < 20 + sw * 2 * 50 / 100)                    /* (and resonant as it closes: up to 70) */
+            swept.mreso = (uint8_t)(20 + sw * 2 * 50 / 100);
+        s = &swept;
+    }
     if (!sa_drums_ready) {
         undo_depth++;
         set_engine_of(&trk[SA_PART_DRUMS], SAS_DRUM);
@@ -353,13 +420,42 @@ static void sa_apply(void)
         }
     }
     uint32_t sig = sv_hashb(2166136261u, s, sizeof *s);
+    sig = sv_hashb(sig, sa_g.az_now, sizeof sa_g.az_now);
+    sig = sv_hashb(sig, &sw, sizeof sw);
+    sig = sv_hashb(sig, sa_g.el_now, sizeof sa_g.el_now);
     for (int p = 0; p < SA_SYNTHS; ++p) sig = sv_hashb(sig, &sa_loaded[p], sizeof sa_loaded[p]);
     if (sig != sa_applied_sig || !sig) {
         fm1_irq_off();
         for (int l = 0; l < SA_LAYERS; ++l) {
             const sa_code *c = &s->code[l];
             if (c->type == SA_T_SYNTH && c->part < SA_SYNTHS && sa_loaded[c->part] == c->sound)
-                sas_synth(&trk[c->part], sas_of(c->sound), &sa_base[c->part], &s->live[l], s);
+            {
+                sa_3d now = s->d3[c->part];                  /* (3D where it is now: moving with ORBIT RANDOM FLY) */
+                now.az = sa_g.az_now[c->part];
+                now.el = sa_g.el_now[c->part];
+                sas_synth(&trk[c->part], sas_of(c->sound), &sa_base[c->part], &s->live[l], s, &now);
+            }
+        }
+        {   /* each drum row's variation onto its channel(s) of the drum engine (eng_drum.c drum_lane_ov) */
+            static const drum_lane_ov_t VAR[SA_DVARS] = {{0, 0, 0, 0}, {0, 0, 10, -28}, {0, 0, -8, 30}, {0, 3, 6, -6},
+                                                          {0, -3, -6, 6}, {2, 0, 0, 0}, {3, 0, 0, 0}, {7, 0, 0, 0}};
+            static const uint8_t LANE[SA_DROWS] = {0, 1, 2, 3, 5, 6, 7};    /* (HATS: the open hat's channel 4 too) */
+            /* CLAP: hands, short and dry with a little room, never the 10's long noise tail: each one from the short
+             * claps (80 55 77 66), the hiss down (kit: 2 the 80, 4 the 66, 5 the 55, 6 the 77, 7 DEEP) */
+            static const drum_lane_ov_t CLAP[SA_DVARS] = {{2, 0, -6, -10}, {5, 0, -8, -30}, {6, 0, -10, 0}, {4, 3, 0, -12},
+                                                           {2, -3, -10, -6}, {2, 0, 0, 0}, {6, 0, 0, 0}, {7, 0, 0, 0}};
+            /* METAL (ride, crash, cowbell): FM, three sine pairs at inharmonic ratios (kit 15: drum_voice.c DV_FM),
+             * no samples; OLD the 77's synthesised metal, darker */
+            static const drum_lane_ov_t METAL[SA_DVARS] = {{15, 0, 0, 0}, {15, 0, -6, -30}, {15, -2, -4, 24},
+                                                            {15, 4, 10, -6}, {15, -5, -10, 10}, {15, 0, -24, 6},
+                                                            {15, 2, 20, 0}, {6, -2, -30, 6}};
+            for (int r = 0; r < SA_DROWS; ++r) {
+                const sa_code *c = &s->code[SA_L_DRUM0 + r];
+                int vv = c->type == SA_T_DRUM ? c->amode % SA_DVARS : 0;
+                drum_lane_ov_t ov = r == SA_DR_CLAP ? CLAP[vv] : r == SA_DR_METAL ? METAL[vv] : VAR[vv];
+                drum_lane_ov[SA_PART_DRUMS][LANE[r]] = ov;
+                if (r == SA_DR_HATS) drum_lane_ov[SA_PART_DRUMS][4] = ov;
+            }
         }
         sas_drums(&trk[SA_PART_DRUMS], s);
         sas_song(s);
@@ -426,13 +522,101 @@ static void sa_fw_init(void)
     sa_pref.boots++;                                         /* each start its own groove (the count kept) */
     sa_prefs_save();
     sa_random(&sa_g.s, sa_pref.boots, &sa_pl);
+    sas_fix(&sa_g.s);                                        /* (the pump by the sounds' types) */
     sa_g.s.look = sa_pref.look;
     sa_g.s.palette = (uint8_t)(settings.palette % NPALETTES);
     sa_edit_reset(&sa_g);
     sa_set_sound(&sa_g, sa_sound, 0);
     sv_init(&sa_u, &sa_g);
+    {   /* SONG as kept (none kept, or all END: sets 1..4, sv_init's) */
+        bool any = false;
+        for (int k = 0; k < SV_STEPS; ++k) any |= sa_pref.song.set[k] != 0;
+        if (any) {
+            sa_u.song = sa_pref.song;
+            for (int k = 0; k < SV_STEPS; ++k) {
+                if (sa_u.song.set[k] > SV_SETS) sa_u.song.set[k] = 0;
+                sa_u.song.bars[k] %= SV_SONG_BARS;
+            }
+            sa_u.song.on = 0;                                /* (SONG starts OFF: a start plays its own groove) */
+        }
+    }
     sa_sets_scan();
     sa_apply();
+}
+
+/* ---- SONG: the steps' sets in turn, each armed a bar before its bar line ---- */
+static sa_settings sa_song_set;                              /* the step armed (kept until its bar line) */
+static int sa_song_end, sa_song_next = -1;
+static bool sa_song_primed;
+static bool sa_song_ok(int k)
+{
+    int st = sa_u.song.set[k];
+    return st >= 1 && st <= SV_SETS && (sa_u.sets[st - 1].used || sa_u.sets[st - 1].wait);
+}
+static int sa_song_after(int k)                              /* the next step with a set (round); -1: none */
+{
+    for (int i = 1; i <= SV_STEPS; ++i)
+        if (sa_song_ok((k + i) % SV_STEPS)) return (k + i) % SV_STEPS;
+    return -1;
+}
+static bool sa_song_arm(int k)
+{
+    int st = sa_u.song.set[k] - 1;
+    if (st == sa_wait_slot) {
+        if (sa_wait_clear) return false;
+        sa_song_set = sa_wait.s;
+    } else if (!sa_set_read(st, &sa_song_set)) {
+        return false;
+    }
+    fm1_irq_off();
+    sa_set_arm(&sa_g, &sa_song_set);
+    fm1_irq_on();
+    return true;
+}
+static void sa_song(void)
+{
+    if (!sa_u.song.on) {
+        sa_u.song_step = -1;
+        sa_song_primed = false;
+        sa_song_next = -1;
+        return;
+    }
+    if (!sa_g.playing) {                                     /* stopped: the first step's set in, ready for PLAY */
+        sa_u.song_step = -1;
+        sa_song_next = -1;
+        if (!sa_song_primed) {
+            int f = sa_song_after(SV_STEPS - 1);
+            if (f >= 0 && sa_song_arm(f)) sv_msg(&sa_u, "SONG: PLAY");
+            sa_song_primed = true;
+        }
+        return;
+    }
+    int bar = sa_g.bar;
+    if (sa_u.song_step < 0) {                                /* SONG on while playing, or PLAY after the first */
+        int f = sa_song_after(SV_STEPS - 1);
+        if (f < 0) return;
+        sa_u.song_step = f;
+        if (sa_song_primed && bar <= 0) {
+            sa_song_end = sv_song_bars(sa_u.song.bars[f]);
+        } else {
+            sa_song_arm(f);
+            sa_song_end = bar + 1 + sv_song_bars(sa_u.song.bars[f]);
+        }
+        sa_song_primed = false;
+        sa_song_next = -1;
+        return;
+    }
+    if (sa_song_next < 0 && bar >= sa_song_end - 1) {       /* the next one, for the bar line */
+        int n = sa_song_after(sa_u.song_step);
+        if (n < 0) return;
+        if (sa_u.song.set[n] != sa_u.song.set[sa_u.song_step] || n != sa_u.song_step) sa_song_arm(n);
+        sa_song_next = n;
+    }
+    if (sa_song_next >= 0 && bar >= sa_song_end) {
+        sa_u.song_step = sa_song_next;
+        sa_song_end += sv_song_bars(sa_u.song.bars[sa_song_next]);
+        sa_song_next = -1;
+    }
 }
 
 /* ---- the main loop ----------------------------------------------------------------------------------------------- */
@@ -473,8 +657,8 @@ static void sa_input(void)
     sa_notes_prev = notes;
 }
 
-/* the LEDs: the page's button; REC while something waits for it (blinking once armed); FX while the layer open is
- * muted; PLAY green while playing; the keys held, else the chord's tones dim */
+/* the LEDs: the page's button (FX past a layer's home page); SEQ while something waits for it (blinking once armed);
+ * REC while step recording (on SETS: blinking, it does the action); on a synth layer the notes it sounds; PLAY green while playing; the keys held, else the chord's tones dim */
 static void sa_leds(void)
 {
     static uint8_t ready;
@@ -488,23 +672,27 @@ static void sa_leds(void)
     if (pb >= 0)
         led_put(nl, panel.btn[pb], 1);
     bool pend = sa_pending(&sa_g) > 0;
-    led_put(nl, panel.btn[B_REC], pend && (!sa_g.drop_armed || (fm1_ms / 125u) % 2u));
-    int ml = sa_u.page == SV_PG_DRUMS ? sv_drow_layer(&sa_u) :
-             (sa_u.page == SV_PG_LAYER || sa_u.page == SV_PG_ARP || sa_u.page == SV_PG_STEPS ||
-              sa_u.page == SV_PG_GATE || sa_u.page == SV_PG_PAN) ? sa_u.layer : -1;
-    if (ml >= 0 && sa_g.s.live[ml].mute)
-        led_put(nl, panel.btn[B_FX], 1);
+    led_put(nl, panel.btn[B_SEQ], pend && (!sa_g.drop_armed || (fm1_ms / 125u) % 2u));   /* SEQ: what waits */
+    led_put(nl, panel.btn[B_REC], sa_u.rec || (sa_u.page == SV_PG_SETS && (fm1_ms / 500u) % 2u));
+    led_put(nl, panel.btn[B_ENV], sa_g.fill_held && (sa_g.fill_on || (fm1_ms / 125u) % 2u));   /* (the fill: lit; waiting
+                                                                                                 * for the beat: blinking) */
+    led_put(nl, panel.btn[B_ARP], sa_g.brk_on && (sa_g.brk_held || (fm1_ms / 125u) % 2u));   /* BREAK (let go: blinking
+                                                                                               * until the 1) */
+    led_put(nl, panel.btn[B_LFO], sa_g.sweep_held);                                       /* SWEEP */
+    led_put(nl, panel.btn[B_OCTDN], sa_u.oct < 0);                  /* the keys' octave moved down, or up */
+    led_put(nl, panel.btn[B_OCTUP], sa_u.oct > 0);
     uint32_t efull = 0, edim = 0;
     bool editing = sv_key_leds(&sa_u, &efull, &edim);   /* DRUMS, STEPS: the keys show what they edit */
     for (k = 0; k < NB; k++)
         led_put(nd, panel.btn[k], 1);
-    uint32_t lit = 0;
-    if (sa_g.playing && !editing)
+    uint32_t lit = editing ? 0u : sv_play_dim(&sa_u);   /* DRUMS: the drum's steps dim; else the chord's tones */
+    if (sa_g.playing && !editing && !lit)
         for (k = 0; k < 27u; k++)
             for (int t = 0; t < 3; ++t)
                 if ((SV_KEY_LO + k) % 12u == sa_g.chord_pc[t]) lit |= 1u << k;
+    uint32_t plays = editing ? 0u : sv_play_keys(&sa_u);   /* the layer open: the notes it sounds, lit */
     for (k = 0; k < 27u; k++) {
-        led_put(nl, 14u + k, (int)((fm1_in.notes >> k) & 1u));
+        led_put(nl, 14u + k, (int)(((fm1_in.notes | plays) >> k) & 1u));
         led_put(nd, 14u + k, (int)((lit >> k) & 1u) || !((fm1_in.notes >> k) & 1u));
     }
     if (sa_g.playing)
@@ -551,6 +739,7 @@ static void sa_frame(void)
         sa_set_do(sa_u.req_act, sa_u.req_slot);
         sa_u.req_act = -1;
     }
+    sa_song();
     sa_apply();
     if (sa_wait_slot >= 0 && !sa_g.playing) {                /* a set stored while playing: now */
         int k = sa_wait_slot;
@@ -567,7 +756,7 @@ static void sa_frame(void)
     if (was_playing && !sa_g.playing) sa_save_ms = now;     /* (stopped: the tails ring out before the flash) */
     was_playing = sa_g.playing;
     if (sa_dirty && !sa_g.playing && now - sa_save_ms > SA_LAST_MS) {   /* the look; LAST, when the groove changed */
-        if (sa_g.s.look != sa_pref_look) sa_prefs_save();
+        if (sa_g.s.look != sa_pref_look || memcmp(&sa_u.song, &sa_pref.song, sizeof sa_u.song)) sa_prefs_save();
         uint32_t sig = sv_hashb(2166136261u, &sa_g.s, sizeof sa_g.s) | 1u;
         if (sig != sa_last_sig && sa_set_write(SV_LAST, &sa_g.s)) {
             sa_last_sig = sig;
@@ -578,6 +767,16 @@ static void sa_frame(void)
     song.playing = sa_g.playing;
     sa_leds();
     sa_u.batt = (int)batt_shown();
+    {   /* MENU's CPU: the audio's load (audio.c), read twice a second */
+        static uint32_t cpu_at;
+        if (now - cpu_at >= 500u) {
+            cpu_at = now;
+            sa_u.cpu = (int)(song.cpu_q8 * 100u / 256u);
+            sa_u.cpu_peak = (int)(audio_max_us * 100u / (HALF_FRAMES * 1000000u / FS));
+            sa_u.shed = (int)shed_count;
+        }
+    }
+    sa_wave();
     sv_tick(&sa_u, dt > 100u ? 100 : (int)dt);
     if (first) {
         sv_draw_all(&sa_u);

@@ -7,7 +7,7 @@ set -eu
 OUT=${1:-build/sa_ui}
 mkdir -p build/host "$OUT/ppm"
 [ -f build/gen/ui_fonts.h ] || python3 -c "import sys; sys.argv=['x']; sys.path.insert(0,'tools'); import build; build.generate()"
-cc -O2 -w -DFELUCCA_SLICE=0 -Ibuild/gen -Ifirmware/src -Itests -o build/host/sa_ui_test tests/sa_ui_test.c \
+cc -O2 -w -DFELUCCA_SLICE=0 -Ibuild/gen -Ifirmware/src -Ifirmware/hal -Ifirmware/bsp/chip -Ifirmware/bsp/boards/fm1 -Itests -o build/host/sa_ui_test tests/sa_ui_test.c \
    firmware/src/sa_layer.c -lm
 build/host/sa_ui_test "$OUT"
 python3 - "$OUT" <<'PY' || echo "(no Pillow: the PPM frames are in $1/ppm)"

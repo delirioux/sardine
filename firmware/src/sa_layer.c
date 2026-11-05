@@ -54,12 +54,37 @@ const char *sa_scale_name(int sc) { return SCALE_NAMES[clampi(sc, 0, SA_SCALES -
 static const uint8_t SCALE[SA_SCALES][7] = {
     {0, 2, 3, 5, 7, 8, 10}, {0, 2, 3, 5, 7, 9, 10}, {0, 1, 3, 5, 7, 8, 10}, {0, 2, 4, 5, 7, 9, 11}};
 static const char *const KIT_NAMES[SA_KITS] = {"TECH", "HOUSE", "DEEP", "HARD", "BOOM", "TIGHT", "AFRO", "DUSTY",
-                                               "CLASSIC"};
+                                               "CLASSIC", "ROOM", "VINTAGE", "MINIMAL", "VOLT", "GARAGE", "DISCO",
+                                               "BREAKS", "DUB", "LOFI", "IRON", "ACID"};
 const char *sa_kit_name(int kit) { return KIT_NAMES[clampi(kit, 0, SA_KITS - 1)]; }
 static const char *const DV_NAMES[SA_DVS] = {"KICK", "SNARE", "CLAP", "HAT", "OPEN HAT", "RIDE", "CRASH", "RIM",
                                              "TOM", "LOW TOM", "CONGA", "COWBELL", "CLAVE", "SHAKER"};
 static const uint8_t DV_GM[SA_DVS] = {36, 38, 39, 42, 46, 51, 49, 37, 45, 41, 63, 56, 75, 70};
 const char *sa_dv_name(int dv) { return DV_NAMES[clampi(dv, 0, SA_DVS - 1)]; }
+/* KICK SNARE CLAP HAT OPEN HAT RIDE CRASH RIM TOM LOW TOM CONGA COWBELL CLAVE SHAKER -> their rows (the drum engine's
+ * channels: the shaker is a closed hat, the conga a tom, the clave a rim, ride crash and cowbell its bell) */
+static const uint8_t DV_ROW[SA_DVS] = {SA_DR_KICK, SA_DR_SNARE, SA_DR_CLAP, SA_DR_HATS, SA_DR_HATS, SA_DR_METAL,
+                                       SA_DR_METAL, SA_DR_RIM, SA_DR_TOMS, SA_DR_TOMS, SA_DR_TOMS, SA_DR_METAL,
+                                       SA_DR_RIM, SA_DR_HATS};
+static const uint8_t ROW_DEF[SA_DROWS] = {SA_DV_KICK, SA_DV_SNARE, SA_DV_CLAP, SA_DV_HAT, SA_DV_TOM, SA_DV_RIM,
+                                          SA_DV_RIDE};
+static const char *const ROW_NAMES[SA_DROWS] = {"KICK", "SNARE", "CLAP", "HATS", "TOMS", "RIM", "METAL"};
+int sa_dv_row(int dv) { return DV_ROW[clampi(dv, 0, SA_DVS - 1)]; }
+static const char *const DVAR_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "80", "10", "DEEP"};
+static const char *const CLAP_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "80", "77", "DEEP"};
+static const char *const METAL_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "DARK", "BRIGHT", "OLD"};
+const char *sa_dvar_name(int row, int v)
+{
+    return (row == SA_DR_CLAP ? CLAP_NAMES : row == SA_DR_METAL ? METAL_NAMES : DVAR_NAMES)[clampi(v, 0, SA_DVARS - 1)];
+}
+const char *sa_row_name(int row) { return ROW_NAMES[clampi(row, 0, SA_DROWS - 1)]; }
+int sa_row_voices(int row, uint8_t *out)
+{
+    int n = 0;
+    for (int v = 0; v < SA_DVS; ++v)
+        if (DV_ROW[v] == row) out[n++] = (uint8_t)v;
+    return n;
+}
 uint8_t sa_dv_gm(int dv) { return DV_GM[clampi(dv, 0, SA_DVS - 1)]; }
 static const char *const ARP_NAMES[SA_AR_MODES] = {"OFF", "UP", "DOWN", "UP-DOWN", "DOWN-UP", "CONVERGE", "DIVERGE",
                                                    "RANDOM", "THUMB", "PINKY", "STRUM"};
@@ -491,7 +516,7 @@ static int bar_query(const sa_code *c, int layer, int bar, qev **out)
 uint16_t sa_preview(const sa_groove *g, const sa_code *c, int layer, int bar)
 {
     (void)g;
-    if (c->type == SA_T_NONE) return 0;
+    if (c->type == SA_T_NONE || (c->pat == SA_PAT_OFF && !c->own)) return 0;
     qev *e;
     int n = bar_query(c, layer, bar < 0 ? 0 : bar, &e);
     uint16_t bits = 0;
@@ -503,6 +528,12 @@ uint16_t sa_preview(const sa_groove *g, const sa_code *c, int layer, int bar)
 }
 
 /* ---- the chords ---------------------------------------------------------------------------------------------- */
+int sa_degree(const sa_harm *h, int deg)
+{
+    int o = deg >= 0 ? deg / 7 : -((6 - deg) / 7);
+    return 12 * o + SCALE[h->scale % SA_SCALES][deg - 7 * o];
+}
+
 int sa_snap(const sa_harm *h, int note)
 {
     const uint8_t *sc = SCALE[clampi(h->scale, 0, SA_SCALES - 1)];
@@ -521,7 +552,8 @@ int sa_snap(const sa_harm *h, int note)
 static void chord_of_bar(sa_groove *g, int bar)
 {
     const sa_harm *h = &g->s.harm;
-    int p = clampi(h->prog, 0, SA_PROGS - 1), bars = h->bars >= 4 ? 4 : h->bars >= 2 ? 2 : 1;
+    int p = clampi(g->part_b && g->s.progb ? g->s.progb - 1 : h->prog, 0, SA_PROGS - 1);   /* (PART B: its own) */
+    int bars = h->bars >= 4 ? 4 : h->bars >= 2 ? 2 : 1;
     int i = (bar < 0 ? 0 : bar / bars) % PROG[p].n;
     int d = PROG[p].deg[i], sc = clampi(h->scale, 0, SA_SCALES - 1);
     for (int t = 0; t < 4; ++t)
@@ -574,20 +606,86 @@ static int arp_pick(int mode, uint32_t i, int n, int layer)
     }
 }
 
+/* a layer's code as PART plays it: B's pattern in place of A's (an own pattern is A's) */
+static const sa_code *code_now(const sa_groove *g, int l)
+{
+    static sa_code tmp;
+    const sa_code *c = &g->s.code[l];
+    uint8_t b = g->s.patb[l];
+    if (!g->part_b || b == 0) return c;
+    tmp = *c;
+    tmp.own = 0;
+    tmp.pat = b == SA_PATB_OFF ? SA_PAT_OFF : (uint8_t)(b - 1);
+    return &tmp;
+}
+
+/* PHRASE: a synth layer's bar as the phrase has it (four bars: A A A' B). Bar 3: the second half's chord tones a
+ * tone up (an own note a step up the scale). Bar 4, the answer: LEAD's first note of the second half on the root,
+ * held, nothing after it; BASS and CHORD quiet over the last beat (the fill's room), BASS's last note on the root */
+static int phrase_bar(sa_groove *g, int l, qev *e, int n, int32_t b0, int bar)
+{
+    int ph = g->s.phrase == 0 && bar >= 0 ? bar % 4 : 0;
+    if (ph < 2 || l >= SA_L_DRUM0) return n;
+    int half = SA_TPB / 2, last = 3 * SA_TPB / 4, m = 0, f = -1;
+    for (int i = 0; i < n; ++i) {
+        int tick = (int)(e[i].t - b0);
+        if (ph == 2) {
+            if (tick >= half && e[i].tone == SA_NOTE) e[i].n = (int8_t)(sa_snap(&g->s.harm, g->s.harm.key + e[i].n + 2) -
+                                                                       g->s.harm.key);
+            else if (tick >= half && e[i].tone < 3) e[i].tone = (uint8_t)(e[i].tone + 1);
+            e[m++] = e[i];
+            continue;
+        }
+        if (l == SA_L_LEAD) {
+            if (tick >= half && f >= 0) continue;
+            if (tick >= half) {
+                f = m;
+                e[i].d = (uint8_t)clampi(SA_TPB - SA_TPS - tick, 1, 255);
+            }
+        } else {
+            if (tick >= last) continue;
+            if (tick >= half) f = m;
+        }
+        e[m++] = e[i];
+    }
+    if (ph == 3 && f >= 0 && (l == SA_L_LEAD || l == SA_L_BASS) && e[f].tone != SA_CH) {
+        if (e[f].tone == SA_NOTE) {                /* (an own note: the chord's root nearest it) */
+            int p = g->s.harm.key + e[f].n, dn = ((p - g->chord_pc[0]) % 12 + 12) % 12;
+            p += dn > 6 ? 12 - dn : -dn;
+            e[f].n = (int8_t)(p - g->s.harm.key);
+        } else {
+            e[f].tone = 0;
+        }
+    }
+    return m;
+}
+
 static void layer_bar(sa_groove *g, int l, int bar)
 {
-    const sa_code *c = &g->s.code[l];
-    if (c->type == SA_T_NONE) return;
+    const sa_code *c = code_now(g, l);
+    if (c->type == SA_T_NONE || (c->pat == SA_PAT_OFF && !c->own)) return;
     qev *e;
     int n = bar_query(c, l, bar, &e);
     int32_t b0 = (int32_t)bar * SA_TPB;
-    if (c->type == SA_T_DRUM) {
-        int lv = g->s.live[l].level, note = sa_dv_gm(c->sound);
-        for (int i = 0; i < n; ++i)
-            bn_add(g, (int)(e[i].t - b0), e[i].d, note, e[i].v * (20 + lv * 80 / 100) / 100, l);
+    if (c->type == SA_T_DRUM) {                    /* LEVEL; ACCENT (env, 50: as written); CHANCE (cut) */
+        const sa_live *v = &g->s.live[l];
+        int lv = v->level, note = sa_dv_gm(c->sound), ac = v->env, ch = v->cut;
+        for (int i = 0; i < n; ++i) {
+            if (ch < 100) {
+                uint32_t h = ((uint32_t)bar * 2654435761u) ^ ((uint32_t)e[i].t * 40503u) ^ ((uint32_t)l * 2246822519u);
+                h ^= h >> 15;
+                h *= 2654435761u;
+                if ((int)((h >> 16) % 100u) >= ch) continue;
+            }
+            int vel = e[i].v;
+            vel = vel >= 120 ? 90 + (vel - 90) * ac / 50 : vel * (150 - ac) / 100;
+            vel = clampi(vel, 20, 127);
+            bn_add(g, (int)(e[i].t - b0), e[i].d, note, vel * (20 + lv * 80 / 100) / 100, l);
+        }
         return;
     }
     int poct = c->own ? c->ooct : SPAT[c->pat % NSPAT].oct;
+    n = phrase_bar(g, l, e, n, b0, bar);
     for (int i = 0; i < n; ++i) {
         int tick = (int)(e[i].t - b0), oct = poct + e[i].oct;
         int own_note = e[i].tone == SA_NOTE ? g->s.harm.key + e[i].n + 12 * e[i].oct : -1;
@@ -637,6 +735,8 @@ static void bar_build(sa_groove *g)
 bool sa_chordy(const sa_code *c)
 {
     if (c->type != SA_T_SYNTH) return false;
+    if (c->part == SA_L_CHORD) return true;        /* (the CHORD layer: its steps are chords) */
+    if (c->pat == SA_PAT_OFF) return false;
     const spat *p = &SPAT[c->pat % NSPAT];
     for (int i = 0; i < p->n; ++i)
         if (p->s[i].tone == SA_CH) return true;
@@ -650,6 +750,11 @@ void sa_own_make(sa_groove *g, sa_code *c)
     for (int i = 0; i < 16; ++i) {
         c->sn[i] = SA_NO_NOTE;
         c->sl[i] = 1;
+    }
+    if (c->pat == SA_PAT_OFF) {                    /* (OFF: an empty one, in the layer's octave) */
+        c->ooct = (uint8_t)(c->part == SA_L_BASS ? 2 : c->part == SA_L_LEAD ? 5 : 4);
+        c->own = 1;
+        return;
     }
     if (c->type == SA_T_DRUM) {                    /* (a triplet hit goes to its nearest sixteenth) */
         const dpat *p = &DPAT[c->pat % NDPAT];
@@ -720,8 +825,8 @@ void sa_step_len(sa_groove *g, int l, int st, int d)
 
 void sa_pat_label(const sa_code *c, char *out, int max)
 {
-    cpy(out, sa_pat_name(c->type, c->pat), max);
-    if (c->own) cat(out, " EDIT", max);
+    if (c->own) { cpy(out, "MY STEPS", max); return; }
+    cpy(out, c->pat == SA_PAT_OFF ? "OFF" : sa_pat_name(c->type, c->pat), max);
 }
 
 /* ---- the gates ---------------------------------------------------------------------------------------------------- */
@@ -818,6 +923,11 @@ static void pan_note(sa_groove *g, int l)
     const sa_code *c = &g->s.code[l];
     const sa_pan *p = &g->s.pan[l];
     if (c->type != SA_T_SYNTH || c->part >= SA_SYNTHS) return;
+    if (g->s.d3[c->part].on == SA_3D_RANDOM) {     /* 3D RANDOM: each note somewhere round you */
+        g->pan_rnd = g->pan_rnd * 1664525u + 1013904223u;
+        g->az_now[c->part] = (uint8_t)((g->pan_rnd >> 16) % SA_AZ_STEPS);
+        return;
+    }
     int w = p->width / 2;                          /* (WIDTH 100: 50 each way) */
     if (p->mode == SA_PAN_PINGPONG) {
         g->pan_side[l] ^= 1u;
@@ -829,6 +939,14 @@ static void pan_note(sa_groove *g, int l)
     }
 }
 /* every block: FIXED and SWEEP (a triangle from one side to the other and back over RATE) */
+int sa_sin5(int k)
+{
+    static const uint8_t Q[19] = {0, 11, 22, 33, 43, 54, 64, 73, 82, 90, 97, 104, 110, 115, 119, 123, 125, 127, 127};
+    k %= SA_AZ_STEPS;
+    if (k < 0) k += SA_AZ_STEPS;
+    return k <= 18 ? Q[k] : k <= 36 ? Q[36 - k] : k <= 54 ? -Q[k - 36] : -Q[SA_AZ_STEPS - k];
+}
+
 static void pan_block(sa_groove *g)
 {
     static const uint8_t RATE_Q[SA_PRATES] = {1, 2, 4, 8, 16};     /* in quarter bars */
@@ -836,7 +954,19 @@ static void pan_block(sa_groove *g)
         const sa_code *c = &g->s.code[l];
         const sa_pan *p = &g->s.pan[l];
         if (c->type != SA_T_SYNTH || c->part >= SA_SYNTHS) continue;
-        if (p->mode == SA_PAN_FIXED) {
+        const sa_3d *d = &g->s.d3[c->part];
+        if (d->on) {                               /* 3D: where it is now; the angle pans it */
+            float len = (float)(SA_TPB / 4 * RATE_Q[g->s.d3rate[c->part] % SA_PRATES]);
+            float at = (float)((g->bar < 0 ? 0 : g->bar) * SA_TPB + (g->tick < 0 ? 0 : g->tick));
+            float ph = at / len;
+            ph -= (float)(int)ph;
+            int k = (int)(ph * (float)SA_AZ_STEPS);
+            g->el_now[c->part] = d->el;
+            if (d->on == SA_3D_FIXED) g->az_now[c->part] = d->az;
+            else if (d->on == SA_3D_ORBIT || d->on == SA_3D_FLY) g->az_now[c->part] = (uint8_t)((d->az + k) % SA_AZ_STEPS);
+            if (d->on == SA_3D_FLY) g->el_now[c->part] = (int8_t)clampi(d->el + sa_sin5(2 * k) * 30 / 127, -50, 50);
+            g->pan_now[c->part] = (int8_t)(sa_sin5(g->az_now[c->part]) * 63 / 127);
+        } else if (p->mode == SA_PAN_FIXED) {
             g->pan_now[c->part] = (int8_t)pan_val(p->pos, 0);
         } else if (p->mode == SA_PAN_SWEEP) {
             float len = (float)(SA_TPB / 4 * RATE_Q[p->rate % SA_PRATES]);
@@ -884,6 +1014,7 @@ static void live_default(sa_live *v)
 /* the synth sounds the first groove uses (sa_sounds.h indices: kept in step with it) */
 #define SA_DEF_BASS 0
 #define SA_DEF_STAB 1
+static int pat_find(int type, const char *name);
 void sa_defaults(sa_settings *s)
 {
     memset(s, 0, sizeof *s);
@@ -909,15 +1040,76 @@ void sa_defaults(sa_settings *s)
         s->pan[l].width = 60;
         s->pan[l].rate = SA_PRATE_BAR;
     }
-    code_drum(&s->code[0], SA_DV_KICK, 0);         /* 4 FLOOR */
-    code_drum(&s->code[1], SA_DV_HAT, 1);          /* OFFBEAT */
-    code_drum(&s->code[2], SA_DV_CLAP, 2);         /* 2 + 4 */
-    code_synth(&s->code[3], SA_DEF_BASS, 1, 0);    /* ROLLER */
-    code_synth(&s->code[4], SA_DEF_STAB, 13, 1);   /* STAB 2 */
+    for (int p = 0; p < SA_SYNTHS; ++p) s->d3rate[p] = SA_PRATE_2BARS;
+    s->dvol = 80;
+    for (int p = 0; p < SA_SYNTHS; ++p) {          /* LEAD 10 %, CHORD 80 %, BASS 50 % until the glue sets it by type */
+        static const uint8_t DEP[SA_SYNTHS] = {10, 80, 50};
+        s->pl[p].depth = DEP[p];
+        s->pl[p].rel = 50;
+        s->pl[p].src = SA_PS_KICK;
+        s->pl[p].on = 2;
+    }
+    code_synth(&s->code[SA_L_LEAD], SA_DEF_BASS, pat_find(SA_T_SYNTH, "RIFF"), SA_L_LEAD);   /* (in after a pattern: arrange) */
+    code_synth(&s->code[SA_L_CHORD], SA_DEF_STAB, 13, SA_L_CHORD);   /* STAB 2 */
+    code_synth(&s->code[SA_L_BASS], SA_DEF_BASS, 1, SA_L_BASS);      /* ROLLER */
+    for (int r = 0; r < SA_DROWS; ++r)
+        code_drum(&s->code[SA_L_DRUM0 + r], ROW_DEF[r], SA_PAT_OFF);
+    s->code[SA_L_DRUM0 + SA_DR_KICK].pat = 0;                         /* 4 FLOOR */
+    s->code[SA_L_DRUM0 + SA_DR_HATS].pat = 1;                         /* OFFBEAT */
+    s->code[SA_L_DRUM0 + SA_DR_CLAP].pat = 2;                         /* 2 + 4 */
+    sa_make_b(s, 1);
+}
+
+/* the fixed layers: LEAD CHORD BASS in slots 0..2 on parts 0..2 (a synth layer elsewhere, or a drum there, moves:
+ * its code, sound, gate and pan with it); a slot of them empty: that synth, OFF */
+static void canon(sa_settings *s)
+{
+    sa_code c[SA_LAYERS];
+    sa_live v[SA_LAYERS];
+    sa_gate gt[SA_LAYERS];
+    sa_pan pn[SA_LAYERS];
+    bool have[3] = {false, false, false}, row[SA_DROWS] = {false};
+    memset(c, 0, sizeof c);
+    for (int l = 0; l < SA_LAYERS; ++l) {
+        live_default(&v[l]);
+        gate_default(&gt[l]);
+        memset(&pn[l], 0, sizeof pn[l]);
+        pn[l].width = 60;
+        pn[l].rate = SA_PRATE_BAR;
+    }
+    for (int l = 0; l < SA_LAYERS; ++l) {           /* the synths to their parts' slots (the first of a part wins) */
+        const sa_code *o = &s->code[l];
+        int to = -1;
+        if (o->type == SA_T_SYNTH && o->part < 3 && !have[o->part]) to = o->part;
+        else if (o->type == SA_T_DRUM && !row[DV_ROW[o->sound % SA_DVS]]) to = SA_L_DRUM0 + DV_ROW[o->sound % SA_DVS];
+        if (to < 0) continue;                      /* (a second drum on a row's channel: it goes) */
+        if (o->type == SA_T_SYNTH) have[to] = true;
+        else row[to - SA_L_DRUM0] = true;
+        c[to] = *o;
+        v[to] = s->live[l];
+        gt[to] = s->gate[l];
+        pn[to] = s->pan[l];
+    }
+    for (int p = 0; p < 3; ++p)
+        if (!have[p]) code_synth(&c[p], 0, SA_PAT_OFF, p);
+    for (int r = 0; r < SA_DROWS; ++r)              /* every row there: OFF if the groove has none */
+        if (!row[r]) code_drum(&c[SA_L_DRUM0 + r], ROW_DEF[r], SA_PAT_OFF);
+    memcpy(s->code, c, sizeof c);
+    memcpy(s->live, v, sizeof v);
+    memcpy(s->gate, gt, sizeof gt);
+    memcpy(s->pan, pn, sizeof pn);
 }
 
 void sa_settings_fix(sa_settings *s)
 {
+    canon(s);                                      /* (first: the clamps below then hold for every slot) */
+    s->phrase = (uint8_t)(s->phrase ? 1 : 0);
+    s->abauto = (uint8_t)(s->abauto % SA_ABAUTOS);
+    if (s->progb > SA_PROGS) s->progb = 0;
+    for (int l = 0; l < SA_LAYERS; ++l) {
+        int t = s->code[l].type == SA_T_DRUM ? sa_drum_pats() : sa_synth_pats();
+        if (s->patb[l] != SA_PATB_OFF && s->patb[l] > t) s->patb[l] = 0;
+    }
     s->bpm = (uint8_t)clampi(s->bpm, 60, 200);
     s->filter = (uint8_t)clampi(s->filter, 0, 100);
     s->feel = (uint8_t)clampi(s->feel, 0, 60);
@@ -951,13 +1143,13 @@ void sa_settings_fix(sa_settings *s)
             if (c->type == SA_T_SYNTH) {
                 parts |= (uint8_t)(1u << c->part);
                 synths++;
-                c->pat %= (uint8_t)NSPAT;
+                if (c->pat != SA_PAT_OFF) c->pat %= (uint8_t)NSPAT;
             }
         }
         if (c->type == SA_T_DRUM) {
             c->part = SA_PART_DRUMS;
             c->sound %= SA_DVS;
-            c->pat %= (uint8_t)NDPAT;
+            if (c->pat != SA_PAT_OFF) c->pat %= (uint8_t)NDPAT;
         }
         for (int i = 0; i < SA_MODS; ++i) {
             sa_mod *m = &c->mod[i];
@@ -970,7 +1162,8 @@ void sa_settings_fix(sa_settings *s)
         c->ooct = (uint8_t)clampi(c->ooct, 1, 6);
         for (int i = 0; i < 16; ++i)
             c->sl[i] = (uint8_t)clampi(c->sl[i], 1, 16);
-        c->amode = (uint8_t)(c->amode < SA_AR_MODES ? c->amode : 0);
+        c->amode = (uint8_t)(c->amode < (c->type == SA_T_DRUM ? SA_DVARS : SA_AR_MODES) ? c->amode : 0);   /* (a drum: its
+                                                                                                   * variation) */
         c->arate = (uint8_t)clampi(c->arate, 0, SA_RATES - 1);
         c->arange = (uint8_t)clampi(c->arange, 1, 4);
         c->agate = (uint8_t)clampi(c->agate, 10, 100);
@@ -992,6 +1185,26 @@ void sa_settings_fix(sa_settings *s)
         pn->pos = (int8_t)clampi(pn->pos, -50, 50);
         pn->width = (uint8_t)clampi(pn->width, 0, 100);
         pn->rate = (uint8_t)(pn->rate % SA_PRATES);
+    }
+    for (int p = 0; p < SA_SYNTHS; ++p) {
+        sa_pumpl *q = &s->pl[p];
+        q->depth = (uint8_t)clampi(q->depth, 0, 100);
+        q->rel = (uint8_t)clampi(q->rel, 0, 100);
+        q->src = (uint8_t)(q->src % SA_PSRCS);
+        if (q->on > 2) q->on = 1;
+    }
+    for (int p = 0; p < SA_SYNTHS; ++p) {
+        sa_3d *d = &s->d3[p];
+        d->on = (uint8_t)(d->on % SA_3D_MODES);
+        s->d3rate[p] = (uint8_t)(s->d3rate[p] % SA_PRATES);
+        s->dvol = (uint8_t)clampi(s->dvol, 0, 100);
+        s->mreso = (uint8_t)clampi(s->mreso, 0, 100);
+        s->intro %= SA_INTROS;
+        s->arc %= SA_ARCS;
+        s->dmute = (uint8_t)(s->dmute ? 1 : 0);
+        d->az %= SA_AZ_STEPS;
+        d->el = (int8_t)clampi(d->el, -50, 50);
+        d->dist = (uint8_t)clampi(d->dist, 0, 100);
     }
 }
 
@@ -1020,13 +1233,56 @@ static int pat_find(int type, const char *name)
 static int pick_pat(uint32_t *r, int type, const char *const *names, int n) { return pat_find(type, names[rnd(r, n)]); }
 static int pick_sound(uint32_t *r, const uint8_t *list, int n) { return n > 0 ? list[rnd(r, n)] : 0; }
 
+static const char *const BASS[] = {"OFFBEAT", "ROLLER", "ROOT 8THS", "OCTAVE", "PUMP 16", "SYNCO", "ACID",
+                                   "GROWL", "2-STEP", "HALF"};
+static const char *const STABS[] = {"STAB 1", "STAB 2", "OFFBEATS", "HOUSE", "CHARLESTON", "DOWNBEAT", "PUSH",
+                                    "DOTTED"};
+static const char *const PADS[] = {"WASH", "TWO HALVES", "SWELL"};
+static const char *const LEADS[] = {"TONES UP", "RIFF", "PLUCKS", "CALL"};
+#define NL(a) ((int)(sizeof a / sizeof a[0]))
+
+/* another pattern of a list than cur (cur not in it: any of it); -1 none */
+static int other_in(uint32_t *r, const char *const *names, int n, int cur)
+{
+    int in = 0, c[16], m = 0;
+    for (int i = 0; i < n && i < 16; ++i) {
+        int p = pat_find(SA_T_SYNTH, names[i]);
+        if (p == cur) in = 1;
+        else if (p >= 0) c[m++] = p;
+    }
+    (void)in;
+    return m ? c[rnd(r, m)] : -1;
+}
+
+void sa_make_b(sa_settings *s, uint32_t seed)
+{
+    uint32_t r = seed * 2654435761u ^ 0xB5297A4Du;
+    if (!r) r = 1;
+    memset(s->patb, 0, sizeof s->patb);
+    for (int l = 0; l < SA_SYNTHS; ++l) {
+        const sa_code *c = &s->code[l];
+        if (c->type != SA_T_SYNTH || c->pat == SA_PAT_OFF) continue;
+        int b = -1, cur = c->own ? -1 : c->pat;
+        if (l == SA_L_LEAD) b = other_in(&r, LEADS, NL(LEADS), cur);
+        else if (l == SA_L_BASS) b = other_in(&r, BASS, NL(BASS), cur);
+        else {
+            int pad = 0;
+            for (int i = 0; i < NL(PADS); ++i) pad |= pat_find(SA_T_SYNTH, PADS[i]) == cur;
+            b = pad ? other_in(&r, PADS, NL(PADS), cur) : other_in(&r, STABS, NL(STABS), cur);
+        }
+        if (b >= 0) s->patb[l] = (uint8_t)(b + 1);
+    }
+    const sa_code *h = &s->code[SA_L_DRUM0 + SA_DR_HATS];   /* the hats busier */
+    if (h->type == SA_T_DRUM && h->pat != SA_PAT_OFF) {
+        int p = pat_find(SA_T_DRUM, "16THS");
+        if (p == h->pat) p = pat_find(SA_T_DRUM, "OFFBEAT");
+        if (p >= 0 && p != h->pat) s->patb[SA_L_DRUM0 + SA_DR_HATS] = (uint8_t)(p + 1);
+    }
+    s->progb = (uint8_t)((s->harm.prog + 1 + rnd(&r, SA_PROGS - 1)) % SA_PROGS + 1);
+}
+
 void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p)
 {
-    static const char *const BASS[] = {"OFFBEAT", "ROLLER", "ROOT 8THS", "OCTAVE", "PUMP 16", "SYNCO", "ACID",
-                                       "GROWL", "2-STEP", "HALF"};
-    static const char *const STABS[] = {"STAB 1", "STAB 2", "OFFBEATS", "HOUSE", "CHARLESTON", "DOWNBEAT", "PUSH",
-                                        "DOTTED"};
-    static const char *const PADS[] = {"WASH", "TWO HALVES", "SWELL"};
     static const char *const HATS[] = {"OFFBEAT", "16THS", "SKIP", "OFFBEAT"};
     static const uint8_t BPM[] = {122, 124, 125, 126, 126, 128, 128, 130};
     static const uint8_t FEEL[] = {0, 8, 14, 18, 18, 24};
@@ -1047,39 +1303,37 @@ void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p)
     s->harm.scale = SCL[rnd(&r, sizeof SCL)];
     s->harm.prog = (uint8_t)rnd(&r, SA_PROGS);
     s->harm.bars = BARS[rnd(&r, sizeof BARS)];
-    int l = 0;
+    int l = SA_L_DRUM0;
     /* the drums: a kick, hats, a clap or a snare on 2 and 4; sometimes an open hat, a shaker, a rim, a conga, a ride */
     code_drum(&s->code[l++], SA_DV_KICK, pat_find(SA_T_DRUM, rnd(&r, 8) ? "4 FLOOR" : rnd(&r, 2) ? "2-STEP" : "BROKEN"));
     int hat = pick_pat(&r, SA_T_DRUM, HATS, (int)(sizeof HATS / sizeof HATS[0]));
-    code_drum(&s->code[l++], SA_DV_HAT, hat);
+    code_drum(&s->code[l++], rnd(&r, 5) ? SA_DV_HAT : SA_DV_SHAKER, hat);
     code_drum(&s->code[l++], rnd(&r, 3) ? SA_DV_CLAP : SA_DV_SNARE, pat_find(SA_T_DRUM, "2 + 4"));
-    if (hat != pat_find(SA_T_DRUM, "OFFBEAT") && rnd(&r, 2))
-        code_drum(&s->code[l++], SA_DV_OPEN, pat_find(SA_T_DRUM, "OFFBEAT"));
-    switch (rnd(&r, 6)) {
-    case 0: code_drum(&s->code[l++], SA_DV_SHAKER, pat_find(SA_T_DRUM, "SHAKE")); break;
+    (void)hat;
+    switch (rnd(&r, 6)) {                          /* (one more, on a row of its own) */
+    case 0: code_drum(&s->code[l++], SA_DV_CLAVE, pat_find(SA_T_DRUM, "CLAVE")); break;
     case 1: code_drum(&s->code[l++], SA_DV_RIM, pat_find(SA_T_DRUM, "SYNCO")); break;
     case 2: code_drum(&s->code[l++], SA_DV_CONGA, pat_find(SA_T_DRUM, "TRESILLO")); break;
     case 3: code_drum(&s->code[l++], SA_DV_RIDE, pat_find(SA_T_DRUM, "8THS")); break;
     default: break;
     }
-    /* the synths: a bass; stabs or a pad; now and then both */
-    code_synth(&s->code[l++], pick_sound(&r, p->bass, p->nbass),
-               pick_pat(&r, SA_T_SYNTH, BASS, (int)(sizeof BASS / sizeof BASS[0])), 0);
-    bool stab = rnd(&r, 100) < 55, both = rnd(&r, 100) < 40;
-    for (int k = 0; k < (both ? 2 : 1); ++k) {
-        bool st = k == 0 ? stab : !stab;
-        int sl = l++;
-        if (st) {
-            code_synth(&s->code[sl], pick_sound(&r, p->keys, p->nkeys),
-                       pick_pat(&r, SA_T_SYNTH, STABS, (int)(sizeof STABS / sizeof STABS[0])), 1 + k);
-        } else {
-            code_synth(&s->code[sl], pick_sound(&r, p->pad, p->npad),
-                       pick_pat(&r, SA_T_SYNTH, PADS, (int)(sizeof PADS / sizeof PADS[0])), 1 + k);
-            if (rnd(&r, 100) < 35) s->gate[sl].pat = (uint8_t)(1 + rnd(&r, SA_GATES - 1));   /* a gated pad */
-            if (rnd(&r, 100) < 40) s->pan[sl].mode = SA_PAN_SWEEP;
-        }
+    /* BASS always; CHORD stabs or a pad (sometimes gated, sweeping); LEAD now and then, mostly OFF */
+    code_synth(&s->code[SA_L_BASS], pick_sound(&r, p->bass, p->nbass),
+               pick_pat(&r, SA_T_SYNTH, BASS, (int)(sizeof BASS / sizeof BASS[0])), SA_L_BASS);
+    if (rnd(&r, 100) < 55) {
+        code_synth(&s->code[SA_L_CHORD], pick_sound(&r, p->keys, p->nkeys),
+                   pick_pat(&r, SA_T_SYNTH, STABS, (int)(sizeof STABS / sizeof STABS[0])), SA_L_CHORD);
+    } else {
+        code_synth(&s->code[SA_L_CHORD], pick_sound(&r, p->pad, p->npad),
+                   pick_pat(&r, SA_T_SYNTH, PADS, (int)(sizeof PADS / sizeof PADS[0])), SA_L_CHORD);
+        if (rnd(&r, 100) < 35) s->gate[SA_L_CHORD].pat = (uint8_t)(1 + rnd(&r, SA_GATES - 1));
+        if (rnd(&r, 100) < 40) s->pan[SA_L_CHORD].mode = SA_PAN_SWEEP;
     }
+    code_synth(&s->code[SA_L_LEAD], pick_sound(&r, p->lead, p->nlead),
+               pick_pat(&r, SA_T_SYNTH, LEADS, (int)(sizeof LEADS / sizeof LEADS[0])), SA_L_LEAD);   /* (always: a song
+                                                     * has a lead; it comes in after a pattern, arrange) */
     sa_settings_fix(s);
+    sa_make_b(s, seed);                            /* (on the slots as canon placed them) */
 }
 
 /* ---- the engine ------------------------------------------------------------------------------------------------ */
@@ -1109,13 +1363,16 @@ void sa_edit_reset(sa_groove *g)
     memcpy(g->ed, g->s.code, sizeof g->ed);
     memcpy(g->ed_gate, g->s.gate, sizeof g->ed_gate);
     g->ed_harm = g->s.harm;
+    memcpy(g->ed_patb, g->s.patb, sizeof g->ed_patb);
+    g->ed_progb = g->s.progb;
     g->drop_armed = false;
 }
 
 bool sa_layer_pending(const sa_groove *g, int l)
 {
     return l >= 0 && l < SA_LAYERS && (memcmp(&g->ed[l], &g->s.code[l], sizeof g->ed[l]) != 0 ||
-                                       memcmp(&g->ed_gate[l], &g->s.gate[l], sizeof g->ed_gate[l]) != 0);
+                                       memcmp(&g->ed_gate[l], &g->s.gate[l], sizeof g->ed_gate[l]) != 0 ||
+                                       g->ed_patb[l] != g->s.patb[l]);
 }
 
 int sa_pending(const sa_groove *g)
@@ -1123,7 +1380,7 @@ int sa_pending(const sa_groove *g)
     int n = 0;
     for (int l = 0; l < SA_LAYERS; ++l)
         n += sa_layer_pending(g, l);
-    n += memcmp(&g->ed_harm, &g->s.harm, sizeof g->ed_harm) != 0;
+    n += memcmp(&g->ed_harm, &g->s.harm, sizeof g->ed_harm) != 0 || g->ed_progb != g->s.progb;
     return n;
 }
 
@@ -1230,7 +1487,18 @@ static void drop_now(sa_groove *g)
     memcpy(g->s.code, g->ed, sizeof g->ed);
     memcpy(g->s.gate, g->ed_gate, sizeof g->ed_gate);
     g->s.harm = g->ed_harm;
+    memcpy(g->s.patb, g->ed_patb, sizeof g->s.patb);
+    g->s.progb = g->ed_progb;
     g->drop_armed = false;
+    g->sound_sig++;
+}
+
+void sa_sound_now(sa_groove *g, int l, int sound)
+{
+    if (l < 0 || l >= SA_LAYERS || g->s.code[l].type != SA_T_SYNTH) return;
+    part_off(g, g->s.code[l].part);
+    g->s.code[l].sound = (uint8_t)sound;
+    g->ed[l].sound = (uint8_t)sound;
     g->sound_sig++;
 }
 
@@ -1260,6 +1528,10 @@ static void set_now(sa_groove *g)
     g->s.look = look;
     sa_settings_fix(&g->s);
     memset(g->arp_i, 0, sizeof g->arp_i);
+    g->part_b = g->part_cue = false;               /* (a groove in: its A) */
+    bool nob = g->s.progb == 0;                    /* (an older set: no B yet, made from its A) */
+    for (int l = 0; l < SA_LAYERS; ++l) nob &= g->s.patb[l] == 0;
+    if (nob) sa_make_b(&g->s, (uint32_t)g->s.bpm * 977u + g->s.harm.key * 31u + g->s.harm.prog);
     sa_edit_reset(g);
     g->sound_sig++;
 }
@@ -1273,11 +1545,35 @@ void sa_set_arm(sa_groove *g, const sa_settings *s)
     }
 }
 
+static void arrange(sa_groove *g);
+/* after a long BREAK, the beat of the two bars each drum row is back on: KICK (and the bass) on the 1, the hats,
+ * the metal, the rim, the snare on the second bar's 1, the clap, the toms */
+static const uint8_t BACK_BEAT[SA_DROWS] = {0, 4, 5, 1, 6, 3, 2};   /* KICK SNARE CLAP HATS TOMS RIM METAL */
 static void bar_line(sa_groove *g)
 {
     for (int l = 0; l < SA_LAYERS; ++l) {
         g->hits_last[l] = g->hits[l];
         g->hits[l] = 0;
+    }
+    if (g->arr_fill && !g->fill_held) g->fill_on = 0;   /* (ARC's roll: over on the 1, its crash there) */
+    arrange(g);
+    if (g->back_on && ++g->back_bar >= 2) g->back_on = 0;   /* (the build back in: two bars) */
+    if (g->brk_on && g->brk_held && g->brk_bars < 255) g->brk_bars++;
+    if (g->brk_on && !g->brk_held) {               /* BREAK let go: everything back on this 1; after 4 bars or
+                                                    * more the drums one by one over two bars (BACK_BEAT) */
+        g->brk_on = false;
+        g->back_on = g->brk_bars >= 4;
+        g->back_bar = 0;
+        msg(g, g->back_on ? "BACK IN" : "DROP");
+    }
+    if (g->bar >= 0 && g->bar % 4 == 0) {          /* PART on the phrase: A/B by itself, or the one wanted */
+        int ab = sa_ab_bars(g->s.abauto);
+        if (ab && g->bar > 0 && g->bar % ab == 0) g->part_cue = !g->part_b;
+        if (g->part_cue != g->part_b) {
+            g->part_b = g->part_cue;
+            for (int l = 0; l < SA_LAYERS; ++l) g->arp_i[l] = 0;
+            msg(g, g->part_b ? "PART B" : "PART A");
+        }
     }
     if (g->set_next) {
         set_now(g);
@@ -1298,6 +1594,10 @@ void sa_play(sa_groove *g, bool on)
     g->wait = 0.0f;
     g->tick = SA_TPB - 1;                          /* the first tick wraps into bar 0 (its bar line) */
     g->bar = -1;
+    g->arr_out = 0;
+    g->arr_brk = g->arr_fill = false;
+    g->arr_sw0 = g->arr_sw1 = 0.0f;
+    g->back_on = 0;
     if (!on) {
         g->tick = -1;
         g->bar = 0;
@@ -1316,6 +1616,178 @@ void sa_mute(sa_groove *g, int l, bool m)
         part_off(g, g->s.code[l].part);
 }
 
+/* ---- the drum fill (held) ---------------------------------------------------------------------------------------- */
+/* the fills: a bar each, a sixteenth a step, up to three hits a step (General MIDI notes: 36 kick, 38 snare, 37 rim,
+ * 39 clap, 42 46 the hats, 41 43 45 47 48 50 the toms low to high, 49 crash); a hit's flag: 1 a second one a 32nd
+ * later, 2 a flam (a soft one a moment before). Started on a beat, a fill plays from that beat of its bar, so it
+ * always peaks on the bar's last sixteenth */
+enum { FILL_ROLL, FILL_TOMS, FILL_BUILD, FILL_STUTTER, FILL_FLAM, FILL_SYNCO, FILL_CLAPS, FILL_GHOST, FILLS };
+static const char *const FILL_NAMES[FILLS] = {"ROLL", "TOMS", "BUILD", "STUTTER", "FLAM", "SYNCO", "CLAPS", "GHOST"};
+typedef struct { uint8_t n, v, f; } fhit;
+typedef struct { fhit h[16][3]; } fprog;
+#define K(v) {36, v, 0}
+#define S(v) {38, v, 0}
+#define SD(v) {38, v, 1}
+#define SF(v) {38, v, 2}
+#define T(n, v) {n, v, 0}
+#define C(v) {39, v, 0}
+#define CD(v) {39, v, 1}
+#define HH(v) {42, v, 0}
+#define OH(v) {46, v, 0}
+#define R(v) {37, v, 0}
+#define NO {0, 0, 0}
+static const fprog FILL_PROG[FILLS] = {
+    {{{K(110), S(60), NO}, {S(64), NO, NO}, {S(68), NO, NO}, {S(72), NO, NO}, {K(100), S(76), NO}, {S(80), NO, NO},
+      {S(84), NO, NO}, {S(88), NO, NO}, {K(110), S(92), NO}, {S(96), NO, NO}, {S(100), NO, NO}, {S(104), NO, NO},
+      {K(110), SD(108), NO}, {SD(114), NO, NO}, {SD(120), NO, NO}, {SD(127), K(120), NO}}},
+    {{{K(110), S(118), NO}, {S(50), NO, NO}, {T(50, 104), NO, NO}, {T(50, 88), NO, NO}, {K(100), T(48, 106), NO},
+      {T(48, 90), NO, NO}, {T(47, 108), NO, NO}, {T(47, 92), NO, NO}, {K(110), T(45, 110), NO}, {T(45, 94), NO, NO},
+      {T(43, 112), NO, NO}, {T(43, 96), NO, NO}, {K(110), T(41, 118), NO}, {T(41, 100), NO, NO}, {SD(124), NO, NO},
+      {SD(127), K(120), NO}}},
+    {{{K(110), S(72), NO}, {NO, NO, NO}, {S(76), NO, NO}, {NO, NO, NO}, {K(100), S(82), NO}, {NO, NO, NO},
+      {S(88), NO, NO}, {NO, NO, NO}, {K(110), S(94), NO}, {S(98), NO, NO}, {S(102), NO, NO}, {S(106), NO, NO},
+      {K(110), SD(112), NO}, {SD(118), NO, NO}, {SD(124), NO, NO}, {SD(127), OH(110), K(120)}}},
+    {{{K(120), HH(100), NO}, {K(70), HH(70), NO}, {K(90), HH(84), NO}, {K(70), HH(70), NO}, {K(120), HH(100), C(110)},
+      {K(70), HH(70), NO}, {K(90), HH(84), NO}, {K(70), HH(70), NO}, {K(120), HH(100), NO}, {HH(70), NO, NO},
+      {K(90), HH(84), NO}, {HH(70), NO, NO}, {K(120), HH(104), C(118)}, {K(80), HH(80), NO}, {K(110), C(100), NO},
+      {K(127), C(124), OH(100)}}},
+    {{{K(110), HH(80), NO}, {NO, NO, NO}, {HH(70), S(42), NO}, {NO, NO, NO}, {SF(120), HH(80), NO}, {NO, NO, NO},
+      {K(100), HH(70), NO}, {S(44), NO, NO}, {K(110), HH(80), NO}, {NO, NO, NO}, {HH(70), S(46), NO}, {K(96), NO, NO},
+      {SF(124), HH(84), NO}, {S(48), NO, NO}, {SF(116), K(100), NO}, {SF(127), K(120), NO}}},
+    {{{K(120), S(110), NO}, {NO, NO, NO}, {S(50), NO, NO}, {K(110), S(104), NO}, {NO, NO, NO}, {S(52), NO, NO},
+      {K(112), S(110), NO}, {NO, NO, NO}, {K(116), S(112), NO}, {NO, NO, NO}, {S(54), NO, NO}, {K(114), S(114), NO},
+      {NO, NO, NO}, {S(60), NO, NO}, {T(45, 118), K(116), NO}, {T(41, 124), SD(120), NO}}},
+    {{{K(110), C(90), NO}, {NO, NO, NO}, {C(80), NO, NO}, {NO, NO, NO}, {K(100), C(96), NO}, {NO, NO, NO},
+      {C(88), NO, NO}, {NO, NO, NO}, {K(110), C(100), NO}, {C(80), NO, NO}, {C(96), NO, NO}, {C(84), NO, NO},
+      {K(110), CD(108), NO}, {CD(114), NO, NO}, {CD(120), NO, NO}, {CD(127), OH(110), K(120)}}},
+    {{{K(110), HH(84), NO}, {S(40), NO, NO}, {HH(70), R(70), NO}, {S(44), NO, NO}, {S(118), HH(84), NO},
+      {S(42), NO, NO}, {HH(70), K(96), NO}, {S(46), NO, NO}, {K(110), HH(84), NO}, {S(44), R(64), NO},
+      {HH(70), S(48), NO}, {K(100), S(52), NO}, {SF(120), HH(84), NO}, {S(56), NO, NO}, {S(62), R(80), NO},
+      {SF(127), OH(104), K(118)}}},
+};
+#undef K
+#undef S
+#undef SD
+#undef SF
+#undef T
+#undef C
+#undef CD
+#undef HH
+#undef OH
+#undef R
+#undef NO
+const char *sa_fill_name(int kind) { return FILL_NAMES[clampi(kind, 0, FILLS - 1)]; }
+void sa_fill(sa_groove *g, bool down)
+{
+    if (!down && g->fill_on) {
+        g->fill_kind = (uint8_t)((g->fill_kind + 1) % FILLS);   /* (next time, the next fill) */
+        g->crash_next = 1;                         /* and a crash on the next beat */
+    }
+    g->fill_held = down;
+    if (!down) g->fill_on = 0;                     /* (let go: the groove again, at once) */
+}
+void sa_break(sa_groove *g, bool down)
+{
+    g->brk_held = down;
+    if (down && !g->brk_on) {                      /* out at once: let go of what sounds */
+        g->brk_on = true;
+        g->brk_bars = 0;
+        part_off(g, SA_PART_DRUMS);
+        part_off(g, g->s.code[SA_L_BASS].part);
+        msg(g, "BREAK");
+    }
+    if (!g->playing && !down) g->brk_on = false;   /* (stopped: no 1 to wait for) */
+}
+int sa_ab_bars(int i) { static const uint8_t B[SA_ABAUTOS] = {0, 8, 16}; return B[clampi(i, 0, SA_ABAUTOS - 1)]; }
+void sa_part(sa_groove *g, bool b)
+{
+    g->part_cue = b;
+    if (!g->playing) {
+        g->part_b = b;
+        chord_of_bar(g, 0);
+    }
+}
+
+void sa_sweep(sa_groove *g, bool down)
+{
+    g->sweep_held = down;
+    if (!down) g->sweep_man = 0.0f;                /* (let go: open at once) */
+}
+int sa_intro_bars(int i) { static const uint8_t B[SA_INTROS] = {0, 4, 8, 16}; return B[clampi(i, 0, SA_INTROS - 1)]; }
+int sa_arc_bars(int i) { static const uint8_t B[SA_ARCS] = {0, 16, 32, 64}; return B[clampi(i, 0, SA_ARCS - 1)]; }
+/* INTRO and ARC, on each bar line: INTRO, from PLAY: the kick first, the other drums at a quarter of it, BASS at half,
+ * CHORD at three quarters, LEAD at its end, the filter opening over it. ARC, after it, a cycle: the groove for half,
+ * a break (drums and bass out) for a quarter, a build (the filter closing) for the last quarter, a roll on its last
+ * half bar, and the drop on the next 1 */
+static void arrange(sa_groove *g)
+{
+    int n = sa_intro_bars(g->s.intro), len = sa_arc_bars(g->s.arc), b = g->bar < 0 ? 0 : g->bar;
+    g->arr_out = 0;
+    g->arr_brk = g->arr_fill = false;
+    g->arr_sw0 = g->arr_sw1 = 0.0f;
+    if (n == 0) {                                  /* no INTRO: the LEAD in after one pattern (the progression once
+                                                    * round, 4..8 bars) */
+        const sa_harm *h = &g->s.harm;
+        int bars = h->bars >= 4 ? 4 : h->bars >= 2 ? 2 : 1;
+        int w = clampi(PROG[clampi(h->prog, 0, SA_PROGS - 1)].n * bars, 4, 8);
+        if (b < w) g->arr_out |= (uint16_t)(1u << SA_L_LEAD);
+        else if (b == w && g->s.code[SA_L_LEAD].type == SA_T_SYNTH && g->s.code[SA_L_LEAD].pat != SA_PAT_OFF)
+            msg(g, "LEAD IN");
+    }
+    if (b < n) {
+        for (int l = 0; l < SA_LAYERS; ++l) {
+            int at = l == SA_L_DRUM0 + SA_DR_KICK ? 0 : l >= SA_L_DRUM0 ? n / 4 : l == SA_L_BASS ? n / 2 :
+                     l == SA_L_CHORD ? 3 * n / 4 : n;
+            if (b < at) g->arr_out |= (uint16_t)(1u << l);
+        }
+        g->arr_sw0 = 0.8f * (1.0f - (float)b / (float)n);
+        g->arr_sw1 = 0.8f * (1.0f - (float)(b + 1) / (float)n);
+    } else if (len) {
+        int p = (b - n) % len, q = len / 4;
+        if (p >= len / 2 && p < 3 * q) g->arr_brk = true;
+        if (p >= 3 * q) {
+            g->arr_sw0 = 0.7f * (float)(p - 3 * q) / (float)q;
+            g->arr_sw1 = 0.7f * (float)(p - 3 * q + 1) / (float)q;
+        }
+        if (p == len - 1) g->arr_fill = true;
+    }
+}
+/* a drum note of a fill: the snare's and the clap's as their rows play them (their INSTR), the others as written */
+static void fill_hit(sa_groove *g, const fhit *h, uint32_t len)
+{
+    int n = h->n;
+    if (!n) return;
+    if (n == 38 && g->s.code[SA_L_DRUM0 + SA_DR_SNARE].type == SA_T_DRUM) n = sa_dv_gm(g->s.code[SA_L_DRUM0 + SA_DR_SNARE].sound);
+    float sixteenth = tick_frames(g) * (float)SA_TPS;
+    if (h->f == 2 && g->npend < SA_PEND) {         /* a flam: the soft one first, then this a moment later */
+        note(g, SA_PART_DRUMS, n, h->v / 3, len);
+        g->pend[g->npend].at = g->clock + (uint32_t)(g->sr * 0.022f);
+        g->pend[g->npend].part = SA_PART_DRUMS;
+        g->pend[g->npend].note = (uint8_t)n;
+        g->pend[g->npend].vel = h->v;
+        g->pend[g->npend].layer = SA_L_DRUM0;
+        g->pend[g->npend].len = len;
+        g->npend++;
+        return;
+    }
+    note(g, SA_PART_DRUMS, n, h->v, len);
+    if (h->f == 1 && g->npend < SA_PEND) {         /* a 32nd: the second one half a sixteenth later */
+        g->pend[g->npend].at = g->clock + (uint32_t)(sixteenth * 0.5f);
+        g->pend[g->npend].part = SA_PART_DRUMS;
+        g->pend[g->npend].note = (uint8_t)n;
+        g->pend[g->npend].vel = (uint8_t)(h->v > 12 ? h->v - 12 : h->v);
+        g->pend[g->npend].layer = SA_L_DRUM0;
+        g->pend[g->npend].len = len;
+        g->npend++;
+    }
+}
+static void fill_tick(sa_groove *g, int s)
+{
+    const fprog *p = &FILL_PROG[g->fill_kind % FILLS];
+    uint32_t len = (uint32_t)(g->sr * 0.25f);
+    for (int k = 0; k < 3; ++k) fill_hit(g, &p->h[s & 15][k], len);
+}
+
 static void do_tick(sa_groove *g)
 {
     if (++g->tick >= SA_TPB) {
@@ -1325,6 +1797,27 @@ static void do_tick(sa_groove *g)
     }
     int t = g->tick;
     float tf = tick_frames(g);
+    if (t == 48 && g->arr_fill && !g->fill_on) {   /* ARC: a roll on the last half bar */
+        g->fill_on = 1;
+        g->fill_step = 8;
+        g->fill_kind = FILL_ROLL;
+        g->crash_next = 1;
+    }
+    if (t % 24 == 0 && g->crash_next && !g->fill_on && !g->brk_on && !g->arr_brk) {   /* the crash: the beat after a fill */
+        g->crash_next = 0;
+        note(g, SA_PART_DRUMS, 49, 118, (uint32_t)g->sr);
+    }
+    if (t % 24 == 0 && g->fill_held && !g->fill_on) {   /* the fill: from the beat after ENV went down, at that beat
+                                                      * of its bar (it peaks on the bar's end) */
+        g->fill_on = 1;
+        g->fill_step = (uint8_t)(t / SA_TPS);
+        msg(g, FILL_NAMES[g->fill_kind % FILLS]);
+    }
+    if (g->fill_on && t % SA_TPS == 0 && !g->brk_on) {
+        fill_tick(g, g->fill_step);
+        g->fill_step = (uint8_t)(g->fill_step + 1);
+        if (g->fill_step >= 16) g->fill_step = 0;   /* (held past a bar: it goes round) */
+    }
     uint32_t delay = 0;
     if (t % 12 == 6 && g->s.feel)                  /* FEEL: the off sixteenths late */
         delay = (uint32_t)(tf * 6.0f * (float)g->s.feel / 100.0f * 0.66f);
@@ -1333,6 +1826,12 @@ static void do_tick(sa_groove *g)
         if (b->tick != t) continue;
         const sa_code *c = &g->s.code[b->layer];
         if (c->type == SA_T_NONE || g->s.live[b->layer].mute) continue;
+        if (c->type == SA_T_DRUM && g->fill_on) continue;   /* (the fill plays in place of the drums) */
+        if ((g->brk_on || g->arr_brk) && (c->type == SA_T_DRUM || b->layer == SA_L_BASS)) continue;   /* BREAK: out */
+        if ((g->arr_out >> b->layer) & 1u) continue;   /* INTRO: not in yet */
+        if (g->back_on && c->type == SA_T_DRUM && b->layer >= SA_L_DRUM0 &&
+            g->back_bar * 4 + t / 24 < BACK_BEAT[(b->layer - SA_L_DRUM0) % SA_DROWS]) continue;   /* back one by one */
+        if (g->solo && !((g->solo >> (c->type == SA_T_DRUM ? 3 : b->layer)) & 1u)) continue;   /* SOLO: the others out */
         int part = c->type == SA_T_DRUM ? SA_PART_DRUMS : c->part;
         uint32_t len = c->type == SA_T_DRUM ? (uint32_t)(g->sr * (c->sound == SA_DV_CRASH ? 1.0f :
                                                                   c->sound == SA_DV_OPEN ? 0.4f : 0.3f))
@@ -1356,25 +1855,45 @@ static void do_tick(sa_groove *g)
 /* the pump: down fast on the kick (6 ms), back over 70 % of a beat, as deep as PUMP says */
 static void pump_block(sa_groove *g)
 {
-    float d = 0.0f;
-    if (g->playing && g->kicked && g->s.pump) {
-        float depth = (float)g->s.pump / 100.0f * 0.85f;
-        float t = (float)(g->clock - g->kick_clock) / g->sr, beat = 60.0f / (float)clampi(g->s.bpm, 60, 200);
-        if (t < 0.006f) {
-            d = depth * t / 0.006f;
-        } else {
-            float k = (t - 0.006f) / (0.7f * beat);
-            if (k < 1.0f) d = depth * (1.0f - k) * (1.0f - k);
+    float beat = 60.0f / (float)clampi(g->s.bpm, 60, 200), master = (float)g->s.pump / 100.0f * 0.85f;
+    for (int p = 0; p < SA_SYNTHS; ++p) {
+        const sa_pumpl *pl = &g->s.pl[p];
+        float d = 0.0f, t = -1.0f;
+        if (g->playing && pl->on && pl->depth && g->s.pump) {
+            if (pl->src == SA_PS_BEAT) {
+                uint32_t fpb = (uint32_t)(g->sr * beat);
+                t = fpb ? (float)(g->clock % fpb) / g->sr : -1.0f;
+            } else if (g->kicked) {
+                t = (float)(g->clock - g->kick_clock) / g->sr;
+            }
         }
+        if (t >= 0.0f) {
+            float depth = master * (float)pl->depth / 100.0f, back = (0.25f + (float)pl->rel * 0.009f) * beat;
+            if (t < 0.006f) {
+                d = depth * t / 0.006f;
+            } else {
+                float k = (t - 0.006f) / back;
+                if (k < 1.0f) d = depth * (1.0f - k) * (1.0f - k);
+            }
+        }
+        g->duck[p] = (uint8_t)(d * 127.0f + 0.5f);
     }
-    g->duck = (uint8_t)(d * 127.0f + 0.5f);
 }
 
 void sa_process(sa_groove *g, int frames)
 {
+    if (g->sweep_held && g->sweep_man < 1.0f) {    /* SWEEP: closing over two bars */
+        float bars2 = 2.0f * 4.0f * 60.0f / (float)clampi(g->s.bpm, 60, 200) * g->sr;
+        g->sweep_man += (float)frames / bars2;
+        if (g->sweep_man > 1.0f) g->sweep_man = 1.0f;
+    }
+    {   /* INTRO, ARC: their sweep over the bar; the deeper of the two */
+        float a = g->playing ? g->arr_sw0 + (g->arr_sw1 - g->arr_sw0) * (float)(g->tick < 0 ? 0 : g->tick) / (float)SA_TPB
+                             : 0.0f;
+        g->sweep = g->sweep_man > a ? g->sweep_man : a;
+    }
     if (!g->playing) {
-        g->duck = 0;
-        for (int p = 0; p < SA_SYNTHS; ++p) { g->gate_gain[p] = 1.0f; g->gate_off[p] = 0; }
+        for (int p = 0; p < SA_SYNTHS; ++p) { g->duck[p] = 0; g->gate_gain[p] = 1.0f; g->gate_off[p] = 0; }
         pan_block(g);
         return;
     }
@@ -1412,13 +1931,18 @@ void sa_process(sa_groove *g, int frames)
     pan_block(g);
 }
 
+void sa_key_drum(sa_groove *g, int k, int dv, bool down) { sa_key(g, k, -1 - clampi(dv, 0, SA_DVS - 1), down, -2); }
+
 void sa_key(sa_groove *g, int k, int note_in, bool down, int layer)
 {
     if (k < 0 || k >= 27) return;
     if (down) {
         if (g->key_note[k] >= 0) emit(g, 0, g->key_part[k], g->key_note[k], 0);
         int part = -1, n = note_in, vel = 104;
-        if (layer >= 0 && layer < SA_LAYERS && g->s.code[layer].type == SA_T_DRUM) {
+        if (layer == -2) {                         /* (sa_key_drum: a drum voice, note -1 - dv) */
+            part = SA_PART_DRUMS;
+            n = sa_dv_gm(-1 - note_in);
+        } else if (layer >= 0 && layer < SA_LAYERS && g->s.code[layer].type == SA_T_DRUM) {
             part = SA_PART_DRUMS;
             n = sa_dv_gm(g->s.code[layer].sound);
         } else {

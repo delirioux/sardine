@@ -72,7 +72,7 @@
 enum { DV_KICK, DV_SNARE, DV_CLAP, DV_HATC, DV_HATO, DV_TOM, DV_RIM, DV_BELL, DV_NLANE };
 enum {
     DVT_PUNCH, DVT_ROUND, DVT_SNARE, DVT_CLAP, DVT_HATC, DVT_HATO, DVT_TOM, DVT_CONGA, DVT_RIM, DVT_CLAVE,
-    DVT_BELL, DVT_CYM, DVT_COUNT
+    DVT_BELL, DVT_CYM, DVT_FMRIDE, DVT_FMCRASH, DVT_FMBELL, DVT_COUNT   /* (Sardine: the FM metals after CYM) */
 };
 /* a lane of a model kit as a type: the kit (1..DV_NKIT) in the high 4 bits, the lane in the low 3 (Felucca's own
  * types: 0 above). Its run (the DVT_* it plays through) is the kit's (DV_KIT) */
@@ -137,6 +137,27 @@ static const struct {
     {1585, 1382, 1715, 30, 32, {64, 64, 64}, 5608},      /* CLAVE  2.5 kHz (1.2..4), tau 3..12 ms */
     {1161, 969, 1353, 300, 59, {64, 64, 64}, 2785},      /* BELL   540 Hz (270..1080), tail tau 30..400 ms */
     {1078, 886, 1270, 3000, 53, {64, 64, 64}, 7583},     /* CYM    metal 400 Hz, ring tau 0.3..3 s */
+    {1078, 886, 1270, 3000, 53, {64, 64, 64}, 950},      /* FM RIDE  base 400 Hz, ring tau 0.3..3 s */
+    {1078, 886, 1270, 2000, 53, {64, 64, 64}, 856},      /* FM CRASH ring tau 0.2..2 s */
+    {1161, 969, 1353, 300, 59, {64, 64, 64}, 2933},     /* FM BELL  540 Hz, tail tau 30..400 ms */
+};
+/* (Sardine) the FM metals: three phase-modulated sine pairs at inharmonic ratios, the classic FM cymbal and bell
+ * (no samples). rc: each carrier over the base pitch, rm: its modulator over the carrier (Q12); ix: the index
+ * (radians x 2608), lv: the pair's level (Q15); sx: the index added at the hit (Q12 of ix, its tau stau, 0.1 ms):
+ * brighter at the stick, darker as it rings; samp: the stick's level over the ring (Q15, tau satau); hp: the
+ * high-pass (p16 at the design pitch). TONE moves every index x0.5 .. x1.5, SNAP the stick. */
+typedef struct {
+    uint16_t rc[3], rm[3], ix[3], lv[3], sx, stau, samp, satau;
+    int16_t hp;
+} dv_fm_t;
+static const dv_fm_t DV_FM[3] = {
+    /* RIDE: a bell-ish body at 2 f, the wash at 7.1 f, a shimmer at 13.4 f; a clear ping, the wash under it */
+    {{8192, 21299, 36454}, {5796, 7086, 5448}, {2608, 3912, 2608}, {16384, 11469, 4915}, 2048, 600, 13107, 150, 1136},
+    /* CRASH: denser (higher indices), the burst held longer, less body */
+    {{12984, 22938, 33997}, {7496, 5775, 5202}, {4694, 5216, 3912}, {13107, 13107, 6554}, 2048, 2500, 9830, 1200,
+     1232},
+    /* BELL (cowbell, the ride's bell): two near-harmonic tones (f, 1.48 f) and a clank at 3.9 f */
+    {{4096, 6062, 15974}, {4096, 4096, 5775}, {2608, 2347, 2086}, {14746, 11469, 4915}, 7373, 80, 16384, 40, 992},
 };
 #define DV_SEED 0x5EED1234
 #define DV_P16(hz_p16) pitch_inc(clamp((hz_p16), 0, 2047))
@@ -505,6 +526,25 @@ static void dv_setup_own(dv_coef_t *c, const dv_param_t *p)
         c->g[1] = 32767 - c->g[0];                       /* low band */
         c->g[2] = dv_lin(x, 8000, 32000) + acc * 60;     /* STRIKE: the strike over the ring */
         break;
+    case DVT_FMRIDE:
+    case DVT_FMCRASH:
+    case DVT_FMBELL: {
+        const dv_fm_t *f = &DV_FM[t - DVT_FMRIDE];
+        uint32_t base = c->inc[0] >> 12;
+        int32_t tq = 2048 + (int32_t)tn * 32;            /* TONE: the indices x0.5 .. x1.5 (Q12) */
+        c->mrow = (uint8_t)(t - DVT_FMRIDE);
+        for (i = 0; i < 3u; i++) {
+            c->inc[i] = base * f->rc[i];
+            c->g[i] = (f->ix[i] * tq) >> 12;
+        }
+        c->span[0] = (uint32_t)(f->sx * (int32_t)x / 64);   /* SNAP: the stick's brightness and level */
+        c->g[3] = f->samp * (int32_t)x / 64 + acc * 60;
+        c->kb[0] = dv_kb(tau);
+        c->kb[1] = dv_kb((uint32_t)f->stau * 100u);
+        c->k[1] = dv_k((uint32_t)f->satau * 100u);
+        dv_hp1(&c->g[4], &c->g[5], f->hp + p16 - DV_DEF[t].p16);
+        break;
+    }
     }
 }
 
@@ -879,6 +919,40 @@ static __attribute__((noinline)) void dv_cym_run(const dv_coef_t *c, dv_voice_t 
     v->live = v->q[0] > DV_QUIET;
 }
 
+/* (Sardine) the FM metals: three pairs, each carrier phase-modulated by its sine, the index from the hit's
+ * brightness (per block) -> high-pass -> the ring (slow) + the stick (fast) */
+static __attribute__((noinline)) void dv_fm_run(const dv_coef_t *c, dv_voice_t *v, int32_t *y, uint32_t n)
+{
+    const dv_fm_t *f = &DV_FM[c->mrow % 3u];
+    uint32_t i, p0 = v->ph[0], p1 = v->ph[1], p2 = v->ph[2], m0 = (uint32_t)v->s[0], m1 = (uint32_t)v->s[1];
+    uint32_t m2 = (uint32_t)v->s[2], es = v->e[1];
+    uint32_t i0 = (uint32_t)c->inc[0], i1 = (uint32_t)c->inc[1], i2 = (uint32_t)c->inc[2];
+    uint32_t j0 = (i0 >> 12) * f->rm[0], j1 = (i1 >> 12) * f->rm[1], j2 = (i2 >> 12) * f->rm[2];
+    int32_t b = (int32_t)(((c->span[0] * (v->e[0] >> 1)) >> 15)), x1 = v->s[3], h = v->s[4], a, d;
+    uint32_t x0 = (uint32_t)(c->g[0] + ((c->g[0] * b) >> 12)), x1i = (uint32_t)(c->g[1] + ((c->g[1] * b) >> 12));
+    uint32_t x2 = (uint32_t)(c->g[2] + ((c->g[2] * b) >> 12));
+    v->e[0] = mulq16(v->e[0], c->kb[1]);
+    dv_slow(&v->q[0], c->kb[0], &a, &d);
+    for (i = 0; i < n; i++) {
+        int32_t x, env;
+        m0 += j0, m1 += j1, m2 += j2;
+        x = sine_i(p0 + (((uint32_t)sine_i(m0) * x0) << 3)) * f->lv[0];
+        x += sine_i(p1 + (((uint32_t)sine_i(m1) * x1i) << 3)) * f->lv[1];
+        x += sine_i(p2 + (((uint32_t)sine_i(m2) * x2) << 3)) * f->lv[2];
+        x >>= 15;
+        p0 += i0, p1 += i1, p2 += i2;
+        h = (c->g[4] * (x - x1) + c->g[5] * h) >> 14;
+        x1 = x;
+        a += d;
+        env = (a >> 5) + ((((int32_t)(es >> 1)) * c->g[3]) >> 15);
+        es = (es * c->k[1]) >> 15;
+        y[i] = (h * (env >> 1)) >> 14;
+    }
+    v->ph[0] = p0, v->ph[1] = p1, v->ph[2] = p2, v->s[0] = (int32_t)m0, v->s[1] = (int32_t)m1, v->s[2] = (int32_t)m2;
+    v->s[3] = x1, v->s[4] = h, v->e[1] = es;
+    v->live = v->q[0] > DV_QUIET;
+}
+
 /* a model kit's metal: the source (c->span[0], Q15) and white noise (c->span[1]) mixed into y */
 static __attribute__((noinline)) void dv_metal_mix(const dv_coef_t *c, dv_voice_t *v, const int32_t *m, int32_t *y,
                                                    uint32_t n)
@@ -983,6 +1057,11 @@ static void dv_run(const dv_coef_t *c, dv_voice_t *v, const int32_t *metal, int3
         break;
     case DVT_BELL:
         dv_bell_run(c, v, y, n);
+        break;
+    case DVT_FMRIDE:
+    case DVT_FMCRASH:
+    case DVT_FMBELL:
+        dv_fm_run(c, v, y, n);
         break;
     default:
         dv_cym_run(c, v, metal, y, n);

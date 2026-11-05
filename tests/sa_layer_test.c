@@ -25,6 +25,9 @@ static void run_bars(sa_groove *g, int bars)
     int n = bar_frames(g) * bars;
     while (n > 0) { int k = n > 128 ? 128 : n; sa_process(g, k); n -= k; }
 }
+#define K SA_L_DRUM0                         /* the kick of the first groove */
+#define BS SA_L_BASS
+#define ST SA_L_CHORD
 static void clear_log(void) { memset(&LG, 0, sizeof LG); }
 
 static void only(sa_groove *g, int keep)
@@ -42,7 +45,7 @@ int main(void)
     CHECK(sa_pending(&g) == 0, "fresh: nothing pending");
 
     /* the first groove plays: four kicks a bar */
-    only(&g, 0);                                    /* stopped: drops at once */
+    only(&g, K);                                    /* stopped: drops at once */
     CHECK(sa_pending(&g) == 0, "dropped while stopped");
     sa_play(&g, true);
     clear_log();
@@ -50,8 +53,8 @@ int main(void)
     CHECK(LG.on[3][36] == 16, "4 FLOOR: 16 kicks in 4 bars, got %d", LG.on[3][36]);
 
     /* FAST 2: twice as many */
-    g.ed[0].mod[0].type = SA_M_FAST;
-    g.ed[0].mod[0].val = 2;
+    g.ed[K].mod[0].type = SA_M_FAST;
+    g.ed[K].mod[0].val = 2;
     CHECK(sa_pending(&g) == 1, "one change pending");
     clear_log();
     run_bars(&g, 1);
@@ -69,9 +72,9 @@ int main(void)
     CHECK(!g.drop_armed && sa_pending(&g) == 0, "dropped on the bar line");
 
     /* REV of 4 FLOOR: still 4 a bar (symmetric), LEN 3: polymeter, 6 sixteenths in 16? (0,3 of each 3-step cycle) */
-    memset(g.ed[0].mod, 0, sizeof g.ed[0].mod);
-    g.ed[0].mod[0].type = SA_M_LEN;
-    g.ed[0].mod[0].val = 3;                         /* the first 3 sixteenths (a kick on 0) looped: a kick every 3 */
+    memset(g.ed[K].mod, 0, sizeof g.ed[K].mod);
+    g.ed[K].mod[0].type = SA_M_LEN;
+    g.ed[K].mod[0].val = 3;                         /* the first 3 sixteenths (a kick on 0) looped: a kick every 3 */
     sa_drop(&g);
     run_bars(&g, 1);                                /* (the drop's bar) */
     clear_log();
@@ -79,8 +82,8 @@ int main(void)
     CHECK(LG.on[3][36] == 16, "LEN 3: a kick every 3 sixteenths, 16 in 3 bars, got %d", LG.on[3][36]);
 
     /* EUCLID 5/16 */
-    g.ed[0].mod[0].type = SA_M_EUCLID;
-    g.ed[0].mod[0].val = 5;
+    g.ed[K].mod[0].type = SA_M_EUCLID;
+    g.ed[K].mod[0].val = 5;
     sa_drop(&g);
     run_bars(&g, 1);
     clear_log();
@@ -88,10 +91,10 @@ int main(void)
     CHECK(LG.on[3][36] == 10, "EUCLID 5: 5 a bar, got %d", LG.on[3][36]);
 
     /* THIN 50 % leaves some, not all */
-    g.ed[0].mod[0].type = SA_M_FAST;
-    g.ed[0].mod[0].val = 4;
-    g.ed[0].mod[1].type = SA_M_THIN;
-    g.ed[0].mod[1].val = 5;
+    g.ed[K].mod[0].type = SA_M_FAST;
+    g.ed[K].mod[0].val = 4;
+    g.ed[K].mod[1].type = SA_M_THIN;
+    g.ed[K].mod[1].val = 5;
     sa_drop(&g);
     run_bars(&g, 1);
     clear_log();
@@ -99,75 +102,86 @@ int main(void)
     CHECK(LG.on[3][36] > 10 && LG.on[3][36] < 54, "FAST 4 THIN 50: between, got %d", LG.on[3][36]);
 
     /* the mute: at once */
-    sa_mute(&g, 0, true);
+    sa_mute(&g, K, true);
     clear_log();
     run_bars(&g, 1);
     CHECK(LG.on[3][36] == 0, "muted: silent, got %d", LG.on[3][36]);
-    sa_mute(&g, 0, false);
+    sa_mute(&g, K, false);
+
+    /* CHANCE: 0 % none, 50 % some; ACCENT: the accents louder than the rest */
+    g.s.live[K].cut = 0;
+    clear_log();
+    run_bars(&g, 2);
+    CHECK(LG.on[3][36] == 0, "CHANCE 0: no kick, got %d", LG.on[3][36]);
+    g.s.live[K].cut = 50;
+    clear_log();
+    run_bars(&g, 8);
+    CHECK(LG.on[3][36] > 4 && LG.on[3][36] < 60, "CHANCE 50: some of 64, got %d", LG.on[3][36]);
+    g.s.live[K].cut = 100;
 
     /* a synth layer follows the chord; the arpeggiator */
     sa_play(&g, false);
     sa_init(&g, SR);
     sa_set_sound(&g, snd, 0);
-    only(&g, 3);                                    /* the ROLLER bass alone */
+    only(&g, BS);                                    /* the ROLLER bass alone */
     sa_play(&g, true);
     clear_log();
     run_bars(&g, 2);
-    CHECK(LG.per_part[0] == 16, "ROLLER: 8 notes a bar on part 1, got %d", LG.per_part[0]);
+    CHECK(LG.per_part[2] == 16, "ROLLER: 8 notes a bar on part 1, got %d", LG.per_part[2]);
     /* A minor: the bass notes are A (57 - 12 = 45 at octave 2) or its octave/fifth */
-    CHECK(LG.on[0][45] > 0, "the bass plays A2 in A minor");
-    g.ed[3].amode = SA_AR_UP;
-    g.ed[3].arate = SA_RATE_32;
-    g.ed[3].pat = 6;                                /* SUB HOLD: one note the bar long */
+    CHECK(LG.on[2][45] > 0, "the bass plays A2 in A minor");
+    g.ed[BS].amode = SA_AR_UP;
+    g.ed[BS].arate = SA_RATE_32;
+    g.ed[BS].pat = 6;                                /* SUB HOLD: one note the bar long */
     sa_drop(&g);
     run_bars(&g, 1);
     clear_log();
     run_bars(&g, 1);
-    CHECK(LG.per_part[0] >= 30, "ARP 1/32 over a held note: 32 a bar, got %d", LG.per_part[0]);
+    CHECK(LG.per_part[2] >= 30, "ARP 1/32 over a held note: 32 a bar, got %d", LG.per_part[2]);
 
     /* own patterns: a drum step added and one taken away (in the copy, dropped with REC) */
     sa_play(&g, false);
     sa_init(&g, SR);
     sa_set_sound(&g, snd, 0);
-    only(&g, 0);                                    /* the kick: 4 FLOOR */
-    sa_step_drum(&g, 0, 4);                         /* the second kick off */
-    sa_step_drum(&g, 0, 14);                        /* a pickup on */
-    CHECK(g.ed[0].own && g.ed[0].hits == ((1u << 0) | (1u << 8) | (1u << 12) | (1u << 14)), "drum steps: %04x",
-          g.ed[0].hits);
-    CHECK(g.s.code[0].own == 0, "the edit waits for REC");
+    only(&g, K);                                    /* the kick: 4 FLOOR */
+    sa_step_drum(&g, K, 4);                         /* the second kick off */
+    sa_step_drum(&g, K, 14);                        /* a pickup on */
+    CHECK(g.ed[K].own && g.ed[K].hits == ((1u << 0) | (1u << 8) | (1u << 12) | (1u << 14)), "drum steps: %04x",
+          g.ed[K].hits);
+    CHECK(g.s.code[K].own == 0, "the edit waits for REC");
     sa_drop(&g);
     sa_play(&g, true);
     clear_log();
     run_bars(&g, 2);
     CHECK(LG.on[3][36] == 8, "own kick: 4 a bar, got %d", LG.on[3][36]);
-    CHECK(sa_preview(&g, &g.s.code[0], 0, 0) == g.s.code[0].hits, "the preview shows the own steps");
+    CHECK(sa_preview(&g, &g.s.code[K], K, 0) == g.s.code[K].hits, "the preview shows the own steps");
     /* a synth layer's own notes: a key on a step, the same key again takes it off */
     sa_play(&g, false);
     sa_init(&g, SR);
     sa_set_sound(&g, snd, 0);
-    only(&g, 3);                                    /* ROLLER: notes on 2 3 6 7 10 11 14 15 */
-    sa_step_note(&g, 3, 0, 48);                     /* C3 on step 1 (A minor: C is in the scale) */
-    CHECK(g.ed[3].sn[0] == 48 - 9, "the note is kept above the key (%d)", g.ed[3].sn[0]);
-    sa_step_note(&g, 3, 2, 45);                     /* step 3: A2, ROLLER's own A2 there: it goes */
-    CHECK(g.ed[3].sn[2] == SA_NO_NOTE, "the same note again: off (%d)", g.ed[3].sn[2]);
-    sa_step_note(&g, 3, 4, 49);                     /* C#3: not in A minor, snapped to C3 or D3 */
-    CHECK(g.ed[3].sn[4] == 48 - 9 || g.ed[3].sn[4] == 50 - 9, "snapped to the scale (%d)", g.ed[3].sn[4]);
-    sa_step_len(&g, 3, 0, 3);
-    CHECK(g.ed[3].sl[0] == 4, "the length: 4 sixteenths (%d)", g.ed[3].sl[0]);
+    only(&g, BS);                                    /* ROLLER: notes on 2 3 6 7 10 11 14 15 */
+    sa_step_note(&g, BS, 0, 48);                     /* C3 on step 1 (A minor: C is in the scale) */
+    CHECK(g.ed[BS].sn[0] == 48 - 9, "the note is kept above the key (%d)", g.ed[BS].sn[0]);
+    sa_step_note(&g, BS, 2, 45);                     /* step 3: A2, ROLLER's own A2 there: it goes */
+    CHECK(g.ed[BS].sn[2] == SA_NO_NOTE, "the same note again: off (%d)", g.ed[BS].sn[2]);
+    sa_step_note(&g, BS, 4, 49);                     /* C#3: not in A minor, snapped to C3 or D3 */
+    CHECK(g.ed[BS].sn[4] == 48 - 9 || g.ed[BS].sn[4] == 50 - 9, "snapped to the scale (%d)", g.ed[BS].sn[4]);
+    sa_step_len(&g, BS, 0, 3);
+    CHECK(g.ed[BS].sl[0] == 4, "the length: 4 sixteenths (%d)", g.ed[BS].sl[0]);
     sa_drop(&g);
     sa_play(&g, true);
     clear_log();
     run_bars(&g, 1);
-    CHECK(LG.on[0][48] == 1 + (g.s.code[3].sn[4] == 48 - 9), "the own C3 plays (%d)", LG.on[0][48]);
-    CHECK(LG.per_part[0] == 9, "ROLLER's 8 notes, one off, two on: 9, got %d", LG.per_part[0]);
+    CHECK(LG.on[2][48] == 1 + (g.s.code[BS].sn[4] == 48 - 9), "the own C3 plays (%d)", LG.on[2][48]);
+    CHECK(LG.per_part[2] == 9, "ROLLER's 8 notes, one off, two on: 9, got %d", LG.per_part[2]);
     /* a chord layer: a key toggles the chord */
     sa_play(&g, false);
     sa_init(&g, SR);
     sa_set_sound(&g, snd, 0);
-    only(&g, 4);                                    /* STAB 2: chords on 4 and 11 */
-    CHECK(sa_chordy(&g.ed[4]), "STAB 2 is a chord pattern");
-    sa_step_note(&g, 4, 0, 60);
-    CHECK(g.ed[4].chord == ((1u << 0) | (1u << 3) | (1u << 10)), "a chord added on step 1 (%04x)", g.ed[4].chord);
+    only(&g, ST);                                    /* STAB 2: chords on 4 and 11 */
+    CHECK(sa_chordy(&g.ed[ST]), "STAB 2 is a chord pattern");
+    sa_step_note(&g, ST, 0, 60);
+    CHECK(g.ed[ST].chord == ((1u << 0) | (1u << 3) | (1u << 10)), "a chord added on step 1 (%04x)", g.ed[ST].chord);
     sa_drop(&g);
     sa_play(&g, true);
     clear_log();
@@ -178,9 +192,9 @@ int main(void)
     sa_play(&g, false);
     sa_init(&g, SR);
     sa_set_sound(&g, snd, 0);
-    only(&g, 4);
-    g.ed[4].pat = 20;                               /* WASH: the chord held the bar */
-    g.ed_gate[4].pat = 2;                           /* 8THS */
+    only(&g, ST);
+    g.ed[ST].pat = 20;                               /* WASH: the chord held the bar */
+    g.ed_gate[ST].pat = 2;                           /* 8THS */
     CHECK(sa_pending(&g) == 1, "the gate is code (one layer pending)");
     sa_drop(&g);
     sa_play(&g, true);
@@ -198,17 +212,21 @@ int main(void)
         CHECK(opens >= 14 && closes >= 14, "8THS: open and closed 16 times in 2 bars (%d %d)", opens, closes);
         CHECK(LG.per_part[1] == 6, "the chord played twice, not retriggered by the gate (%d notes)", LG.per_part[1]);
     }
-    sa_gate_step(&g, 4, 1);                         /* an own gate step */
-    CHECK(g.ed_gate[4].own && g.ed_gate[4].mask == (0x5555 | 2), "a gate step on the keys (%04x)", g.ed_gate[4].mask);
+    sa_gate_step(&g, ST, 1);                         /* an own gate step */
+    CHECK(g.ed_gate[ST].own && g.ed_gate[ST].mask == (0x5555 | 2), "a gate step on the keys (%04x)", g.ed_gate[ST].mask);
 
-    /* three synth layers at most */
+    /* the fixed layers: LEAD CHORD BASS on parts 0 1 2, the drums after them; a moved synth layer goes back */
     sa_init(&g, SR);
-    CHECK(sa_synth_count(&g) == 2, "first groove: two synth layers");
-    int p = sa_synth_free_part(&g, -1);
-    CHECK(p == 2, "the free part is 3 (index 2), got %d", p);
-    g.ed[5].type = SA_T_SYNTH;
-    g.ed[5].part = (uint8_t)p;
-    CHECK(sa_synth_free_part(&g, -1) < 0, "three: no part left");
+    CHECK(sa_synth_count(&g) == 3 && g.s.code[SA_L_LEAD].pat != SA_PAT_OFF, "first groove: three synth layers, LEAD on (in after a pattern)");
+    {
+        sa_settings t = g.s;
+        sa_code bass = t.code[SA_L_BASS];
+        t.code[SA_L_BASS] = t.code[7];
+        t.code[7] = bass;
+        sa_settings_fix(&t);
+        CHECK(t.code[SA_L_BASS].type == SA_T_SYNTH && t.code[SA_L_BASS].part == SA_L_BASS &&
+              t.code[SA_L_BASS].sound == bass.sound, "a synth layer out of place: back on its part's slot");
+    }
 
     /* the modifier list round-trips */
     for (int i = 0; i < sa_mod_opts(SA_T_SYNTH); ++i) {
@@ -226,41 +244,34 @@ int main(void)
     CHECK(synths <= SA_SYNTHS, "fix: at most three synths, got %d", synths);
     CHECK(s.bpm <= 200 && s.harm.key < 12, "fix: ranges");
 
-    /* a fresh groove: a kick, hats, a clap or snare, a bass on part 1, stabs or a pad; each seed its own */
+    /* a fresh groove: a kick, hats, a clap or snare; BASS on its part; CHORD stabs or a pad; LEAD mostly OFF */
     {
-        static const uint8_t PB[] = {10, 11, 12}, PK[] = {20, 21}, PP[] = {30, 31, 32};
-        sa_pool pool = {PB, PK, PP, 3, 2, 3};
-        int differ = 0, gated = 0, both = 0;
+        static const uint8_t PB[] = {10, 11, 12}, PK[] = {20, 21}, PP[] = {30, 31, 32}, PL[] = {40, 41};
+        sa_pool pool = {PB, PK, PP, PL, 3, 2, 3, 2};
+        int differ = 0, gated = 0, leads = 0;
         sa_settings a, b;
         for (uint32_t seed = 1; seed <= 200; ++seed) {
             sa_random(&a, seed, &pool);
-            int drums = 0, kick = 0, bass = 0, upper = 0;
-            for (int l = 0; l < SA_LAYERS; ++l) {
-                const sa_code *c = &a.code[l];
-                if (c->type == SA_T_DRUM) {
-                    drums++;
-                    kick += c->sound == SA_DV_KICK;
-                }
-                if (c->type == SA_T_SYNTH) {
-                    const char *pn = sa_pat_name(SA_T_SYNTH, c->pat);
-                    if (c->part == 0) {
-                        bass++;
-                        CHECK(c->sound >= 10 && c->sound <= 12, "seed %u: the bass from the bass list", seed);
-                    } else {
-                        upper++;
-                        bool pad = c->sound >= 30;
-                        CHECK(pad ? (c->sound <= 32) : (c->sound == 20 || c->sound == 21), "seed %u: a stab or a pad",
-                              seed);
-                        CHECK(pad ? !strcmp(pn, "WASH") || !strcmp(pn, "TWO HALVES") || !strcmp(pn, "SWELL")
-                                  : sa_chordy(c), "seed %u: a %s's pattern (%s)", seed, pad ? "pad" : "stab", pn);
-                        gated += sa_gate_on(&a.gate[l]);
-                    }
-                }
+            int drums = 0, kick = 0;
+            for (int l = SA_L_DRUM0; l < SA_LAYERS; ++l) {
+                drums += a.code[l].type == SA_T_DRUM;
+                kick += a.code[l].type == SA_T_DRUM && a.code[l].sound == SA_DV_KICK;
             }
-            both += upper == 2;
+            const sa_code *bs = &a.code[SA_L_BASS], *ch = &a.code[SA_L_CHORD], *ld = &a.code[SA_L_LEAD];
+            CHECK(bs->type == SA_T_SYNTH && bs->part == SA_L_BASS && bs->sound >= 10 && bs->sound <= 12 &&
+                  bs->pat != SA_PAT_OFF, "seed %u: BASS from the bass list, playing", seed);
+            bool pad = ch->sound >= 30;
+            const char *pn = sa_pat_name(SA_T_SYNTH, ch->pat);
+            CHECK(ch->type == SA_T_SYNTH && ch->part == SA_L_CHORD && (pad ? ch->sound <= 32 : (ch->sound == 20 ||
+                  ch->sound == 21)), "seed %u: CHORD a stab or a pad", seed);
+            CHECK(pad ? !strcmp(pn, "WASH") || !strcmp(pn, "TWO HALVES") || !strcmp(pn, "SWELL") : !pad,
+                  "seed %u: a pad's pattern (%s)", seed, pn);
+            CHECK(ch->amode == SA_AR_OFF, "seed %u: ARP off", seed);
+            CHECK(ld->type == SA_T_SYNTH && ld->part == SA_L_LEAD && (ld->sound == 40 || ld->sound == 41),
+                  "seed %u: LEAD from the lead list", seed);
+            leads += ld->pat != SA_PAT_OFF;
+            gated += sa_gate_on(&a.gate[SA_L_CHORD]);
             CHECK(drums >= 3 && kick == 1, "seed %u: three drums or more, one kick (%d, %d)", seed, drums, kick);
-            CHECK(bass == 1 && upper >= 1 && upper <= 2, "seed %u: a bass and one or two above (%d %d)", seed, bass,
-                  upper);
             CHECK(a.bpm >= 120 && a.bpm <= 130, "seed %u: a club tempo, %d", seed, a.bpm);
             sa_random(&b, seed, &pool);
             CHECK(!memcmp(&a, &b, sizeof a), "seed %u: the same seed, the same groove", seed);
@@ -268,7 +279,7 @@ int main(void)
             differ += memcmp(&a, &b, sizeof a) != 0;
         }
         CHECK(differ == 200, "each seed its own groove (%d of 200)", differ);
-        CHECK(gated > 0 && both > 20 && both < 180, "some gated pads (%d), now and then both (%d)", gated, both);
+        CHECK(gated > 0 && leads == 200, "some gated pads (%d), always a lead (%d)", gated, leads);
 
         /* a whole groove in: stopped at once, playing on the bar line; the look stays, what waited goes */
         sa_init(&g, SR);
@@ -292,6 +303,31 @@ int main(void)
         sa_play(&g, false);
     }
 
+    /* INTRO: the kick first, the others coming in; ARC: its break, and the drop */
+    sa_init(&g, SR);
+    sa_set_sound(&g, snd, 0);
+    g.s.intro = 2;                                  /* 8 bars */
+    g.s.arc = 1;                                    /* 16 bars */
+    sa_play(&g, true);
+    clear_log();
+    run_bars(&g, 1);
+    CHECK(LG.on[3][36] == 4 && LG.per_part[2] == 0 && LG.per_part[1] == 0, "INTRO bar 1: the kick alone (%d %d %d)",
+          LG.on[3][36], LG.per_part[2], LG.per_part[1]);
+    CHECK(g.sweep > 0.5f, "INTRO: the filter closed at first");
+    run_bars(&g, 7);
+    clear_log();
+    run_bars(&g, 1);
+    CHECK(LG.per_part[2] > 0 && LG.per_part[1] > 0, "after INTRO: bass and chord in");
+    run_bars(&g, 8);
+    clear_log();
+    run_bars(&g, 2);
+    CHECK(LG.on[3][36] == 0 && LG.per_part[2] == 0 && LG.per_part[1] > 0, "ARC: the break, the chord alone");
+    run_bars(&g, 6);
+    clear_log();
+    run_bars(&g, 1);
+    CHECK(LG.on[3][36] == 4, "ARC: the drop, the kick back");
+    sa_play(&g, false);
+
     /* every pattern with every modifier, two bars: no crash, notes within the bar */
     sa_init(&g, SR);
     sa_set_sound(&g, snd, 0);
@@ -312,6 +348,38 @@ int main(void)
             }
     }
     CHECK(g.nheld <= SA_HELD, "held in range");
+
+    /* PHRASE (A A A' B: bar 4's last beat quiet on the bass) and PART B (on the next phrase) */
+    {
+        static sa_groove h;
+        sa_init(&h, SR);
+        sa_set_sound(&h, snd, 0);
+        only(&h, BS);
+        h.s.code[BS].pat = 4;                       /* PUMP 16: a note every sixteenth */
+        sa_edit_reset(&h);
+        int nb[8];
+        sa_play(&h, true);
+        for (int b = 0; b < 8; ++b) { clear_log(); run_bars(&h, 1); nb[b] = LG.per_part[2]; }
+        CHECK(nb[3] < nb[0] && nb[7] < nb[4] && nb[1] == nb[0], "PHRASE: bar 4 the answer, room at its end (%d %d %d %d)",
+              nb[0], nb[1], nb[2], nb[3]);
+        h.s.phrase = 1;
+        for (int b = 0; b < 4; ++b) { clear_log(); run_bars(&h, 1); nb[b] = LG.per_part[2]; }
+        CHECK(nb[3] == nb[0], "PHRASE OFF: every bar the same (%d %d)", nb[0], nb[3]);
+        h.s.patb[BS] = 1;                           /* B: OFFBEAT (pattern 0) */
+        sa_part(&h, true);
+        int was = h.part_b;
+        for (int b = 0; b < 4 && !h.part_b; ++b) run_bars(&h, 1);
+        clear_log();
+        run_bars(&h, 1);
+        CHECK(!was && h.part_b && LG.per_part[2] == 4, "PART B on the phrase: B's line (%d notes)", LG.per_part[2]);
+        h.s.abauto = 1;                             /* A/B every 8 bars by itself */
+        int flips = 0, last = h.part_b;
+        for (int b = 0; b < 32; ++b) { run_bars(&h, 1); flips += h.part_b != last; last = h.part_b; }
+        CHECK(flips == 4, "A/B every 8 bars: %d turns in 32", flips);
+        sa_settings z;
+        sa_random(&z, 7, &(sa_pool){0});
+        CHECK(z.progb != 0 && z.patb[BS] != 0 && z.patb[BS] != z.code[BS].pat + 1, "a fresh groove has a B");
+    }
 
     if (fails) { printf("sa_layer_test: %d failed\n", fails); return 1; }
     printf("sa_layer_test: all passed\n");
