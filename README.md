@@ -56,7 +56,7 @@ second colour, until SEQ drops them in on the one.
 
 ## Install
 
-Version 0.8.2: [install it on the FM-1](https://delirioux.github.io/sardine/install/) from Chrome or Edge (Web MIDI), with
+Version 0.8.3: [install it on the FM-1](https://delirioux.github.io/sardine/install/) from Chrome or Edge (Web MIDI), with
 the FM-1 on USB, or [try it in the browser](https://delirioux.github.io/sardine/try/) first. The `dev` branch's test
 build: [install](https://delirioux.github.io/sardine/dev/install/), [try](https://delirioux.github.io/sardine/dev/try/).
 Installing firmware is at your own risk; Felucca's [installer](https://hugelton.github.io/Felucca/webapp/installer/)
@@ -85,7 +85,7 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
 | ENV / ARP / LFO | held: fill / BREAK / SWEEP |
 | GLO | MIXER, MUTE, SOLO, STYLE, SONG |
 
-The [manual](docs/MANUAL.md) has every screen; [BUILDING.md](BUILDING.md) builds it yourself.
+The [manual](docs/MANUAL.md) has every screen; [BUILDING.md](BUILDING.md) builds it yourself; [the road to 1.0](docs/ROADMAP.md) what is left.
 
 ## Credits
 
