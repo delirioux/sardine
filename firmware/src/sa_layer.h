@@ -44,7 +44,8 @@ enum { SA_KIT_TECH, SA_KIT_HOUSE, SA_KIT_DEEP, SA_KIT_HARD, SA_KIT_BOOM, SA_KIT_
        SA_KIT_BREAKS, SA_KIT_DUB, SA_KIT_LOFI, SA_KIT_IRON, SA_KIT_ACID, SA_KITS };   /* (0.7: ROOM .. ACID appended) */
 /* the drum voices a drum layer can be */
 enum { SA_DV_KICK, SA_DV_SNARE, SA_DV_CLAP, SA_DV_HAT, SA_DV_OPEN, SA_DV_RIDE, SA_DV_CRASH, SA_DV_RIM, SA_DV_TOM,
-       SA_DV_LOTOM, SA_DV_CONGA, SA_DV_COWBELL, SA_DV_CLAVE, SA_DV_SHAKER, SA_DVS };
+       SA_DV_LOTOM, SA_DV_CONGA, SA_DV_COWBELL, SA_DV_CLAVE, SA_DV_SHAKER,
+       SA_DV_TAMB, SA_DV_BONGO, SA_DV_WOOD, SA_DV_CABASA, SA_DV_ZAP, SA_DVS };   /* (RIDE CRASH: never offered) */
 #define SA_PROGS 10                                 /* the chord progressions (sa_layer.c) */
 #define SA_CH 9                                     /* a pattern step's tone: the whole chord */
 
@@ -74,7 +75,7 @@ typedef struct {
 enum { SA_L_LEAD, SA_L_CHORD, SA_L_BASS, SA_L_DRUM0 };
 /* the drum rows (0.7): seven, always there, each on a drum channel of its own (none choke another); a row's INSTR one
  * of its channel's drums */
-enum { SA_DR_KICK, SA_DR_SNARE, SA_DR_CLAP, SA_DR_HATS, SA_DR_TOMS, SA_DR_RIM, SA_DR_METAL, SA_DROWS };
+enum { SA_DR_KICK, SA_DR_SNARE, SA_DR_CLAP, SA_DR_HATS, SA_DR_TOMS, SA_DR_RIM, SA_DR_PERC, SA_DROWS };
 int sa_dv_row(int dv);                              /* the row a drum voice plays on */
 int sa_row_voices(int row, uint8_t *out);           /* a row's drum voices (its INSTR list) */
 const char *sa_row_name(int row);
@@ -213,7 +214,6 @@ typedef struct {
     bool fill_held;                                 /* ENV held: a drum fill from the next beat, as long as it is held */
     uint8_t fill_on, fill_kind, fill_step;          /* playing it; which (ROLL TOMS BUILD STUTTER FLAM SYNCO CLAPS GHOST,
                                                      * by turns); the step of its bar */
-    uint8_t crash_next;                             /* a crash on the next beat (a fill over) */
     bool brk_held, brk_on;                          /* ARP held: BREAK, the drums and the bass out; back on the next 1 */
     uint8_t brk_bars;                               /* the bar lines BREAK has been held over */
     uint8_t back_on, back_bar;                      /* after a long BREAK (4 bars or more): the drums back one by one

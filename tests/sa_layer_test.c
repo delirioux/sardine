@@ -349,6 +349,19 @@ int main(void)
     }
     CHECK(g.nheld <= SA_HELD, "held in range");
 
+    {   /* no ride, no crash: PERC lists its own percussion; a stored ride or crash is the tambourine */
+        uint8_t v[16];
+        int n = sa_row_voices(SA_DR_PERC, v), cym = 0;
+        for (int i = 0; i < n; ++i) cym |= v[i] == SA_DV_RIDE || v[i] == SA_DV_CRASH;
+        static sa_settings z;
+        sa_defaults(&z);
+        z.code[SA_L_DRUM0 + SA_DR_PERC].sound = SA_DV_CRASH;
+        sa_settings_fix(&z);
+        CHECK(!cym && n == 6 && z.code[SA_L_DRUM0 + SA_DR_PERC].sound == SA_DV_TAMB && sa_dv_gm(SA_DV_TAMB) == 82 &&
+                  !strcmp(sa_row_name(SA_DR_PERC), "PERC"),
+              "PERC: %d drums, no cymbal; a stored crash is the tambourine", n);
+    }
+
     /* PHRASE (A A A' B: bar 4's last beat quiet on the bass) and PART B (on the next phrase) */
     {
         static sa_groove h;

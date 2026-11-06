@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.3. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.4. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -165,12 +165,12 @@ Seven rows, always there, each on a drum channel of its own, so no two ever cut 
 | HATS | HAT, OPEN HAT, SHAKER |
 | TOMS | TOM, LOW TOM, CONGA |
 | RIM | RIM, CLAVE |
-| METAL | CRASH, COWBELL |
+| PERC | TAMB, BONGO, WOOD, COWBELL, CABASA, ZAP |
 
 Every drum comes in eight variations, all on the INSTR knob: as the kit has it, **TIGHT** (short and bright), **ROOM**
 (long and darker), **HIGH**, **LOW**, and the same drum from three other drum machines (**80**, **10**, **DEEP**),
 whatever the kit: CLAP, CLAP TIGHT, CLAP ROOM .. CLAP DEEP, then (on HATS) OPEN HAT, OPEN HAT TIGHT and so on. The
-header says the whole name as it turns. The METAL row's (crash and cowbell; no ride, ever) are FM: three sine pairs at inharmonic ratios, the way the classic FM synths made cymbals and bells, no samples (TIGHT ROOM HIGH LOW DARK BRIGHT; OLD is the 77's analog metal, darkened). The claps are their own: all eight short hand claps (from the 80, 55, 77 and
+header says the whole name as it turns. The PERC row's are the engine's own percussion on a channel of their own, never a kit's (TIGHT ROOM HIGH LOW DARK BRIGHT DEEP). No cymbals: a synthesised ride or crash never sounds right, so there are none. The claps are their own: all eight short hand claps (from the 80, 55, 77 and
 66 machines and DEEP; CLAP 77 the 80 and 10 swapped for the 77), whatever the kit.
 
 Each row shows its drum and its bar (the second colour: waiting for SEQ); a row OFF is dimmed. The home page: **DRUM**
@@ -198,7 +198,7 @@ to STYLE (below), GLO again to SONG (below), GLO once more back. SOLO is a live 
 ## The drum fill
 
 Hold **ENV**: from the next beat the drums give way to a fill (ENV blinks until the beat, then stays lit), for as
-long as you hold it; let go and the groove is back at once, with a crash on the next beat. A fill is a bar: started
+long as you hold it; let go and the groove is back at once. Towards its end a fill dips the filter of the synth layers, the 1 opens it again. A fill is a bar: started
 on beat 3 it plays from its third beat, so it always peaks on the bar's last sixteenth. Each time another, by turns:
 ROLL (the snare in sixteenths, rising, 32nds at the end), TOMS (a run from the high tom down), BUILD (eighths, then
 sixteenths, then 32nds, an open hat on top), STUTTER (kick and hat on every sixteenth, claps), FLAM (flammed
@@ -209,7 +209,7 @@ notes and rim around a flammed snare). They play the SNARE row's drum; the synth
 
 Hold **ARP** for a **BREAK**: the drums and the bass drop out at once, LEAD and CHORD play on. Let go and ARP blinks
 until the next 1, where everything comes back in: the drop. Held 4 bars or more, the drums come back one by one over
-two bars instead: the kick (and the bass) on the 1, then the hats, the metal, the rim, the snare on the second bar's
+two bars instead: the kick (and the bass) on the 1, then the hats, the perc, the rim, the snare on the second bar's
 1, the clap, the toms. Hold **LFO** for a **SWEEP**: the whole mix's filter closes
 over two bars (as far as FILTER at about 15), its resonance rising as it goes; let go and it is open again at once. Together with the fill on ENV: the
 build, the fill and the drop.

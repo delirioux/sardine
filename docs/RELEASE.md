@@ -1,10 +1,10 @@
-Sardine 0.8.3: live club mixing for the FM-1.
+Sardine 0.8.4: live club mixing for the FM-1.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
   through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, ARP, PAN, 3D, PUMP, GATE, MOD; DRUMS: MIX, KIT, MOD), HOME back to them all
 - EDIT: a pattern editor, KNOB 1 the step, KNOB 2 ready fills (drum fills, lines in the key, chord rhythms), REC:
   the keys write the steps
-- ENV held: a drum fill from the next beat, eight bar-long fills by turns, peaking on the bar's end, a crash after; ARP held: BREAK, the drums and bass out,
+- ENV held: a drum fill from the next beat, eight bar-long fills by turns, peaking on the bar's end, the filter dipping into the 1; ARP held: BREAK, the drums and bass out,
   back in on the 1; LFO held: SWEEP, the filter closing over two bars
 - STYLE: twenty styles (NIGHT, FILTER, DEEP, TECH, MINIMAL, TECHNO, HARD, GABBER, ACID, TRANCE, PROG, DISCO, AFRO,
   GARAGE, BREAKS, DUB, AMBIENT, ELECTRO, HAPPY, LOFI), a fresh groove in one on SEQ; INTRO and ARC
@@ -12,7 +12,7 @@ Sardine 0.8.3: live club mixing for the FM-1.
 - Phrases: the synth layers over four bars, A A A' B (a lift in bar 3, an answer on the root in bar 4); PART A and B,
   each layer's second line and a progression of its own, on HOME's ALGORITHM or by themselves every 8 or 16 bars
 - SELECT is the tempo, ALGORITHM the pattern; SEQ drops what waits on the one; REC records steps on the keys
-- DRUMS: seven rows on channels of their own (KICK SNARE CLAP HATS TOMS RIM METAL), each drum switched at once, in eight variations (TIGHT ROOM HIGH LOW, 80 10 DEEP);
+- DRUMS: seven rows on channels of their own (KICK SNARE CLAP HATS TOMS RIM PERC), each drum switched at once, in eight variations (TIGHT ROOM HIGH LOW, 80 10 DEEP);
   VOLUME and ACCENT per row, CHANCE beside the modifiers; the kit's TUNE, TONE and DECAY on its KIT page
 - PUMP per layer: its depth (set by the sound's type), release, and the kick or every beat
 - 3D: a synth layer placed around you for headphones (angle, height, distance), fixed or moving (ORBIT, RANDOM,

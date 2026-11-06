@@ -499,9 +499,12 @@ int main(int argc, char **argv)
         bars(1);
         CHECK(g.fill_on && part_on[SA_PART_DRUMS] - before > 16, "ENV held: a fill plays (%d drum hits in a bar)",
               part_on[SA_PART_DRUMS] - before);
+        float sw = 0.0f;
+        for (int i = 0; i < 40; ++i) { run_ms(10); if (g.sweep > sw) sw = g.sweep; }
+        CHECK(sw > 0.1f, "a fill dips the filter towards the 1 (%.2f)", sw);
         int k0 = g.fill_kind;
         sv_button(&ui, SV_B_ENV, false);
-        CHECK(!g.fill_on && g.fill_kind == (k0 + 1) % 8 && g.crash_next, "let go: the groove, the next fill next time");
+        CHECK(!g.fill_on && g.fill_kind == (k0 + 1) % 8, "let go: the groove, the next fill next time");
     }
     /* ARP held: BREAK, the drums and the bass out at once; let go: in on the next 1 */
     {

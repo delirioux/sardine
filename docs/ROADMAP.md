@@ -1,10 +1,10 @@
 # The road to 1.0
 
-Sardine 0.8.3 has everything planned for 1.0. What is left is listening on the FM-1 and tuning what it shows.
+Sardine 0.8.4 has everything planned for 1.0. What is left is listening on the FM-1 and tuning what it shows.
 
 ## To check on the FM-1
 
-- The FM metals: the crash and the cowbell in all their variations (TIGHT, ROOM, HIGH, LOW, DARK, BRIGHT, OLD)
+- PERC: tambourine, bongo, wood block, cowbell, cabasa, zap, in all their variations
 - Phrases: bar 3's lift and bar 4's answer on LEAD, CHORD and BASS; PHRASE OFF
 - PART B: switching on the phrase from HOME's ALGORITHM, A/B by itself every 8 and 16 bars, B CHORDS
 - SONG: the steps in turn, each set on its bar line, empty and END steps passed
@@ -21,14 +21,14 @@ Sardine 0.8.3 has everything planned for 1.0. What is left is listening on the F
 
 - How much ENV and the filter move a sound
 - How each of the twenty styles feels
-- The fills, the crash after them, the SWEEP
+- The fills, the filter dip into the 1 after them, the SWEEP
 
 ## Known limits
 
 - RAM: 68.8 of 73.7 KB in use; a big new feature needs room found first
-- The ride is gone for good: the METAL row is the crash and the cowbell
+- No cymbals, for good: synthesised, they never sound right; the PERC row is short percussion
 
 ## Not planned
 
 - Bluetooth (audio and MIDI): the latency and the system's overhead are too much for a live box; MIDI is over USB
-- Samples: the drums and metals stay synthesised
+- Samples: the drums stay synthesised

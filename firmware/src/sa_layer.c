@@ -58,31 +58,35 @@ static const char *const KIT_NAMES[SA_KITS] = {"TECH", "HOUSE", "DEEP", "HARD", 
                                                "BREAKS", "DUB", "LOFI", "IRON", "ACID"};
 const char *sa_kit_name(int kit) { return KIT_NAMES[clampi(kit, 0, SA_KITS - 1)]; }
 static const char *const DV_NAMES[SA_DVS] = {"KICK", "SNARE", "CLAP", "HAT", "OPEN HAT", "RIDE", "CRASH", "RIM",
-                                             "TOM", "LOW TOM", "CONGA", "COWBELL", "CLAVE", "SHAKER"};
-static const uint8_t DV_GM[SA_DVS] = {36, 38, 39, 42, 46, 49, 49, 37, 45, 41, 63, 56, 75, 70};
+                                             "TOM", "LOW TOM", "CONGA", "COWBELL", "CLAVE", "SHAKER", "TAMB",
+                                             "BONGO", "WOOD", "CABASA", "ZAP"};
+/* their notes: General MIDI's; the PERC row's on Sardine's own notes 82..87 (eng_drum.c SA_PERC: the drum engine's
+ * percussion on the PERC row's channel; RIDE and CRASH, never offered, play the tambourine) */
+static const uint8_t DV_GM[SA_DVS] = {36, 38, 39, 42, 46, 82, 82, 37, 45, 41, 63, 85, 75, 70, 82, 83, 84, 86, 87};
 const char *sa_dv_name(int dv) { return DV_NAMES[clampi(dv, 0, SA_DVS - 1)]; }
-/* KICK SNARE CLAP HAT OPEN HAT RIDE CRASH RIM TOM LOW TOM CONGA COWBELL CLAVE SHAKER -> their rows (the drum engine's
- * channels: the shaker is a closed hat, the conga a tom, the clave a rim, ride crash and cowbell its bell) */
-static const uint8_t DV_ROW[SA_DVS] = {SA_DR_KICK, SA_DR_SNARE, SA_DR_CLAP, SA_DR_HATS, SA_DR_HATS, SA_DR_METAL,
-                                       SA_DR_METAL, SA_DR_RIM, SA_DR_TOMS, SA_DR_TOMS, SA_DR_TOMS, SA_DR_METAL,
-                                       SA_DR_RIM, SA_DR_HATS};
+/* the drums -> their rows (the drum engine's channels: the shaker is a closed hat, the conga a tom, the clave a rim;
+ * PERC: tambourine, bongo, wood block, cowbell, cabasa, zap, on its own channel) */
+static const uint8_t DV_ROW[SA_DVS] = {SA_DR_KICK, SA_DR_SNARE, SA_DR_CLAP, SA_DR_HATS, SA_DR_HATS, SA_DR_PERC,
+                                       SA_DR_PERC, SA_DR_RIM, SA_DR_TOMS, SA_DR_TOMS, SA_DR_TOMS, SA_DR_PERC,
+                                       SA_DR_RIM, SA_DR_HATS, SA_DR_PERC, SA_DR_PERC, SA_DR_PERC, SA_DR_PERC,
+                                       SA_DR_PERC};
 static const uint8_t ROW_DEF[SA_DROWS] = {SA_DV_KICK, SA_DV_SNARE, SA_DV_CLAP, SA_DV_HAT, SA_DV_TOM, SA_DV_RIM,
-                                          SA_DV_CRASH};
-static const char *const ROW_NAMES[SA_DROWS] = {"KICK", "SNARE", "CLAP", "HATS", "TOMS", "RIM", "METAL"};
+                                          SA_DV_TAMB};
+static const char *const ROW_NAMES[SA_DROWS] = {"KICK", "SNARE", "CLAP", "HATS", "TOMS", "RIM", "PERC"};
 int sa_dv_row(int dv) { return DV_ROW[clampi(dv, 0, SA_DVS - 1)]; }
 static const char *const DVAR_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "80", "10", "DEEP"};
 static const char *const CLAP_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "80", "77", "DEEP"};
-static const char *const METAL_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "DARK", "BRIGHT", "OLD"};
+static const char *const PERC_NAMES[SA_DVARS] = {"", "TIGHT", "ROOM", "HIGH", "LOW", "DARK", "BRIGHT", "DEEP"};
 const char *sa_dvar_name(int row, int v)
 {
-    return (row == SA_DR_CLAP ? CLAP_NAMES : row == SA_DR_METAL ? METAL_NAMES : DVAR_NAMES)[clampi(v, 0, SA_DVARS - 1)];
+    return (row == SA_DR_CLAP ? CLAP_NAMES : row == SA_DR_PERC ? PERC_NAMES : DVAR_NAMES)[clampi(v, 0, SA_DVARS - 1)];
 }
 const char *sa_row_name(int row) { return ROW_NAMES[clampi(row, 0, SA_DROWS - 1)]; }
 int sa_row_voices(int row, uint8_t *out)
 {
     int n = 0;
     for (int v = 0; v < SA_DVS; ++v)
-        if (DV_ROW[v] == row && v != SA_DV_RIDE) out[n++] = (uint8_t)v;   /* (no ride, ever: 0.8.2) */
+        if (DV_ROW[v] == row && v != SA_DV_RIDE && v != SA_DV_CRASH) out[n++] = (uint8_t)v;   /* (no ride nor crash) */
     return n;
 }
 uint8_t sa_dv_gm(int dv) { return DV_GM[clampi(dv, 0, SA_DVS - 1)]; }
@@ -1103,8 +1107,9 @@ static void canon(sa_settings *s)
 void sa_settings_fix(sa_settings *s)
 {
     canon(s);                                      /* (first: the clamps below then hold for every slot) */
-    for (int l = 0; l < SA_LAYERS; ++l)            /* no ride, ever: a set that had one plays the crash */
-        if (s->code[l].type == SA_T_DRUM && s->code[l].sound == SA_DV_RIDE) s->code[l].sound = SA_DV_CRASH;
+    for (int l = 0; l < SA_LAYERS; ++l)            /* no ride, no crash: a set that had one plays the tambourine */
+        if (s->code[l].type == SA_T_DRUM && (s->code[l].sound == SA_DV_RIDE || s->code[l].sound == SA_DV_CRASH))
+            s->code[l].sound = SA_DV_TAMB;
     s->phrase = (uint8_t)(s->phrase ? 1 : 0);
     s->abauto = (uint8_t)(s->abauto % SA_ABAUTOS);
     if (s->progb > SA_PROGS) s->progb = 0;
@@ -1316,7 +1321,7 @@ void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p)
     case 0: code_drum(&s->code[l++], SA_DV_CLAVE, pat_find(SA_T_DRUM, "CLAVE")); break;
     case 1: code_drum(&s->code[l++], SA_DV_RIM, pat_find(SA_T_DRUM, "SYNCO")); break;
     case 2: code_drum(&s->code[l++], SA_DV_CONGA, pat_find(SA_T_DRUM, "TRESILLO")); break;
-    case 3: code_drum(&s->code[l++], SA_DV_TOM, pat_find(SA_T_DRUM, "SYNCO")); break;   /* (no ride: only when picked) */
+    case 3: code_drum(&s->code[l++], SA_DV_TAMB, pat_find(SA_T_DRUM, "SYNCO")); break;
     default: break;
     }
     /* BASS always; CHORD stabs or a pad (sometimes gated, sweeping); LEAD now and then, mostly OFF */
@@ -1683,7 +1688,6 @@ void sa_fill(sa_groove *g, bool down)
 {
     if (!down && g->fill_on) {
         g->fill_kind = (uint8_t)((g->fill_kind + 1) % FILLS);   /* (next time, the next fill) */
-        g->crash_next = 1;                         /* and a crash on the next beat */
     }
     g->fill_held = down;
     if (!down) g->fill_on = 0;                     /* (let go: the groove again, at once) */
@@ -1803,11 +1807,6 @@ static void do_tick(sa_groove *g)
         g->fill_on = 1;
         g->fill_step = 8;
         g->fill_kind = FILL_ROLL;
-        g->crash_next = 1;
-    }
-    if (t % 24 == 0 && g->crash_next && !g->fill_on && !g->brk_on && !g->arr_brk) {   /* the crash: the beat after a fill */
-        g->crash_next = 0;
-        note(g, SA_PART_DRUMS, 49, 118, (uint32_t)g->sr);
     }
     if (t % 24 == 0 && g->fill_held && !g->fill_on) {   /* the fill: from the beat after ENV went down, at that beat
                                                       * of its bar (it peaks on the bar's end) */
@@ -1835,7 +1834,7 @@ static void do_tick(sa_groove *g)
             g->back_bar * 4 + t / 24 < BACK_BEAT[(b->layer - SA_L_DRUM0) % SA_DROWS]) continue;   /* back one by one */
         if (g->solo && !((g->solo >> (c->type == SA_T_DRUM ? 3 : b->layer)) & 1u)) continue;   /* SOLO: the others out */
         int part = c->type == SA_T_DRUM ? SA_PART_DRUMS : c->part;
-        uint32_t len = c->type == SA_T_DRUM ? (uint32_t)(g->sr * (c->sound == SA_DV_CRASH ? 1.0f :
+        uint32_t len = c->type == SA_T_DRUM ? (uint32_t)(g->sr * (c->sound == SA_DV_CRASH ? 0.2f :
                                                                   c->sound == SA_DV_OPEN ? 0.4f : 0.3f))
                                             : (uint32_t)((float)b->dur * tf);
         g->hits[b->layer] |= (uint16_t)(1u << (t / SA_TPS));
@@ -1892,6 +1891,10 @@ void sa_process(sa_groove *g, int frames)
     {   /* INTRO, ARC: their sweep over the bar; the deeper of the two */
         float a = g->playing ? g->arr_sw0 + (g->arr_sw1 - g->arr_sw0) * (float)(g->tick < 0 ? 0 : g->tick) / (float)SA_TPB
                              : 0.0f;
+        if (g->playing && g->fill_on) {            /* a fill dips the filter towards its end, the 1 opens it */
+            float f = 0.55f * (float)(g->tick < 0 ? 0 : g->tick) / (float)SA_TPB;
+            if (f > a) a = f;
+        }
         g->sweep = g->sweep_man > a ? g->sweep_man : a;
     }
     if (!g->playing) {

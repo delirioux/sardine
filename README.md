@@ -17,8 +17,8 @@ second colour, until SEQ drops them in on the one.
 
 - LEAD, CHORD and BASS: 81 synth sounds on Felucca's engines (bass, keys, pads, leads, FX, and an AMBIENT set of wide
   pads, dub stabs and a rumbling bass in a big hall), each with CUTOFF, RESO, DRIVE and ENV on its home page
-- DRUMS: seven rows (KICK, SNARE, CLAP, HATS, TOMS, RIM, METAL) that never cut each other off, eight variations of each
-  drum, twenty synthesised kits; the crash and cowbell are FM, no samples
+- DRUMS: seven rows (KICK, SNARE, CLAP, HATS, TOMS, RIM, PERC) that never cut each other off, eight variations of each
+  drum, twenty synthesised kits; PERC is tambourine, bongo, wood block, cowbell, cabasa and zap; no cymbals, no samples
 - 24 drum patterns and 29 synth patterns, straight, broken and triplet; FEEL swings them all together; ten modifiers
   (FAST, SLOW, REV, EVERY, THIN, EUCLID, SHIFT, LEN, OCT, PLY) bend any of them
 - An arpeggiator on every synth layer, off until you want it: ten modes, triplet rates, up to four octaves
@@ -56,7 +56,7 @@ second colour, until SEQ drops them in on the one.
 
 ## Install
 
-Version 0.8.3: [install it on the FM-1](https://delirioux.github.io/sardine/install/) from Chrome or Edge (Web MIDI), with
+Version 0.8.4: [install it on the FM-1](https://delirioux.github.io/sardine/install/) from Chrome or Edge (Web MIDI), with
 the FM-1 on USB, or [try it in the browser](https://delirioux.github.io/sardine/try/) first. The `dev` branch's test
 build: [install](https://delirioux.github.io/sardine/dev/install/), [try](https://delirioux.github.io/sardine/dev/try/).
 Installing firmware is at your own risk; Felucca's [installer](https://hugelton.github.io/Felucca/webapp/installer/)

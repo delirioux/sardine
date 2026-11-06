@@ -447,15 +447,14 @@ static void sa_apply(void)
              * claps (80 55 77 66), the hiss down (kit: 2 the 80, 4 the 66, 5 the 55, 6 the 77, 7 DEEP) */
             static const drum_lane_ov_t CLAP[SA_DVARS] = {{2, 0, -6, -10}, {5, 0, -8, -30}, {6, 0, -10, 0}, {4, 3, 0, -12},
                                                            {2, -3, -10, -6}, {2, 0, 0, 0}, {6, 0, 0, 0}, {7, 0, 0, 0}};
-            /* METAL (ride, crash, cowbell): FM, three sine pairs at inharmonic ratios (kit 15: drum_voice.c DV_FM),
-             * no samples; OLD the 77's synthesised metal, darker */
-            static const drum_lane_ov_t METAL[SA_DVARS] = {{15, 0, 0, 0}, {15, 0, -6, -30}, {15, -2, -4, 24},
-                                                            {15, 4, 10, -6}, {15, -5, -10, 10}, {15, 0, -24, 6},
-                                                            {15, 2, 20, 0}, {6, -2, -30, 6}};
+            /* PERC: the engine's own percussion on its channel (Sardine's notes 82..87: eng_drum.c SA_PERC), never a
+             * model kit's; a variation tunes, colours and lengthens it */
+            static const drum_lane_ov_t PERC[SA_DVARS] = {{0, 0, 0, 0}, {0, 0, 4, -30}, {0, 0, -6, 30}, {0, 4, 8, -6},
+                                                           {0, -4, -6, 6}, {0, 0, -24, 0}, {0, 2, 22, -8}, {0, -7, -12, 12}};
             for (int r = 0; r < SA_DROWS; ++r) {
                 const sa_code *c = &s->code[SA_L_DRUM0 + r];
                 int vv = c->type == SA_T_DRUM ? c->amode % SA_DVARS : 0;
-                drum_lane_ov_t ov = r == SA_DR_CLAP ? CLAP[vv] : r == SA_DR_METAL ? METAL[vv] : VAR[vv];
+                drum_lane_ov_t ov = r == SA_DR_CLAP ? CLAP[vv] : r == SA_DR_PERC ? PERC[vv] : VAR[vv];
                 drum_lane_ov[SA_PART_DRUMS][LANE[r]] = ov;
                 if (r == SA_DR_HATS) drum_lane_ov[SA_PART_DRUMS][4] = ov;
             }

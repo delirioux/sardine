@@ -1042,7 +1042,10 @@ static void kit_keys(void)
         trk[0].p[P_E6] = 1;
         for (n = 0; n < 128u; n++) {
             uint32_t t = drum_gm(trk[0].p, n, &st);
-            bad += t != DV_KTYPE(k + 1u, drum_lane(n));
+            if (n >= SA_PERC_LO && n < SA_PERC_LO + 6u)   /* (Sardine's PERC notes: the engine's own, on the bell's) */
+                bad += drum_lane(n) != DV_BELL || t != (uint32_t)SA_PERC[n - SA_PERC_LO][0];
+            else
+                bad += t != DV_KTYPE(k + 1u, drum_lane(n));
         }
         for (i = 0; i < 8u; i++) {
             kit_fresh();

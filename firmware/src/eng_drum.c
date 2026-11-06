@@ -94,8 +94,17 @@ typedef struct { uint8_t kit; int8_t semi, tone, decay; } drum_lane_ov_t;
 #define DRUM_OV_FM 15u                            /* kit: the FM metals (ride, crash, bell: drum_voice.c DV_FM) */
 static drum_lane_ov_t drum_lane_ov[NPART][DV_NLANE];
 static uint32_t drum_gm_part;                     /* (the part drum_gm is asked for: drum_note_on sets it) */
+/* (Sardine) its PERC row's own notes 82..87: tambourine, bongo, wood block, cowbell (the 808's), cabasa, zap; the
+ * engine's own drums, never a kit's, on the bell's channel (drum_lane) */
+#define SA_PERC_LO 82u
+static const int8_t SA_PERC[6][2] = {{DVT_HATO, 9}, {DVT_CONGA, 9}, {DVT_CLAVE, -9}, {DVT_BELL, 0}, {DVT_HATC, 9},
+                                     {DVT_TOM, 19}};
 static uint32_t drum_gm(const int16_t *p, uint32_t note, int32_t *st)
 {
+    if (note >= SA_PERC_LO && note < SA_PERC_LO + 6u) {
+        *st = SA_PERC[note - SA_PERC_LO][1];
+        return (uint32_t)SA_PERC[note - SA_PERC_LO][0];
+    }
     uint32_t n = note >= 35u && note <= 81u ? note : 36u + (note + 120u - 36u) % 12u, t = (uint32_t)DRUM_GM[n - 35u][0];
     uint32_t kit = drum_kit_plays(p[P_E0]);           /* STD, the model kits */
     uint32_t ov = drum_lane_ov[drum_gm_part % NPART][DV_TYPE_LANE[t]].kit;
@@ -119,6 +128,7 @@ static const uint8_t DRUM_LANE_NOTE[NLANE] = {36, 38, 39, 42, 46, 45, 37, 56};
 /* the lane a note strikes (KIT-proof: a kit plays its own piece inside the lane) */
 static uint32_t drum_lane(uint32_t note)
 {
+    if (note >= SA_PERC_LO && note < SA_PERC_LO + 6u) return DV_BELL;   /* (Sardine's PERC: their own channel) */
     uint32_t n = note >= 35u && note <= 81u ? note : 36u + (note + 120u - 36u) % 12u;
     return DV_TYPE_LANE[DRUM_GM[n - 35u][0]];
 }

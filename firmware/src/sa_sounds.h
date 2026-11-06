@@ -429,14 +429,14 @@ static inline void sas_style_apply(sa_settings *s, int st, uint32_t seed, const 
     }
     if (y->clap) s->code[SA_L_DRUM0 + (y->clap[0] == 'S' ? SA_DR_SNARE : SA_DR_CLAP)].pat = (uint8_t)sas_pat(SA_T_DRUM, "2 + 4");
     if (y->xrow && y->xpat) {
-        static const char *const ROWS[SA_DROWS] = {"KICK", "SNARE", "CLAP", "HATS", "TOMS", "RIM", "METAL"};
+        static const char *const ROWS[SA_DROWS] = {"KICK", "SNARE", "CLAP", "HATS", "TOMS", "RIM", "PERC"};
         for (int row = 0; row < SA_DROWS; ++row) {
             const char *a = ROWS[row], *b = y->xrow;
             while (*a && *a == *b) { a++; b++; }
             if (*a == *b && (p = sas_pat(SA_T_DRUM, y->xpat)) >= 0) {
                 s->code[SA_L_DRUM0 + row].pat = (uint8_t)p;
                 if (row == SA_DR_TOMS) s->code[SA_L_DRUM0 + row].sound = SA_DV_CONGA;
-                if (row == SA_DR_METAL) s->code[SA_L_DRUM0 + row].sound = SA_DV_CRASH;
+                if (row == SA_DR_PERC) s->code[SA_L_DRUM0 + row].sound = SA_DV_TAMB;
                 if (row == SA_DR_RIM && y->xpat[0] == 'C') s->code[SA_L_DRUM0 + row].sound = SA_DV_CLAVE;
             }
         }
