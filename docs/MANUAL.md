@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.4. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.5. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -18,16 +18,16 @@ into one of eight sets (SAVE, below).
 | SELECT | the tempo, everywhere |
 | ALGORITHM | the layer's pattern (OFF first); it waits for SEQ. On HOME: PART A or B |
 | SEQ | drops what waits, on the next bar line (stopped: at once) |
-| REC | step recording on the layer, on and off |
+| REC | step recording on the layer, on and off; held: WOBBLE (below) |
 | SCL | the key and the chords, again: back |
 | SAVE | the sets, again: back |
-| EDIT | the layer's pattern editor, again: back |
+| EDIT | the layer's pattern editor, again: back; held: TAPE STOP (below) |
 | ENV | held: a drum fill (below) |
 | ARP | held: BREAK (below) |
 | LFO | held: SWEEP (below) |
 | GLO | GLOBAL: the MIXER, each press its next page (MUTE, SOLO, STYLE, SONG), past the last back |
 | PLAY | start, stop |
-| OCT- OCT+ | the keys' octave (the one it moved to lit) |
+| OCT- OCT+ | the keys' octave (the one it moved to lit); held: WASH, THROW (below) |
 
 The footer shows the layer, a dot for each of its pages (the one open lit) and what the next press does.
 
@@ -183,6 +183,18 @@ FX: **MIX** (VOLUME, KIT, INSTR, MUTE), **KIT** (KIT, TUNE, TONE, DECAY: the who
 **MOD** (three modifiers, and **CHANCE**: how likely each hit plays, 100 % always; lower and hits drop out at random,
 so the pattern changes as it plays). The kits, all synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY,
 CLASSIC, ROOM, VINTAGE, MINIMAL, VOLT (electro), GARAGE, DISCO, BREAKS, DUB, LOFI, IRON (industrial), ACID.
+
+## MOVES
+
+Four more held moves, from any page. A tap on the button does its own job, as ever; held longer than a moment it is a
+move for as long as you hold it (the header names it), its own job not done. They stack.
+
+| Hold | Move |
+| --- | --- |
+| OCT- | **WASH**: everything into the reverb; let go and it comes back dry on the next 1 |
+| OCT+ | **THROW**: everything into the delay, its feedback up; let go and the echoes ring out |
+| EDIT | **TAPE STOP**: the whole mix slows down to a halt over a beat; let go and it plays on |
+| REC | **WOBBLE**: the synth layers' filter rises and falls on the eighths, in time |
 
 ## MIXER
 

@@ -1891,6 +1891,10 @@ void sa_process(sa_groove *g, int frames)
     {   /* INTRO, ARC: their sweep over the bar; the deeper of the two */
         float a = g->playing ? g->arr_sw0 + (g->arr_sw1 - g->arr_sw0) * (float)(g->tick < 0 ? 0 : g->tick) / (float)SA_TPB
                              : 0.0f;
+        if (g->playing && g->wobble) {             /* WOBBLE: a triangle on the eighths, in time */
+            float x = (float)((g->tick < 0 ? 0 : g->tick) % 12) / 12.0f, w = 0.65f * (x < 0.5f ? 2.0f * x : 2.0f - 2.0f * x);
+            if (w > a) a = w;
+        }
         if (g->playing && g->fill_on) {            /* a fill dips the filter towards its end, the 1 opens it */
             float f = 0.55f * (float)(g->tick < 0 ? 0 : g->tick) / (float)SA_TPB;
             if (f > a) a = f;

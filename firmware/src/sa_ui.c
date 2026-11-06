@@ -1833,6 +1833,25 @@ void sv_button(sa_ui *u, int b, bool down)
         }
         return;
     }
+    {   /* MOVES: OCT- OCT+ EDIT REC act on a tap (let go before SV_MOVE_MS); held longer, a move (sv_tick) */
+        int mv = b == SV_B_OCTDN ? SV_MV_WASH : b == SV_B_OCTUP ? SV_MV_THROW : b == SV_B_EDIT ? SV_MV_STOP :
+                 b == SV_B_REC ? SV_MV_WOBBLE : -1;
+        if (mv >= 0) {
+            uint8_t bit = (uint8_t)(1u << mv);
+            if (down) {
+                u->hb_down |= bit;
+                u->hb_ms[mv] = 0;
+                return;
+            }
+            if (!(u->hb_down & bit)) return;
+            u->hb_down &= (uint8_t)~bit;
+            if (u->moves & bit) {                  /* a move: over */
+                u->moves &= (uint8_t)~bit;
+                return;
+            }
+            down = true;                           /* a tap: the button's own job, now */
+        }
+    }
     if (b == SV_B_ENV) {                           /* the drum fill: held, from the next beat */
         sa_fill(g, down);
         return;
@@ -2096,6 +2115,12 @@ void sv_tick(sa_ui *u, int ms)
     if (u->hot_ms > 0) u->hot_ms -= ms;
     if (u->msg_ms > 0) u->msg_ms -= ms;
     if (u->main_ms > 0) u->main_ms -= ms;
+    for (int mv = 0; mv < SV_MOVES; ++mv)          /* MOVES: held long enough */
+        if ((u->hb_down >> mv) & 1u && !((u->moves >> mv) & 1u) && (u->hb_ms[mv] += ms) >= SV_MOVE_MS) {
+            static const char *const N[SV_MOVES] = {"WASH", "THROW", "TAPE STOP", "WOBBLE"};
+            u->moves |= (uint8_t)(1u << mv);
+            sv_msg(u, N[mv]);
+        }
     if (u->home_down) {
         u->home_ms += ms;
         if (u->home_ms >= SV_MENU_HOLD_MS && u->page != SV_PG_MENU) {

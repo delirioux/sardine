@@ -63,6 +63,13 @@ w.web_enc(EN.PRESETS, -1); run(0.2);
 press(B.FX); pages.push(w.web_da_fx());                                                // its SOUND page
 press(B.SCL); pages.push(w.web_da_page());                                             // KEY
 check(`PRESETS, FX, SCL: CHORD, SOUND, KEY (${pages.join(" ")})`, pages[0] === 1 && pages[1] === 2 && pages[2] === 1 && pages[3] === 2);
+{   // EDIT held: TAPE STOP, the mix slows to silence; let go: back
+  peak = 0; run(1); const live = peak;
+  w.web_buttons(1 << B.EDIT); run(1.5); peak = 0; run(0.5); const stopped = peak;
+  w.web_buttons(0); run(0.1); peak = 0; run(1); const back = peak;
+  check(`EDIT held: TAPE STOP (${live.toFixed(3)} -> ${stopped.toFixed(3)} -> ${back.toFixed(3)})`,
+        stopped < live * 0.3 && back > live * 0.5 && w.web_da_page() !== 6);   // (6: EDIT, not opened)
+}
 press(B.HOME); press(B.GLO);                                                          // the MIXER: the whole mix's scope
 wv = 0;
 for (let i = 0; i < 40; i++) { run(0.05); wv = Math.max(wv, w.web_da_wave()); }

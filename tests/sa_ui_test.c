@@ -506,6 +506,33 @@ int main(int argc, char **argv)
         sv_button(&ui, SV_B_ENV, false);
         CHECK(!g.fill_on && g.fill_kind == (k0 + 1) % 8, "let go: the groove, the next fill next time");
     }
+    /* MOVES: a tap is the button's job; held past 300 ms a move, the button's job not done */
+    {
+        int o0 = ui.oct;
+        press(SV_B_OCTUP);
+        CHECK(ui.oct == o0 + 1 && !ui.moves, "OCT+ tapped: the octave");
+        sv_button(&ui, SV_B_OCTUP, true);
+        run_ms(400);
+        CHECK(ui.moves == 1u << SV_MV_THROW && ui.oct == o0 + 1, "OCT+ held: THROW (moves %u)", ui.moves);
+        sv_button(&ui, SV_B_OCTUP, false);
+        CHECK(!ui.moves && ui.oct == o0 + 1, "let go: THROW over, the octave as it was");
+        press(SV_B_OCTDN);
+        sv_button(&ui, SV_B_REC, true);
+        sv_button(&ui, SV_B_EDIT, true);
+        sv_button(&ui, SV_B_OCTDN, true);
+        run_ms(400);
+        CHECK(ui.moves == ((1u << SV_MV_WOBBLE) | (1u << SV_MV_STOP) | (1u << SV_MV_WASH)) && !ui.rec,
+              "REC EDIT OCT- held together: WOBBLE TAPE STOP WASH (moves %u), REC not toggled", ui.moves);
+        g.wobble = true;
+        float sw = 0.0f;
+        for (int i = 0; i < 30; ++i) { run_ms(10); if (g.sweep > sw) sw = g.sweep; }
+        g.wobble = false;
+        CHECK(sw > 0.4f, "WOBBLE: the filter moves (%.2f)", sw);
+        sv_button(&ui, SV_B_REC, false);
+        sv_button(&ui, SV_B_EDIT, false);
+        sv_button(&ui, SV_B_OCTDN, false);
+        CHECK(!ui.moves && ui.page != SV_PG_EDIT, "let go: the moves over, no EDIT opened");
+    }
     /* ARP held: BREAK, the drums and the bass out at once; let go: in on the next 1 */
     {
         int d0 = part_on[SA_PART_DRUMS], b0 = part_on[SA_L_BASS], c0 = part_on[SA_L_CHORD];

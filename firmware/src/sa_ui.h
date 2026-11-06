@@ -65,6 +65,12 @@ typedef struct {
     uint8_t wait;                                     /* stored while playing: written once stopped */
 } sv_set_info;
 
+/* MOVES (0.8.5): tap OCT- OCT+ EDIT REC as ever; held past SV_MOVE_MS, a live move while held (the glue plays them):
+ * OCT- WASH (everything into the reverb; back dry on the next 1), OCT+ THROW (into the delay, the echoes ring out),
+ * EDIT STOP (a tape stop), REC WOBBLE (the synth layers' filter on the eighths) */
+enum { SV_MV_WASH, SV_MV_THROW, SV_MV_STOP, SV_MV_WOBBLE, SV_MOVES };
+#define SV_MOVE_MS 300
+
 /* SONG (GLO's 5th page): up to eight steps, each a set for a number of bars, played in turn round and round
  * while SONG is ON (the glue loads each on its bar line); kept with the preferences */
 #define SV_STEPS 8
@@ -92,6 +98,8 @@ typedef struct {
     sv_song song;                         /* SONG (the glue keeps it) */
     int song_pick;                        /* SONG: the step KNOB 1 picked */
     int song_step;                        /* SONG: the step playing (-1: none; the glue sets it) */
+    uint8_t hb_down, moves;               /* MOVES: OCT- OCT+ EDIT REC held (a bit each, SV_MV_*); the moves on */
+    int hb_ms[4];                         /* .. how long each has been held */
     int style_pick;                       /* the MIXER's STYLE page: the style SEQ makes a groove in */
     int scur;                             /* REC on a synth layer, EDIT: the step the keys write */
     int fill;                             /* EDIT: KNOB 2's FILL (0 CURR: the pattern as it was) */

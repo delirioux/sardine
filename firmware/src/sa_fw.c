@@ -621,6 +621,36 @@ static void sa_song(void)
     }
 }
 
+/* ---- MOVES: the UI's held moves onto Felucca's PERFORM effects (perform.c) and the groove ---- */
+static uint8_t sa_moves_on;                                  /* the moves playing */
+static int sa_wash_bar = -1;                                 /* WASH let go: off on the next 1 (this bar) */
+static void sa_perf(uint32_t e, int down) { fm1_irq_off(); perf_press(e, down); fm1_irq_on(); }
+static void sa_moves(void)
+{
+    static const uint8_t PF[SV_MOVES] = {PF_RTHR, PF_ETHR, PF_TAPE, PF_N};
+    uint8_t want = sa_u.moves;
+    if (sa_wash_bar >= 0 && (!sa_g.playing || sa_g.bar != sa_wash_bar)) {   /* WASH: dry again on the 1 */
+        sa_perf(PF_RTHR, 0);
+        sa_wash_bar = -1;
+        sa_moves_on &= (uint8_t)~(1u << SV_MV_WASH);
+    }
+    for (int mv = 0; mv < SV_MOVES; ++mv) {
+        uint8_t bit = (uint8_t)(1u << mv);
+        bool w = want & bit, on = sa_moves_on & bit;
+        if (mv == SV_MV_WASH && w && sa_wash_bar >= 0) sa_wash_bar = -1;   /* (held again before the 1: on) */
+        if (w == on || (mv == SV_MV_WASH && !w && sa_wash_bar >= 0)) continue;
+        if (mv == SV_MV_WOBBLE) {
+            sa_g.wobble = w;
+        } else if (mv == SV_MV_WASH && !w && sa_g.playing) {
+            sa_wash_bar = sa_g.bar;                         /* (held to the next 1) */
+            continue;
+        } else {
+            sa_perf(PF[mv], w);
+        }
+        sa_moves_on = (uint8_t)(w ? sa_moves_on | bit : sa_moves_on & ~bit);
+    }
+}
+
 /* ---- the main loop ----------------------------------------------------------------------------------------------- */
 static uint32_t sa_notes_prev;
 static void sa_input(void)
@@ -742,6 +772,7 @@ static void sa_frame(void)
         sa_u.req_act = -1;
     }
     sa_song();
+    sa_moves();
     sa_apply();
     if (sa_wait_slot >= 0 && !sa_g.playing) {                /* a set stored while playing: now */
         int k = sa_wait_slot;

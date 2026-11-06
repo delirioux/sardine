@@ -229,6 +229,7 @@ typedef struct {
     int8_t el_now[SA_SYNTHS];
     uint8_t pan_side[SA_LAYERS];                    /* PING-PONG: the side the next note goes to */
     uint32_t pan_rnd;
+    bool wobble;                                    /* WOBBLE held: the synth layers' filter on the eighths */
     bool part_b, part_cue;                          /* PART B playing; the PART wanted (in on the next phrase) */
     uint8_t ed_patb[SA_LAYERS], ed_progb;           /* the edit copy of the B patterns and B's progression (SEQ drops) */
     char msg[24];
