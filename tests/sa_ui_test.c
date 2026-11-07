@@ -912,8 +912,13 @@ int main(int argc, char **argv)
     run_ms(700);
     sv_button(&ui, SV_B_HOME, false);
     CHECK(ui.page == SV_PG_MENU, "HOME held: MENU");
+    ui.cpu = 100;                                  /* (0.8.33: the longest it gets, the peak clear of the percentage) */
+    ui.cpu_peak = 999;
+    ui.shed = 12;
+    shot("20z_menu_full");
     ui.cpu = 42;
     ui.cpu_peak = 67;
+    ui.shed = 0;
     shot("20_menu");
     press(SV_B_HOME);
     CHECK(ui.page == SV_PG_MENU && ui.menu2 && ui.midi_ch[0] == 1 && ui.midi_ch[3] == 10, "MENU, HOME: MIDI OUT, LEAD on 1, DRUMS on 10");

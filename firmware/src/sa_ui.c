@@ -1046,23 +1046,24 @@ static void sv_panel_midi(sa_ui *u)
 static void sv_panel_menu(sa_ui *u)
 {
     if (u->menu2) { sv_panel_midi(u); return; }
-    cv_text_on(30, 16, &AF_M, "SARDINE " SA_VERSION, T_TEXT, T_SURF);
-    cv_text_on(30, 42, &AF_S, "LIVE CLUB MIXING FOR THE FM-1", T_MID, T_SURF);
-    cv_text_on(30, 60, &AF_S, "ON FELUCCA, AFTER TUNA", T_MID, T_SURF);
-    cv_text_on(30, 76, &AF_S, "GPL-3.0, HOME: MIDI OUT", T_DIM, T_SURF);
-    {   /* the CPU: the audio's load, its average over a tenth of a second, and its worst since the start */
+    cv_text_on(30, 10, &AF_M, "SARDINE " SA_VERSION, T_TEXT, T_SURF);
+    cv_text_on(30, 34, &AF_S, "LIVE CLUB MIXING FOR THE FM-1", T_MID, T_SURF);
+    cv_text_on(30, 50, &AF_S, "ON FELUCCA, AFTER TUNA", T_MID, T_SURF);
+    cv_text_on(30, 66, &AF_S, "GPL-3.0, HOME: MIDI OUT", T_DIM, T_SURF);
+    {   /* the CPU: the audio's load, its average over a tenth of a second, and its worst since the start (0.8.33: the
+         * peak on a line of its own, under CPU: beside it, it ran into the percentage) */
         char t[24], a[8];
-        cv_rect(30, 92, 180, 1, T_LINE);
-        cv_text_on(30, 99, &AF_M, "CPU", T_TEXT, T_SURF);
+        cv_rect(30, 82, 180, 1, T_LINE);
+        cv_text_on(30, 88, &AF_M, "CPU", T_TEXT, T_SURF);
         sv_fmt_int(t, sv_clampi(u->cpu, 0, 100));
         sv_cat(t, " %", sizeof t);
-        cv_text_r(210, 99, &AF_M, t, u->cpu >= 85 ? T_ACCENT : T_THEME, T_SURF);
+        cv_text_r(210, 88, &AF_M, t, u->cpu >= 85 ? T_ACCENT : T_THEME, T_SURF);
         sv_cpy(t, "PEAK ", sizeof t);
         sv_fmt_int(a, sv_clampi(u->cpu_peak, 0, 999));
         sv_cat(t, a, sizeof t);
         sv_cat(t, " %", sizeof t);
         if (u->shed) { sv_cat(t, ", SHED ", sizeof t); sv_fmt_int(a, u->shed); sv_cat(t, a, sizeof t); }
-        cv_text_on(80, 103, &AF_S, t, T_DIM, T_SURF);
+        cv_text_on(30, 108, &AF_S, t, T_DIM, T_SURF);
     }
 }
 
