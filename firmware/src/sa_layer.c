@@ -1511,8 +1511,8 @@ void sa_sound_now(sa_groove *g, int l, int sound)
 
 void sa_drop(sa_groove *g)
 {
-    if (sa_pending(g) == 0) {
-        msg(g, "NOTHING TO DROP");
+    if (sa_pending(g) == 0) {                      /* (nothing waits: LIVE's next layer, if a build is on) */
+        sa_build_next(g);
         return;
     }
     if (!g->playing) {
@@ -1522,6 +1522,70 @@ void sa_drop(sa_groove *g)
         return;
     }
     g->drop_armed = true;
+}
+
+/* LIVE: the order a mix builds in, by its START (the layers that are off left out); the first in at once (EMPTY:
+ * none), the rest out */
+static void build_setup(sa_groove *g)
+{
+    static const uint8_t KICK[10] = {SA_L_DRUM0 + SA_DR_KICK, SA_L_DRUM0 + SA_DR_HATS, SA_L_BASS,
+                                            SA_L_DRUM0 + SA_DR_CLAP, SA_L_DRUM0 + SA_DR_SNARE, SA_L_CHORD,
+                                            SA_L_DRUM0 + SA_DR_PERC, SA_L_DRUM0 + SA_DR_RIM, SA_L_DRUM0 + SA_DR_TOMS,
+                                            SA_L_LEAD};
+    static const uint8_t PAD[10] = {SA_L_CHORD, SA_L_DRUM0 + SA_DR_KICK, SA_L_BASS, SA_L_DRUM0 + SA_DR_HATS,
+                                           SA_L_DRUM0 + SA_DR_CLAP, SA_L_DRUM0 + SA_DR_SNARE, SA_L_LEAD,
+                                           SA_L_DRUM0 + SA_DR_PERC, SA_L_DRUM0 + SA_DR_RIM, SA_L_DRUM0 + SA_DR_TOMS};
+    int st = g->build_cue;
+    g->build_cue = 0;
+    g->build_out = 0;
+    g->build_n = 0;
+    g->build_req = false;
+    if (st == SA_START_FULL) return;
+    const uint8_t *o = st == SA_START_PAD ? PAD : KICK;
+    for (int i = 0; i < 10; ++i) {                 /* (the four layers' ten slots: the synths and the drum rows) */
+        const sa_code *c = &g->s.code[o[i]];
+        if (c->type == SA_T_NONE || (c->pat == SA_PAT_OFF && !c->own)) continue;
+        g->build_order[g->build_n++] = o[i];
+        g->build_out |= (uint16_t)(1u << o[i]);
+    }
+    if (st != SA_START_EMPTY && g->build_n) g->build_out &= (uint16_t)~(1u << g->build_order[0]);
+}
+int sa_build_peek(const sa_groove *g)
+{
+    for (int i = 0; i < g->build_n; ++i)
+        if ((g->build_out >> g->build_order[i]) & 1u) return g->build_order[i];
+    return -1;
+}
+const char *sa_build_name(const sa_groove *g, int l)
+{
+    static const char *const S[3] = {"LEAD", "CHORD", "BASS"};
+    (void)g;
+    return l < 0 ? "" : l < SA_SYNTHS ? S[l] : sa_row_name(l - SA_L_DRUM0);
+}
+static void build_in(sa_groove *g)
+{
+    int l = sa_build_peek(g);
+    if (l < 0) return;
+    g->build_out &= (uint16_t)~(1u << l);
+    char t[24];
+    int n = 0;
+    for (const char *p = sa_build_name(g, l); *p && n < 16; ++p) t[n++] = *p;
+    for (const char *p = sa_build_peek(g) < 0 ? " IN: ALL IN" : " IN"; *p; ++p) t[n++] = *p;
+    t[n] = 0;
+    msg(g, t);
+}
+void sa_build_next(sa_groove *g)
+{
+    if (sa_build_peek(g) < 0) {
+        msg(g, "NOTHING TO DROP");
+        return;
+    }
+    if (!g->playing) {
+        build_in(g);
+        return;
+    }
+    g->build_req = true;
+    msg(g, "IN ON THE 1");
 }
 
 static void set_now(sa_groove *g)
@@ -1536,6 +1600,7 @@ static void set_now(sa_groove *g)
     sa_settings_fix(&g->s);
     memset(g->arp_i, 0, sizeof g->arp_i);
     g->part_b = g->part_cue = false;               /* (a groove in: its A) */
+    build_setup(g);
     bool nob = g->s.progb == 0;                    /* (an older set: no B yet, made from its A) */
     for (int l = 0; l < SA_LAYERS; ++l) nob &= g->s.patb[l] == 0;
     if (nob) sa_make_b(&g->s, (uint32_t)g->s.bpm * 977u + g->s.harm.key * 31u + g->s.harm.prog);
@@ -1572,6 +1637,10 @@ static void bar_line(sa_groove *g)
         g->back_on = g->brk_bars >= 4;
         g->back_bar = 0;
         msg(g, g->back_on ? "BACK IN" : "DROP");
+    }
+    if (g->build_out && (g->build_req || (g->build_auto && g->bar > 0 && g->bar % g->build_auto == 0))) {
+        g->build_req = false;                      /* LIVE: the next layer in, on this 1 */
+        build_in(g);
     }
     if (g->bar >= 0 && g->bar % 4 == 0) {          /* PART on the phrase: A/B by itself, or the one wanted */
         int ab = sa_ab_bars(g->s.abauto);
@@ -1829,7 +1898,7 @@ static void do_tick(sa_groove *g)
         if (c->type == SA_T_NONE || g->s.live[b->layer].mute) continue;
         if (c->type == SA_T_DRUM && g->fill_on) continue;   /* (the fill plays in place of the drums) */
         if ((g->brk_on || g->arr_brk) && (c->type == SA_T_DRUM || b->layer == SA_L_BASS)) continue;   /* BREAK: out */
-        if ((g->arr_out >> b->layer) & 1u) continue;   /* INTRO: not in yet */
+        if (((g->arr_out | g->build_out) >> b->layer) & 1u) continue;   /* INTRO, LIVE: not in yet */
         if (g->back_on && c->type == SA_T_DRUM && b->layer >= SA_L_DRUM0 &&
             g->back_bar * 4 + t / 24 < BACK_BEAT[(b->layer - SA_L_DRUM0) % SA_DROWS]) continue;   /* back one by one */
         if (g->solo && !((g->solo >> (c->type == SA_T_DRUM ? 3 : b->layer)) & 1u)) continue;   /* SOLO: the others out */

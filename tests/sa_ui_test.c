@@ -634,7 +634,41 @@ int main(int argc, char **argv)
     ui.req_act = -1;
     g.s.intro = g.s.arc = 0;
     press(SV_B_GLO);
-    CHECK(ui.page == SV_PG_MIXER && ui.mixmute == 4, "GLO: SONG");
+    CHECK(ui.page == SV_PG_MIXER && ui.mixmute == 4 && ui.live_start == SA_START_KICK, "GLO: LIVE, START KICK");
+    shot("18h2_live_setup");
+    press(SV_B_SEQ);
+    CHECK(ui.req_act == SV_SA_LIVE, "LIVE, SEQ: the mix set up, asked");
+    ui.req_act = -1;
+    {   /* (the glue: the groove in, its START cued) */
+        static sa_settings ls;
+        ls = g.s;
+        g.build_cue = SA_START_KICK;
+        sa_set_arm(&g, &ls);
+        bars(1);
+        int s0 = part_on[0] + part_on[1] + part_on[2], d0 = part_on[SA_PART_DRUMS];
+        bars(1);
+        int syn = part_on[0] + part_on[1] + part_on[2] - s0, dr = part_on[SA_PART_DRUMS] - d0;
+        CHECK(g.build_n > 3 && sa_build_peek(&g) == SA_L_DRUM0 + SA_DR_HATS && syn == 0 && dr > 0 && dr <= 8,
+              "LIVE KICK: the kick alone (%d drum hits, %d synth notes), the hats next", dr, syn);
+        int dup = 0;
+        for (int i = 0; i < g.build_n; ++i)
+            for (int j = 0; j < i; ++j) dup += g.build_order[i] == g.build_order[j];
+        CHECK(dup == 0 && g.build_n <= 10, "the build: each layer once (%d)", g.build_n);
+        press(SV_B_SEQ);
+        CHECK(g.build_req && ui.req_act < 0 && sa_build_peek(&g) == SA_L_DRUM0 + SA_DR_HATS,
+              "SEQ (on LIVE too, playing): the hats in on the 1");
+        bars(1);
+        CHECK(!g.build_req && sa_build_peek(&g) == SA_L_BASS, "the hats in, the bass next");
+        shot("18h3_live");
+        ui.live_build = 0;
+        sv_knob(&ui, SV_K3, 1);
+        CHECK(g.build_auto == 8, "BUILD 8 BARS");
+        for (int k = 0; k < 4; ++k) bars(25);
+        CHECK(sa_build_peek(&g) < 0 && g.build_out == 0, "by itself, every 8 bars: all in");
+        sv_knob(&ui, SV_K3, -1);
+    }
+    press(SV_B_GLO);
+    CHECK(ui.page == SV_PG_MIXER && ui.mixmute == 5, "GLO: SONG");
     CHECK(ui.song.set[0] == 1 && ui.song.set[3] == 4 && ui.song.set[4] == 0 && sv_song_bars(ui.song.bars[0]) == 16,
           "SONG: sets 1..4, 16 bars each");
     sv_knob(&ui, SV_K1, 4);

@@ -230,6 +230,12 @@ typedef struct {
     uint8_t pan_side[SA_LAYERS];                    /* PING-PONG: the side the next note goes to */
     uint32_t pan_rnd;
     bool wobble;                                    /* WOBBLE held: the synth layers' filter on the eighths */
+    /* LIVE (GLO): a mix built by hand. build_out: the layers not in yet; they come in one at a time on the 1 in
+     * build_order (SEQ with nothing to drop, or every build_auto bars by itself). build_cue: the START for the next
+     * groove in (set_now), SA_START_* */
+    uint16_t build_out;
+    uint8_t build_order[SA_LAYERS], build_n, build_auto, build_cue;
+    bool build_req;
     bool part_b, part_cue;                          /* PART B playing; the PART wanted (in on the next phrase) */
     uint8_t ed_patb[SA_LAYERS], ed_progb;           /* the edit copy of the B patterns and B's progression (SEQ drops) */
     char msg[24];
@@ -270,6 +276,10 @@ void sa_fill(sa_groove *g, bool down);              /* the drum fill button: hel
 const char *sa_fill_name(int kind);
 void sa_break(sa_groove *g, bool down);             /* BREAK: held, the drums and the bass out at once; let go: in on the 1 */
 void sa_sweep(sa_groove *g, bool down);
+enum { SA_START_FULL, SA_START_KICK, SA_START_PAD, SA_START_EMPTY, SA_STARTS };
+void sa_build_next(sa_groove *g);                   /* LIVE: the next layer in, on the 1 (stopped: at once) */
+const char *sa_build_name(const sa_groove *g, int l);   /* a layer's name in the build: LEAD .. BASS, a drum row */
+int sa_build_peek(const sa_groove *g);              /* the next layer the build brings in, -1 none */
 void sa_part(sa_groove *g, bool b);                 /* PART A or B: playing, on the next phrase (4 bars); stopped, at once */
 int sa_ab_bars(int i);                              /* A/B by itself: 0 OFF, 8, 16 */
 #define SA_INTROS 4                                 /* INTRO: OFF, 4, 8, 16 bars */

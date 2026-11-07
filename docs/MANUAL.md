@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.7. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.8. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -17,7 +17,7 @@ into one of eight sets (SAVE, below).
 | FX | the layer's next page; past the last, back to its home page |
 | SELECT | the tempo, everywhere |
 | ALGORITHM | the layer's pattern (OFF first); it waits for SEQ. On HOME: PART A or B |
-| SEQ | drops what waits, on the next bar line (stopped: at once) |
+| SEQ | drops what waits, on the next bar line (stopped: at once); nothing waiting, a LIVE build: its next layer in |
 | REC | step recording on the layer, on and off; held: WOBBLE (below) |
 | SCL | the key and the chords, again: back |
 | SAVE | the sets, again: back |
@@ -25,7 +25,7 @@ into one of eight sets (SAVE, below).
 | ENV | held: a drum fill (below) |
 | ARP | held: BREAK (below) |
 | LFO | held: SWEEP (below) |
-| GLO | GLOBAL: the MIXER, each press its next page (MUTE, SOLO, STYLE, SONG), past the last back |
+| GLO | GLOBAL: the MIXER, each press its next page (MUTE, SOLO, STYLE, LIVE, SONG), past the last back |
 | PLAY | start, stop |
 | OCT- OCT+ | the keys' octave (the one it moved to lit); held: WASH, THROW (below) |
 
@@ -36,6 +36,20 @@ The footer shows the layer, a dot for each of its pages (the one open lit) and w
 <img src="screens/layer.png" alt="A layer" width="200">
 <img src="screens/pending.png" alt="Waiting for SEQ" width="200">
 </p>
+
+## A live mix, step by step
+
+1. Before PLAY: **GLO** five times to **LIVE**. Pick a **STYLE**, a **START** (KICK for the floor, PAD for a soft
+   opening) and **BUILD** (HAND to ride it yourself). **SELECT** sets the tempo, **SCL** the key.
+2. **SEQ**: the mix is set up, the START waiting. **PLAY**.
+3. Let it run 8 or 16 bars, then **SEQ**: the next layer comes in on the 1. Again every phrase or two: the floor fills.
+4. Ride it on HOME: **FILTER**, **FEEL**, **PUMP**, **SPACE**. On a layer, **ALGORITHM** for another pattern, waiting
+   for SEQ like the build (a pattern waiting drops first).
+5. Tension: hold **LFO** (SWEEP) or **REC** (WOBBLE) over a bar or two; hold **ENV** for a fill into the 1.
+6. The drop: hold **ARP** (BREAK) four bars or more, let go: the drums come back one by one. Or **OCT-** held (WASH) into
+   it, dry on the 1.
+7. Somewhere else: **ALGORITHM** on HOME to PART B, its own lines and chords, on the next phrase.
+8. Keep what works: **SAVE** to a set. The end: hold **OCT+** (THROW) and stop, or **EDIT** (TAPE STOP).
 
 ## HOME
 
@@ -273,9 +287,24 @@ They act in order, each on what the ones before it made, and on time itself, not
 | OCT -2..+2 | octaves (synth layers) |
 | PLY 2 3 4 | each note 2, 3 or 4 times in its own length |
 
+## LIVE
+
+<p align="center">
+<img src="screens/live.png" alt="LIVE" width="200">
+</p>
+
+**GLO** five times: **LIVE**, a mix built by hand. **STYLE** (KNOB 1), **START** (KNOB 2): **KICK** (the kick alone),
+**PAD** (a soft pad on CHORD, its filter low, nothing else) or **EMPTY** (silence), and **BUILD** (KNOB 3): **HAND** (you
+bring each layer in) or every **8** or **16 BARS** by itself. **SEQ** sets it up: a fresh groove in the style, all of it
+made, only the START playing; the rest waits, in an order that builds (KICK: kick, hats, bass, clap, snare, chord, perc,
+rim, toms, lead; PAD: the pad, kick, bass, hats, clap, snare, lead, perc, rim, toms; layers that are off left out). The
+page lists it: what is in lit, the next in the accent. Then **PLAY**, and **SEQ** on any page brings the next layer in on
+the next 1, as long as nothing else waits to drop (that first). Stopped, SEQ brings it in at once. Loading a set or a new
+groove ends the build.
+
 ## SONG
 
-**GLO** five times: **SONG**, the sets as the sections of a song. Eight steps, each a set and its length: **STEP** (1 to 8),
+**GLO** six times: **SONG**, the sets as the sections of a song. Eight steps, each a set and its length: **STEP** (1 to 8),
 **SET** (1 to 8, or END), **BARS** (4, 8, 16, 32, 64) and **SONG** (OFF, ON). ON, the steps play in turn, round and round:
 each set comes in on its bar line (read a bar ahead), empty sets and END steps are passed. Stopped, SONG ON loads the
 first step's set, PLAY starts the song from it; switched ON while playing, the first step comes in on the next 1. Out

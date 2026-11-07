@@ -287,7 +287,7 @@ static void sa_prefs_load(void)
 static void sa_set_do(int act, int k)
 {
     char m[32];
-    if (act != SV_SA_STYLE) k = k < 0 ? 0 : k >= SV_SLOTS ? SV_SLOTS - 1 : k;
+    if (act != SV_SA_STYLE && act != SV_SA_LIVE) k = k < 0 ? 0 : k >= SV_SLOTS ? SV_SLOTS - 1 : k;
     else k = 0;
     sv_cpy(m, "SET ", sizeof m);
     m[4] = (char)('1' + k);
@@ -307,6 +307,28 @@ static void sa_set_do(int act, int k)
         fm1_irq_on();
         sv_cpy(m, SAS_STYLE[k % SAS_NSTYLES].name, sizeof m);
         sv_cat(m, sa_g.playing ? ": ON THE 1" : " IN", sizeof m);
+        break;
+    }
+    case SV_SA_LIVE: {                                       /* LIVE: a fresh groove in a STYLE, only its START in */
+        int k = sa_u.req_slot, st = sa_u.live_start;
+        sas_style_apply(&sa_next, k, sa_pref.boots * 7919u + fm1_ms * 31u + sa_u.frame, &sa_pl);
+        sa_next.intro = 0;                                   /* (built by hand, or by BUILD) */
+        sa_next.arc = sa_g.s.arc;
+        if (st == SA_START_PAD) {                            /* PAD: CHORD a soft pad, its filter low */
+            sa_code *c = &sa_next.code[SA_L_CHORD];
+            int pad = sas_find("SOFT PAD"), wash = sas_pat(SA_T_SYNTH, "WASH");
+            if (sas_of(c->sound)->role != SAS_R_PAD && pad >= 0) c->sound = (uint8_t)pad;
+            if (wash >= 0) c->pat = (uint8_t)wash, c->own = 0;
+            sa_next.live[SA_L_CHORD].cut = 45;
+            sas_fix(&sa_next);
+        }
+        fm1_irq_off();
+        sa_g.build_cue = (uint8_t)st;
+        sa_set_arm(&sa_g, &sa_next);
+        fm1_irq_on();
+        sv_cpy(m, "LIVE: ", sizeof m);
+        sv_cat(m, SAS_STYLE[k % SAS_NSTYLES].name, sizeof m);
+        sv_cat(m, sa_g.playing ? ", ON THE 1" : ", PLAY", sizeof m);
         break;
     }
     case SV_SA_LOAD:

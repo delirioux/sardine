@@ -326,7 +326,17 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         return;
     }
     case SV_PG_MIXER:
-        if (u->mixmute == 4) {                     /* SONG: STEP SET BARS ON */
+        if (u->mixmute == 4) {                     /* LIVE: STYLE START BUILD */
+            static const char *const ST[SA_STARTS] = {"FULL", "KICK", "PAD", "EMPTY"}, *const BU[3] = {"HAND", "8 BARS",
+                                                                                                  "16 BARS"};
+            int k = sv_clampi(u->style_pick, 0, SAS_NSTYLES - 1);
+            sv_card_txt(&c[0], "STYLE", SAS_STYLE[k].name, k * 1000 / (SAS_NSTYLES - 1), false);
+            sv_card_txt(&c[1], "START", ST[sv_clampi(u->live_start, 1, SA_STARTS - 1)], -1, false);
+            sv_card_txt(&c[2], "BUILD", BU[sv_clampi(u->live_build, 0, 2)], u->live_build * 500, false);
+            sv_card_off(&c[3]);
+            return;
+        }
+        if (u->mixmute == 5) {                     /* SONG: STEP SET BARS ON */
             static const char *const BN[SV_SONG_BARS] = {"4 BARS", "8 BARS", "16 BARS", "32 BARS", "64 BARS"};
             int k = sv_clampi(u->song_pick, 0, SV_STEPS - 1), st = u->song.set[k];
             sv_fmt_int(t, k + 1);
@@ -588,7 +598,7 @@ static void sv_head_title(const sa_ui *u, char *t, unsigned n)
         break;
     case SV_PG_KEY: sv_cpy(t, "KEY", n); break;
     case SV_PG_SETS: sv_cpy(t, "SETS", n); break;
-    case SV_PG_MIXER: sv_cpy(t, u->mixmute == 4 ? "SONG" : u->mixmute == 3 ? "STYLE" : u->mixmute == 2 ? "MIXER  SOLO" : u->mixmute ? "MIXER  MUTE" : "MIXER", n); break;
+    case SV_PG_MIXER: sv_cpy(t, u->mixmute == 5 ? "SONG" : u->mixmute == 4 ? "LIVE" : u->mixmute == 3 ? "STYLE" : u->mixmute == 2 ? "MIXER  SOLO" : u->mixmute ? "MIXER  MUTE" : "MIXER", n); break;
     case SV_PG_EDIT:
         sv_cpy(t, SV_VIEW_NAME[u->view], n);
         sv_cat(t, u->rec ? "  EDIT  REC" : "  EDIT", n);
@@ -672,7 +682,7 @@ static void sv_draw_foot(sa_ui *u)
     } else if (u->page == SV_PG_EDIT) {
         sv_cpy(r, u->rec ? "KEYS: WRITE" : "REC: WRITE", sizeof r);
     } else if (u->page == SV_PG_MIXER) {
-        sv_cpy(r, u->mixmute == 4 ? "GLO: BACK" : u->mixmute == 3 ? (u->g->set_next ? "IN ON THE 1" : "SEQ: A NEW GROOVE") : u->mixmute == 2 ? "GLO: STYLE" :
+        sv_cpy(r, u->mixmute == 5 ? "GLO: BACK" : u->mixmute == 4 ? (u->g->set_next ? "IN ON THE 1" : u->g->playing && sa_build_peek(u->g) >= 0 ? "SEQ: NEXT IN" : "SEQ: SET IT UP") : u->mixmute == 3 ? (u->g->set_next ? "IN ON THE 1" : "SEQ: A NEW GROOVE") : u->mixmute == 2 ? "GLO: STYLE" :
                   u->mixmute ? "GLO: SOLO" : "GLO: MUTE", sizeof r);
     }
     uint32_t sig = sv_hash(sv_hash((uint32_t)(now + 1) * 7u + (uint32_t)g->playing * 3u + ux.gen * 11u +
@@ -1319,6 +1329,32 @@ void sv_song_default(sv_song *s)                   /* sets 1..4, 16 bars each */
 }
 int sv_song_bars(int i) { static const uint8_t B[SV_SONG_BARS] = {4, 8, 16, 32, 64}; return B[sv_clampi(i, 0, SV_SONG_BARS - 1)]; }
 
+/* LIVE: the build, in its order: the layers in lit, the next in the accent, the rest dim; before one, how it goes */
+static void sv_panel_live(sa_ui *u)
+{
+    const sa_groove *g = u->g;
+    if (!g->build_n) {
+        sv_label(10, 8, "A MIX BUILT BY HAND:", T_MID);
+        sv_label(10, 26, "SEQ HERE SETS IT UP: THE START IN,", T_DIM);
+        sv_label(10, 40, "THE REST WAITING. PLAY, THEN SEQ", T_DIM);
+        sv_label(10, 54, "ON ANY PAGE: THE NEXT LAYER IN,", T_DIM);
+        sv_label(10, 68, "ON THE 1 (OR BUILD: BY ITSELF)", T_DIM);
+        return;
+    }
+    int next = sa_build_peek(g);
+    for (int i = 0; i < g->build_n && i < 10; ++i) {
+        int l = g->build_order[i];
+        int32_t x = 10 + (i / 5) * 112, y = 6 + (i % 5) * 16;
+        bool in = !((g->build_out >> l) & 1u);
+        char t[4];
+        sv_fmt_int(t, i + 1);
+        cv_text_on(x, y, &AF_S, t, T_DIM, T_SURF);
+        cv_text_on(x + 18, y, &AF_S, sa_build_name(g, l), l == next ? T_ACCENT : in ? T_THEME : T_DIM, T_SURF);
+        if (in) cv_rrect(x + 92, y + 1, 7, 7, 3, T_THEME, T_SURF);
+    }
+    sv_label(10, 92, next < 0 ? "ALL IN" : "SEQ: THE NEXT IN, ON THE 1", next < 0 ? T_THEME : T_DIM);
+}
+
 /* SONG: the eight steps, two columns; the one picked lit, the one playing in the accent */
 static void sv_panel_song(sa_ui *u)
 {
@@ -1349,7 +1385,8 @@ static void sv_panel_song(sa_ui *u)
 
 static void sv_panel_mixer(sa_ui *u)
 {
-    if (u->mixmute == 4) { sv_panel_song(u); return; }
+    if (u->mixmute == 5) { sv_panel_song(u); return; }
+    if (u->mixmute == 4) { sv_panel_live(u); return; }
     if (u->mixmute == 3) { sv_panel_style(u); return; }
     const sa_groove *g = u->g;
     const sa_settings *s = &g->s;
@@ -1517,6 +1554,7 @@ void sv_init(sa_ui *u, sa_groove *g)
     u->pv_layer = -1;
     u->req_act = -1;
     u->song_step = -1;
+    u->live_start = SA_START_KICK;
     u->midi_ch[0] = 1, u->midi_ch[1] = 2, u->midi_ch[2] = 3, u->midi_ch[3] = 10;
     sv_song_default(&u->song);
     for (int k = 0; k < 27; ++k)
@@ -1732,7 +1770,16 @@ void sv_knob(sa_ui *u, int k, int d)
         return;
     case SV_PG_MIXER:
         u->changed = true;
-        if (u->mixmute == 4) {                     /* SONG */
+        if (u->mixmute == 4) {                     /* LIVE */
+            if (i == 0) u->style_pick = sv_clampi(u->style_pick + d, 0, SAS_NSTYLES - 1);
+            else if (i == 1) u->live_start = sv_clampi(u->live_start + d, 1, SA_STARTS - 1);
+            else if (i == 2) {
+                u->live_build = sv_clampi(u->live_build + d, 0, 2);
+                g->build_auto = (uint8_t)(u->live_build == 1 ? 8 : u->live_build == 2 ? 16 : 0);
+            }
+            return;
+        }
+        if (u->mixmute == 5) {                     /* SONG */
             int k = sv_clampi(u->song_pick, 0, SV_STEPS - 1);
             if (i == 0) u->song_pick = sv_clampi(k + d, 0, SV_STEPS - 1);
             else if (i == 1) u->song.set[k] = (uint8_t)sv_clampi(u->song.set[k] + d, 0, SV_SETS);
@@ -1935,6 +1982,12 @@ void sv_button(sa_ui *u, int b, bool down)
     switch (b) {
     case SV_B_PLAY: sa_play(g, !g->playing); break;
     case SV_B_SEQ:                                 /* drop what waits; on STYLE: a fresh groove in it */
+        if (u->page == SV_PG_MIXER && u->mixmute == 4 && !(g->playing && sa_build_peek(g) >= 0)) {
+            /* LIVE: the mix set up, its START in, the rest waiting (a build playing: SEQ brings the next in) */
+            u->req_act = SV_SA_LIVE;
+            u->req_slot = sv_clampi(u->style_pick, 0, SAS_NSTYLES - 1);
+            break;
+        }
         if (u->page == SV_PG_MIXER && u->mixmute == 3) {
             u->req_act = SV_SA_STYLE;
             u->req_slot = sv_clampi(u->style_pick, 0, SAS_NSTYLES - 1);
@@ -1976,8 +2029,8 @@ void sv_button(sa_ui *u, int b, bool down)
             u->force = true;
         }
         break;
-    case SV_B_GLO:                                 /* GLOBAL: MIXER, MUTE, SOLO, STYLE, each press the next; past the last: back */
-        if (u->page == SV_PG_MIXER && u->mixmute < 4) {
+    case SV_B_GLO:                                 /* GLOBAL: MIXER, MUTE, SOLO, STYLE, LIVE, SONG, each press the next */
+        if (u->page == SV_PG_MIXER && u->mixmute < 5) {
             u->mixmute++;
             if (u->mixmute == 3) u->style_pick = g->s.style;
             u->force = true;

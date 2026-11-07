@@ -28,6 +28,7 @@ second colour, until SEQ drops them in on the one.
 
 - The synth layers phrase over four bars (A A A' B): bar 3 lifts, bar 4 answers on the root and leaves room for the fill
 - Every groove has a PART B, its own lines and chords: ALGORITHM on HOME, or by itself every 8 or 16 bars
+- LIVE: a mix built by hand, from the kick alone or a soft pad, a layer at a time on SEQ (or every 8 or 16 bars)
 - Twenty styles, from NIGHT (slow and dark) to GABBER, a groove in one press; INTRO builds it up, ARC drops and lifts it
 - SONG: up to eight saved sets as sections, each for 4 to 64 bars, played in turn
 
@@ -58,7 +59,7 @@ second colour, until SEQ drops them in on the one.
 
 ## Install
 
-Version 0.8.7: [install it on the FM-1](https://delirioux.github.io/sardine/install/) from Chrome or Edge (Web MIDI), with
+Version 0.8.8: [install it on the FM-1](https://delirioux.github.io/sardine/install/) from Chrome or Edge (Web MIDI), with
 the FM-1 on USB, or [try it in the browser](https://delirioux.github.io/sardine/try/) first. The `dev` branch's test
 build: [install](https://delirioux.github.io/sardine/dev/install/), [try](https://delirioux.github.io/sardine/dev/try/).
 Installing firmware is at your own risk; Felucca's [installer](https://hugelton.github.io/Felucca/webapp/installer/)
@@ -71,7 +72,7 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
 3. PRESETS to a layer, ALGORITHM for another pattern, SEQ to drop it in on the one.
 4. On DRUMS, KNOB 1 picks the drum, KNOB 2 its variation; the keys play it.
 5. Hold ARP for a break, let go for the drop; hold ENV for a fill.
-6. GLO, four times: STYLE; SEQ there makes a whole new groove in that style.
+6. GLO, five times: LIVE; set up a mix that starts with the kick or a pad, then SEQ brings in a layer at a time.
 7. SAVE keeps it in one of eight sets.
 
 | Control | What it does |
@@ -81,12 +82,12 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
 | FX | the layer's next page |
 | SELECT | the tempo |
 | ALGORITHM | the layer's pattern (waits for SEQ); on HOME: PART A or B |
-| SEQ | drops what waits, on the next bar line |
+| SEQ | drops what waits, on the next bar line; in a LIVE build, the next layer |
 | REC / EDIT | step recording / the pattern editor |
 | SCL / SAVE | the key and the chords / the sets |
 | ENV / ARP / LFO | held: fill / BREAK / SWEEP |
 | OCT- / OCT+ / EDIT / REC | held: WASH / THROW / TAPE STOP / WOBBLE |
-| GLO | MIXER, MUTE, SOLO, STYLE, SONG |
+| GLO | MIXER, MUTE, SOLO, STYLE, LIVE, SONG |
 
 The [manual](docs/MANUAL.md) has every screen; [BUILDING.md](BUILDING.md) builds it yourself; [the road to 1.0](docs/ROADMAP.md) what is left.
 

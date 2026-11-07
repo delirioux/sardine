@@ -58,7 +58,8 @@ enum { SVP_HOME, SVP_SOUND, SVP_ARP, SVP_PAN, SVP_GATE, SVP_MOD, SVP_MIX, SVP_KI
 #define SV_SETS 8
 #define SV_LAST SV_SETS                       /* the ninth slot: the last groove, kept by itself (LOAD only) */
 #define SV_SLOTS (SV_SETS + 1)
-enum { SV_SA_LOAD, SV_SA_STORE, SV_SA_NEW, SV_SA_CLEAR, SV_SA_ACTS, SV_SA_STYLE = 9 };   /* (STYLE: the MIXER's 4th page) */
+enum { SV_SA_LOAD, SV_SA_STORE, SV_SA_NEW, SV_SA_CLEAR, SV_SA_ACTS, SV_SA_STYLE = 9, SV_SA_LIVE = 10 };   /* (STYLE, LIVE:
+                                                                                                  * GLO's pages) */
 typedef struct {
     uint8_t used, bpm, key, scale, kit, nsyn;
     uint8_t snd[SA_SYNTHS];                           /* its synth layers' sounds */
@@ -101,7 +102,10 @@ typedef struct {
 #define SV_MLOG 8
     volatile uint8_t ml_layer[SV_MLOG], ml_ch[SV_MLOG], ml_note[SV_MLOG], ml_vel[SV_MLOG];
     volatile uint32_t ml_n;
-    int mixmute;                          /* GLO's page: 0 VOLUME, 1 MUTE, 2 SOLO, 3 STYLE, 4 SONG (GLO turns them over) */
+    int mixmute;                          /* GLO's page: 0 VOLUME, 1 MUTE, 2 SOLO, 3 STYLE, 4 LIVE, 5 SONG (GLO turns them) */
+    int live_start;                       /* LIVE: the START (SA_START_KICK PAD EMPTY), the BUILD (0 BY HAND, 1 8 BARS,
+                                           * 2 16 BARS) */
+    int live_build;
     sv_song song;                         /* SONG (the glue keeps it) */
     int song_pick;                        /* SONG: the step KNOB 1 picked */
     int song_step;                        /* SONG: the step playing (-1: none; the glue sets it) */

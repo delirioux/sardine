@@ -1,6 +1,6 @@
 # The road to 1.0
 
-Sardine 0.8.7 has everything planned for 1.0. What is left is listening on the FM-1 and tuning what it shows.
+Sardine 0.8.8 has everything planned for 1.0. What is left is listening on the FM-1 and tuning what it shows.
 
 ## To check on the FM-1
 
@@ -22,6 +22,7 @@ Sardine 0.8.7 has everything planned for 1.0. What is left is listening on the F
 - How much ENV and the filter move a sound
 - How each of the twenty styles feels
 - The fills, the filter dip into the 1 after them, the SWEEP
+- LIVE: KICK, PAD, EMPTY; SEQ bringing each layer in; BUILD by itself; the order it builds in
 - MIDI OUT: each layer on its channel, OFF, the log; the drums' GM notes in a DAW
 - The held moves: WASH, THROW, TAPE STOP, WOBBLE (and that a tap still does the button's job)
 
