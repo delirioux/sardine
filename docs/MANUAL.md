@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.17. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.18. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -18,7 +18,7 @@ into one of eight sets (SAVE, below).
 | SELECT | the tempo, everywhere |
 | ALGORITHM | the layer's pattern (OFF first); it waits for SEQ. On HOME: PART A or B |
 | SEQ | drops what waits, on the next bar line (stopped: at once); nothing waiting, a LIVE build: its next layer in |
-| REC | step recording on the layer, on and off; held: WOBBLE (below) |
+| REC | on a layer: its EDIT (on GATE: the gate's steps on the keys); held: WOBBLE (below) |
 | SCL | the key and the chords, again: back |
 | SAVE | the sets, again: back |
 | EDIT | the layer's pattern editor, again: back; held: TAPE STOP (below) |
@@ -137,12 +137,9 @@ so it is always in key, and swings with FEEL. GATE cuts a held chord to a rhythm
 <img src="screens/drums_rec.png" alt="Drum steps" width="200">
 </p>
 
-**REC** on a layer turns step recording on (REC lit), again off; another layer turns it off. On LEAD and BASS
-**KNOB 1** picks the step, **a key** writes its note there (snapped to the scale) and the cursor moves on, so a line
-goes in as fast as you play it; the same note again takes the step off. **KNOB 2** is the step's length. On CHORD a
-key puts the chord on the step or takes it off: it plays the chord of the bar. On the GATE page the 16 lowest keys
-are the gate's steps. The keys of the scale (or the step keys) glow dim, what is set full. The first edit makes the
-pattern the layer's own (MY STEPS); like a pattern, the steps wait for SEQ, and the modifiers still act on them.
+The keys change a pattern only in **EDIT** (below); everywhere else they play. **REC** on a layer opens its EDIT, and on
+the GATE page turns the gate's steps on the keys (the 16 lowest) on and off. The first edit makes the pattern the
+layer's own (MY STEPS); like a pattern, the steps wait for SEQ, and the modifiers still act on them.
 
 ## EDIT
 
@@ -163,10 +160,9 @@ on it moves it up or down the scale (on CHORD: right the chord on, left off).
 Setting a note, step by step: **EDIT**, KNOB 1 to the step, then a key (heard as you press it; the step moves on) or
 KNOB 4 to the note, KNOB 3 for how long.
 
-In EDIT (and with **REC** on, on the layer's pages too), LEAD, BASS and CHORD: a key writes at the framed step (the note snapped to the scale, the same note
+In EDIT, LEAD, BASS and CHORD: a key writes at the framed step (the note snapped to the scale, the same note
 again takes it off; on CHORD the chord) and the frame moves on. DRUMS: the 16 lowest keys are the steps, glowing dim,
-the hits set full; a key turns its step on or off, the keys above play the drum. Without REC the drum keys play the
-drum, lit with what it plays. Like a pattern, the steps wait for SEQ. EDIT again goes back.
+the hits set full; a key turns its step on or off, the keys above play the drum. Like a pattern, the steps wait for SEQ. EDIT again goes back.
 
 ## DRUMS
 

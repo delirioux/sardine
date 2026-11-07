@@ -249,8 +249,8 @@ int main(int argc, char **argv)
     CHECK(g.ed[SA_L_BASS].pat != pat && g.s.code[SA_L_BASS].pat == pat && sa_pending(&g) == 1, "ALGORITHM: waits");
     shot("05_bass_pending");
     press(SV_B_REC);
-    CHECK(ui.rec && sa_pending(&g) == 1, "REC is step recording, not a drop");
-    press(SV_B_REC);
+    CHECK(ui.page == SV_PG_EDIT && sa_pending(&g) == 1, "REC: the layer's EDIT (the keys write only there), not a drop");
+    press(SV_B_EDIT);
     press(SV_B_SEQ);
     CHECK(g.drop_armed, "SEQ: armed");
     bars(1);
@@ -367,7 +367,7 @@ int main(int argc, char **argv)
     CHECK(!ui.rec, "another layer: REC off");
     /* LEAD: OFF; REC writes its steps from the keys */
     press(SV_B_REC);
-    CHECK(ui.rec && sv_steps_on(&ui), "LEAD, REC: STEPS");
+    CHECK(ui.page == SV_PG_EDIT && sv_steps_on(&ui), "LEAD, REC: its EDIT, the keys its steps");
     sv_key(&ui, 69, true);
     sv_key(&ui, 69, false);
     sv_key(&ui, 72, true);
@@ -378,7 +378,7 @@ int main(int argc, char **argv)
     press(SV_B_SEQ);
     bars(2);
     CHECK(part_on[SA_L_LEAD] > 0, "LEAD plays its steps (%d)", part_on[SA_L_LEAD]);
-    press(SV_B_REC);
+    press(SV_B_EDIT);
     /* DRUMS: seven rows; KNOB 1 the row, KNOB 2 its INSTR (at once), the keys its steps under REC */
     sv_knob(&ui, SV_K_PRESETS, 4);
     CHECK(ui.view == SV_V_DRUMS && ui.layer == SA_L_DRUM0 + SA_DR_KICK, "DRUMS: the kick row");
@@ -408,15 +408,15 @@ int main(int argc, char **argv)
     sv_knob(&ui, SV_K2, -40);
     sv_knob(&ui, SV_K4, 10);
     CHECK(g.s.live[ui.layer].env == 70, "ACCENT");
-    press(SV_B_REC);
+    press(SV_B_EDIT);
     uint32_t fl, dl;
-    CHECK(sv_key_leds(&ui, &fl, &dl) && dl == 0xFFFFu, "REC: the step keys lit");
+    CHECK(sv_key_leds(&ui, &fl, &dl) && dl == 0xFFFFu, "EDIT: the step keys lit");
     sv_key(&ui, SV_KEY_LO + 5, true);
     sv_key(&ui, SV_KEY_LO + 5, false);
     CHECK(g.ed[ui.layer].own, "a drum step");
     shot("14_drums_rec");
     press(SV_B_SEQ);
-    press(SV_B_REC);
+    press(SV_B_EDIT);
     /* a row OFF: ALGORITHM gives it a pattern */
     sv_knob(&ui, SV_K1, 1);
     CHECK(ui.layer == SA_L_DRUM0 + SA_DR_TOMS && g.s.code[ui.layer].pat == SA_PAT_OFF, "TOMS: OFF");
@@ -493,10 +493,9 @@ int main(int argc, char **argv)
         sv_key(&ui, 62, false);
     }
     sv_knob(&ui, SV_K1, 5 - ui.scur);
-    press(SV_B_REC);
     sv_key(&ui, 60, true);
     sv_key(&ui, 60, false);
-    CHECK(ui.rec && g.ed[SA_L_BASS].own && g.ed[SA_L_BASS].sn[5] != SA_NO_NOTE && ui.scur == 6, "EDIT, REC: a note on step 6");
+    CHECK(g.ed[SA_L_BASS].own && g.ed[SA_L_BASS].sn[5] != SA_NO_NOTE && ui.scur == 6, "EDIT: a key, a note on step 6");
     sv_knob(&ui, SV_K2, 2);
     CHECK(!strcmp(sv_fill_name(&ui, ui.fill), "ARP UP") && g.ed[SA_L_BASS].sn[0] != SA_NO_NOTE &&
           g.ed[SA_L_BASS].sn[2] > g.ed[SA_L_BASS].sn[0], "FILL: ARP UP, a line up the scale");
