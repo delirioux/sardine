@@ -2158,6 +2158,13 @@ void sv_key(sa_ui *u, int note, bool down)
         u->changed = true;
         return;
     }
+    if (!lay && sv_drum_view(u)) {                 /* DRUMS with no drum picked: silent, never LEAD (a held key let go) */
+        if (!down && u->key_sent[k] >= 0) {
+            sa_key(u->g, k, u->key_sent[k], false, SA_L_LEAD);
+            u->key_sent[k] = -1;
+        }
+        return;
+    }
     int layer = lay ? u->layer : SA_L_LEAD;
     if (lay && u->rec && u->page == SV_PG_LAYER) {   /* (outside EDIT the keys play; only GATE's REC sets its steps) */
         if (sv_page_now(u) == SVP_GATE && k < 16) {  /* the gate's steps */
@@ -2182,7 +2189,7 @@ void sv_key(sa_ui *u, int note, bool down)
         }
         return;
     }
-    if (lay && u->view == SV_V_DRUMS) {            /* DRUMS: every key plays the drum picked */
+    if (lay && u->view == SV_V_DRUMS) {            /* DRUMS: every key plays the drum picked (nothing else, ever) */
         if (u->g->ed[u->layer].type != SA_T_DRUM) return;
         int dv = u->g->ed[u->layer].sound;
         if (down) {

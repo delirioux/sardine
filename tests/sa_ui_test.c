@@ -570,6 +570,17 @@ int main(int argc, char **argv)
         }
         press(SV_B_HOME);
     }
+    /* DRUMS, no drum row picked: a key plays nothing, never LEAD */
+    {
+        to_view(SV_V_DRUMS);
+        int keep = ui.layer, l0 = part_on[SA_L_LEAD];
+        ui.layer = -1;
+        sv_key(&ui, 72, true);
+        sv_key(&ui, 72, false);
+        CHECK(part_on[SA_L_LEAD] == l0, "DRUMS, no row: the keys never play LEAD");
+        ui.layer = keep;
+        press(SV_B_HOME);
+    }
     /* SEQ held a second: a whole new groove, as at power-on (asked of the glue) */
     {
         ui.req_act = -1;
