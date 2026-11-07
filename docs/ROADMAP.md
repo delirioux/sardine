@@ -11,7 +11,7 @@ Sardine 0.8.35 has everything planned for 1.0. What is left is listening on the 
 - BREAK held over four bars: the drums back one by one
 - The LEAD after one pattern, its polyphony (a chord on the keys), and the lead sounds that lost their glide
   (HOOVER, VOX LEAD, WHISTLE, AIR LEAD) and SUPER LEAD's unison
-- 3D: behind no longer lost
+- PAN 3D: behind no longer lost
 - The detune on the chord and pad sounds (TRANCE, RAVE, STRINGS, SOFT PAD and the rest at 12 to 16 cents)
 - ARP LEAD's sound
 - The style leads (SOFT LEAD, FILTER LEAD, BLIP, DARK SAW, ACID LEAD, RUBBER, PLUCK LEAD, RAVE LEAD, SCREECH, DUB
