@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.6. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.7. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -12,7 +12,7 @@ into one of eight sets (SAVE, below).
 
 | Control | What it does |
 | --- | --- |
-| HOME | HOME, from anywhere; held: MENU |
+| HOME | HOME, from anywhere; held: MENU (HOME again: MIDI OUT) |
 | PRESETS | HOME, LEAD, CHORD, BASS, DRUMS: a layer always opens on its home page |
 | FX | the layer's next page; past the last, back to its home page |
 | SELECT | the tempo, everywhere |
@@ -184,14 +184,6 @@ FX: **MIX** (VOLUME, KIT, INSTR, MUTE), **KIT** (KIT, TUNE, TONE, DECAY: the who
 so the pattern changes as it plays). The kits, all synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY,
 CLASSIC, ROOM, VINTAGE, MINIMAL, VOLT (electro), GARAGE, DISCO, BREAKS, DUB, LOFI, IRON (industrial), ACID.
 
-## MIDI OUT
-
-**HOME** held opens the MENU; **FX** there turns to **MIDI OUT**: the channel each layer sends its notes on over USB,
-LEAD, CHORD, BASS and DRUMS on the four knobs (1 to 16, or OFF: that layer sends nothing). Out of the box LEAD 1,
-CHORD 2, BASS 3, DRUMS 10; they are kept. Under them what went out, the newest on top: the layer, its channel, the
-note (a drum by its name) and its velocity. The drums go out as General MIDI notes (PERC's as the nearest: TAMB 54,
-BONGO 60, WOOD 76, COWBELL 56, CABASA 69, ZAP 80).
-
 ## MOVES
 
 Four more held moves, from any page. A tap on the button does its own job, as ever; held longer than a moment it is a
@@ -347,11 +339,19 @@ delay. The room every layer plays in is a big hall; the drums send little into i
 
 HOME held: the colour (SHOAL by default, and Felucca's) and the look (FLAT, LINE). Below them the **CPU**: the audio's load
 now (its average over a tenth of a second; above 85 % it turns the second colour), its PEAK since the start, and how
-many voices the load guard had to let go (SHED), if any.
+many voices the load guard had to let go (SHED), if any. HOME: MIDI OUT.
 
-## MIDI out
+## MIDI OUT
 
-LEAD, CHORD and BASS on channels 1, 2 and 3, the kit on 10 with General MIDI notes.
+<p align="center">
+<img src="screens/midi.png" alt="MIDI OUT" width="200">
+</p>
+
+**HOME** held opens the MENU; **HOME** once more turns to **MIDI OUT**, and once more back HOME. MIDI OUT: the channel each layer sends its notes on over USB,
+LEAD, CHORD, BASS and DRUMS on the four knobs (1 to 16, or OFF: that layer sends nothing). Out of the box LEAD 1,
+CHORD 2, BASS 3, DRUMS 10; they are kept. Under them what went out, the newest on top: the layer, its channel, the
+note (a drum by its name) and its velocity. The drums go out as General MIDI notes (PERC's as the nearest: TAMB 54,
+BONGO 60, WOOD 76, COWBELL 56, CABASA 69, ZAP 80).
 
 ## Saving
 

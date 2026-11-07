@@ -984,7 +984,7 @@ static void sv_panel_menu(sa_ui *u)
     cv_text_on(30, 16, &AF_M, "SARDINE " SA_VERSION, T_TEXT, T_SURF);
     cv_text_on(30, 42, &AF_S, "LIVE CLUB MIXING FOR THE FM-1", T_MID, T_SURF);
     cv_text_on(30, 60, &AF_S, "ON FELUCCA, AFTER TUNA", T_MID, T_SURF);
-    cv_text_on(30, 76, &AF_S, "GPL-3.0, HOME CLOSES", T_DIM, T_SURF);
+    cv_text_on(30, 76, &AF_S, "GPL-3.0, HOME: MIDI OUT", T_DIM, T_SURF);
     {   /* the CPU: the audio's load, its average over a tenth of a second, and its worst since the start */
         char t[24], a[8];
         cv_rect(30, 92, 180, 1, T_LINE);
@@ -1889,7 +1889,12 @@ void sv_button(sa_ui *u, int b, bool down)
             u->home_ms = 0;
         } else if (u->home_down) {
             u->home_down = false;
-            if (u->home_ms < SV_MENU_HOLD_MS && u->page != SV_PG_MAIN) sv_view(u, SV_V_HOME);   /* (on HOME: nothing) */
+            if (u->home_ms < SV_MENU_HOLD_MS && u->page == SV_PG_MENU && !u->menu2) {   /* MENU: HOME its next page */
+                u->menu2 = true;
+                u->force = true;
+            } else if (u->home_ms < SV_MENU_HOLD_MS && u->page != SV_PG_MAIN) {
+                sv_view(u, SV_V_HOME);             /* (on HOME: nothing) */
+            }
         }
         return;
     }
@@ -1992,11 +1997,6 @@ void sv_button(sa_ui *u, int b, bool down)
             break;
         }
         if (u->page == SV_PG_MIXER) break;         /* (GLO turns its pages) */
-        if (u->page == SV_PG_MENU) {               /* MENU: its second page, MIDI */
-            u->menu2 = !u->menu2;
-            u->force = true;
-            break;
-        }
         if (u->page == SV_PG_LAYER) {
             int p[8], n = sv_pages(u, p);
             u->fx = (u->fx + 1) % n;

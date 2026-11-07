@@ -677,8 +677,8 @@ int main(int argc, char **argv)
     ui.cpu = 42;
     ui.cpu_peak = 67;
     shot("20_menu");
-    press(SV_B_FX);
-    CHECK(ui.menu2 && ui.midi_ch[0] == 1 && ui.midi_ch[3] == 10, "MENU, FX: MIDI OUT, LEAD on 1, DRUMS on 10");
+    press(SV_B_HOME);
+    CHECK(ui.page == SV_PG_MENU && ui.menu2 && ui.midi_ch[0] == 1 && ui.midi_ch[3] == 10, "MENU, HOME: MIDI OUT, LEAD on 1, DRUMS on 10");
     sv_knob(&ui, SV_K2, -2);
     sv_knob(&ui, SV_K3, -3);
     CHECK(ui.midi_ch[1] == 0 && ui.midi_ch[2] == 0, "CHORD and BASS OFF");
@@ -693,6 +693,7 @@ int main(int argc, char **argv)
     }
     shot("20b_midi");
     press(SV_B_HOME);
+    CHECK(ui.page == SV_PG_MAIN, "HOME again: back HOME");
     press(SV_B_PLAY);
     CHECK(!g.playing, "PLAY stops");
     CHECK(g.nheld == 0, "nothing left sounding");
