@@ -741,7 +741,8 @@ static void sv_panel_steps(sa_ui *u)
     char t[32];
     sa_pat_label(sv_ed(u), t, sizeof t);
     cv_free_text(10, 3, &AF_S, t, pend ? T_ACCENT : T_THEME, T_SURF, 150);
-    cv_text_r(230, 3, &AF_S, sa_chordy(&o) ? "KEYS: CHORDS" : "KEYS: NOTES", T_DIM, T_SURF);
+    cv_text_r(230, 3, &AF_S, !u->rec ? "REC: KEYS WRITE" : sa_chordy(&o) ? "KEYS: CHORDS" : "KEYS: NOTES",
+              u->rec ? T_ACCENT : T_DIM, T_SURF);
     int32_t y0 = 18, h = 80;
     for (int k = 0; k < 16; ++k) {
         int32_t x = 8 + k * 14;
@@ -770,7 +771,7 @@ static void sv_panel_steps(sa_ui *u)
         if (chord) for (int r = 0; r < 3; ++r) cv_rrect(x + 1, y0 + h / 2 - 12 + r * 9, w, 6, 2, c, T_SURF);
         else if (note) cv_rrect(x + 1, y0 + h - 8 - (o.sn[k] - lo) * (h - 10) / (hi - lo), w, 6, 2, c, T_SURF);
     }
-    cv_text_on(10, 104, &AF_S, "REC: KNOB 1 THE STEP, A KEY ITS NOTE", T_DIM, T_SURF);
+    cv_text_on(10, 104, &AF_S, u->rec ? "KNOB 1 THE STEP, A KEY ITS NOTE" : "KNOB 1 THE STEP, KNOB 4 ITS NOTE", T_DIM, T_SURF);
 }
 
 static void sv_panel_gate(sa_ui *u)
@@ -1870,6 +1871,8 @@ void sv_knob(sa_ui *u, int k, int d)
     if (sv_steps_on(u)) {                          /* REC: KNOB 1 the step, KNOB 2 its length (EDIT: KNOB 3) */
         if (i == 0) u->scur = sv_wrap(u->scur + d, 16);
         else if (i == (u->page == SV_PG_EDIT ? 2 : 1)) sa_step_len(g, l, sv_clampi(u->scur, 0, 15), d);
+        else if (i == (u->page == SV_PG_EDIT ? 3 : 2)) sa_step_turn(g, l, sv_clampi(u->scur, 0, 15), d);   /* NOTE */
+        u->changed = true;
         return;
     }
     switch (sv_page_now(u)) {

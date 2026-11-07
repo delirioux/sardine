@@ -824,7 +824,46 @@ void sa_step_len(sa_groove *g, int l, int st, int d)
     sa_code *c = &g->ed[l];
     if (c->type != SA_T_SYNTH) return;
     sa_own_make(g, c);
+    if (c->sl[st] + d < 1 && (c->sn[st] != SA_NO_NOTE || ((c->chord >> st) & 1u))) {   /* below 1: the note goes */
+        c->sn[st] = SA_NO_NOTE;
+        c->chord &= (uint16_t)~(1u << st);
+        c->sl[st] = 1;
+        return;
+    }
     c->sl[st] = (uint8_t)clampi(c->sl[st] + d, 1, 16);
+}
+
+void sa_step_turn(sa_groove *g, int l, int st, int d)
+{
+    if (l < 0 || l >= SA_LAYERS || st < 0 || st > 15 || !d) return;
+    sa_code *c = &g->ed[l];
+    if (c->type != SA_T_SYNTH) return;
+    bool chordy = sa_chordy(c);
+    sa_own_make(g, c);
+    if (c->sl[st] < 1) c->sl[st] = 1;
+    if (chordy) {                                  /* CHORD: right on, left off */
+        if (d > 0) c->chord |= (uint16_t)(1u << st);
+        else c->chord &= (uint16_t)~(1u << st);
+        c->sn[st] = SA_NO_NOTE;
+        return;
+    }
+    const sa_harm *h = &g->ed_harm;
+    if (c->sn[st] == SA_NO_NOTE) {                 /* a rest: the note before it, else the root (an octave over C3) */
+        int rel = SA_NO_NOTE;
+        for (int k = 1; k < 16 && rel == SA_NO_NOTE; ++k) rel = c->sn[(st + 16 - k) % 16];
+        if (rel == SA_NO_NOTE) rel = 60;
+        c->sn[st] = (int8_t)clampi(sa_snap(h, h->key + rel) - h->key, -127, 127);
+        c->chord &= (uint16_t)~(1u << st);
+        return;
+    }
+    int n = h->key + c->sn[st], dir = d > 0 ? 1 : -1;
+    for (int k = 0; k < (d > 0 ? d : -d); ++k) {   /* d steps of the scale */
+        int m = n + dir;
+        while (m > 0 && m < 127 && sa_snap(h, m) != m) m += dir;
+        if (m <= 12 || m >= 120) break;
+        n = m;
+    }
+    c->sn[st] = (int8_t)clampi(n - h->key, -127, 127);
 }
 
 void sa_pat_label(const sa_code *c, char *out, int max)

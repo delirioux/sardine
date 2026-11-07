@@ -467,7 +467,23 @@ int main(int argc, char **argv)
         for (int k = 0; k < 40; ++k) { run_ms(16); seen |= sv_play_keys(&ui); }
         CHECK(seen != 0, "EDIT: the keys light as BASS plays");
     }
-    sv_knob(&ui, SV_K1, 5);
+    {   /* the NOTE knob: a rest gets a note, turning moves it up the scale; LENGTH below 1: the note goes */
+        sv_knob(&ui, SV_K1, 9 - ui.scur);
+        sa_code *c = &g.ed[SA_L_BASS];
+        sa_own_make(&g, c);
+        c->sn[9] = SA_NO_NOTE;
+        c->chord &= (uint16_t)~(1u << 9);
+        sv_knob(&ui, SV_K4, 1);
+        int n0 = c->sn[9];
+        sv_knob(&ui, SV_K4, 2);
+        int n1 = c->sn[9];
+        CHECK(n0 != SA_NO_NOTE && n1 > n0 && sa_snap(&g.ed_harm, g.ed_harm.key + n1) == g.ed_harm.key + n1,
+              "NOTE: a rest gets a note (%d), turned two up the scale (%d)", n0, n1);
+        shot("18c_edit_note");
+        sv_knob(&ui, SV_K3, -20);
+        CHECK(c->sn[9] == SA_NO_NOTE, "LENGTH below 1: the note goes");
+    }
+    sv_knob(&ui, SV_K1, 5 - ui.scur);
     press(SV_B_REC);
     sv_key(&ui, 60, true);
     sv_key(&ui, 60, false);

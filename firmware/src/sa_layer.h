@@ -316,7 +316,10 @@ bool sa_chordy(const sa_code *c);                    /* a synth layer whose step
 void sa_step_drum(sa_groove *g, int layer, int step);           /* a drum hit on or off */
 void sa_step_note(sa_groove *g, int layer, int step, int note); /* a note (snapped) on, the same again off; a chord
                                                                  * layer: the chord on or off */
-void sa_step_len(sa_groove *g, int layer, int step, int d);
+void sa_step_len(sa_groove *g, int layer, int step, int d);   /* (a note's length; below 1: the note goes) */
+void sa_step_turn(sa_groove *g, int layer, int step, int d);  /* EDIT's NOTE knob: a rest gets a note (the one before,
+                                                               * else the layer's root), a note moves d steps of the
+                                                               * scale; a chord layer's step: the chord on or off */
 void sa_pat_label(const sa_code *c, char *out, int max);       /* "OFFBEAT", or "OFFBEAT EDIT" for an own one */
 const char *sa_pan_mode_name(int m);
 const char *sa_pan_rate_name(int r);

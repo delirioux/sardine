@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.14. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.15. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -156,7 +156,11 @@ CURR (the pattern as it was when you opened EDIT) and ready fills that rewrite t
 pattern is as it was. On DRUMS: ROLL (the last beat in sixteenths), BUILD, SNARE, BREAK (the first half only), STUTTER,
 GALLOP, FLAM and DOUBLE, over the drum's own hits or in place of them. On LEAD and BASS ready lines in the key: ROOT
 8THS, ARP UP, ARP DOWN, OCTAVES, WALK, RIFF, CALL, PULSE 16. On CHORD the chord's rhythm: STABS, OFFBEATS, PUSH,
-PULSE, 8THS, 16THS, DOTTED, HOLD. **KNOB 3** is the step's LENGTH (on DRUMS its HIT, on or off).
+PULSE, 8THS, 16THS, DOTTED, HOLD. **KNOB 3** is the step's LENGTH (on DRUMS its HIT, on or off); turned below 1, the
+note goes. **KNOB 4** is its **NOTE**: on an empty step it puts a note there (the note before it, else the root), turned
+on it moves it up or down the scale (on CHORD: right the chord on, left off).
+
+Setting a note, step by step: **EDIT**, KNOB 1 to the step, KNOB 4 to the note, KNOB 3 for how long; or REC on and a key.
 
 With **REC** on, LEAD, BASS and CHORD: a key writes at the framed step (the note snapped to the scale, the same note
 again takes it off; on CHORD the chord) and the frame moves on. DRUMS: the 16 lowest keys are the steps, glowing dim,
