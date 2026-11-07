@@ -78,8 +78,11 @@ static void lint_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t h)
     nbox = 0;
 }
 static void lcd_sync(void) {}
+static uint32_t blits;
+static uint32_t sv_draws_total(void) { return blits; }
 static void lcd_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint16_t *p)
 {
+    blits++;
     lint_blit(x, y, w, h);
     for (uint32_t j = 0; j < h && y + j < 240; j++)
         for (uint32_t i = 0; i < w && x + i < 240; i++)
@@ -920,6 +923,16 @@ int main(int argc, char **argv)
     ui.cpu_peak = 67;
     ui.shed = 0;
     shot("20_menu");
+    {   /* (0.8.34) KNOB 3 and 4 over MENU's empty cards: nothing, not even a redraw */
+        sv_draw(&ui);
+        ui.hot_ms = 0;
+        int d0 = (int)sv_draws_total();
+        sv_knob(&ui, SV_K3, 1);
+        sv_knob(&ui, SV_K4, -1);
+        sv_draw(&ui);
+        CHECK(ui.hot_ms == 0 && (int)sv_draws_total() == d0, "MENU, KNOB 3 and 4 (empty cards): nothing drawn again (%d)",
+              (int)sv_draws_total() - d0);
+    }
     press(SV_B_HOME);
     CHECK(ui.page == SV_PG_MENU && ui.menu2 && ui.midi_ch[0] == 1 && ui.midi_ch[3] == 10, "MENU, HOME: MIDI OUT, LEAD on 1, DRUMS on 10");
     sv_knob(&ui, SV_K2, -2);

@@ -1904,6 +1904,11 @@ void sv_knob(sa_ui *u, int k, int d)
     }
     if (k < SV_K1 || k > SV_K4) return;
     int i = k - SV_K1;
+    {   /* (0.8.34) a knob over an empty card (a dash) does nothing: no card lit, no redraw */
+        sv_card c[4];
+        sv_cards_of(u, c);
+        if (c[i].off) return;
+    }
     u->hot = i;
     u->hot_ms = 700;
     switch (u->page) {
