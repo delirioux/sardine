@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.20. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.21. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -388,6 +388,10 @@ LEAD, CHORD, BASS and DRUMS on the four knobs (1 to 16, or OFF: that layer sends
 CHORD 2, BASS 3, DRUMS 10; they are kept. Under them what went out, the newest on top: the layer, its channel, the
 note (a drum by its name) and its velocity. The drums go out as General MIDI notes (PERC's as the nearest: TAMB 54,
 BONGO 60, WOOD 76, COWBELL 56, CABASA 69, ZAP 80).
+
+MIDI in: notes that come in on a channel Sardine sends a layer on are dropped: they are its own coming back (a DAW
+passing through what it gets) and would play again on another layer's sound. Play Sardine from outside on a channel
+it does not send on.
 
 ## Saving
 

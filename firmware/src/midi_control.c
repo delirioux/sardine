@@ -126,8 +126,15 @@ static void midi_play(track_t *t, uint32_t ch, uint32_t note, uint32_t vel)
     }
 }
 
+#if FELUCCA_SARDINE
+static int sa_midi_ours(uint32_t ch);              /* (sa_fw.c: a channel Sardine sends its layers on) */
+#endif
 static void midi_note_event(uint32_t ch, uint32_t note, uint32_t vel)
 {
+#if FELUCCA_SARDINE
+    if (sa_midi_ours(ch)) return;                  /* (Sardine: its own notes coming back, a DAW's thru: not played
+                                                    * again, on whatever sound the channel would reach) */
+#endif
     midi_channel_t *c = midi_channel(ch);
     uint32_t id = midi_notes[ch][note] & 0x7Fu;
     if (vel) {

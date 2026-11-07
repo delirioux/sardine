@@ -462,6 +462,7 @@ EXPORT uint16_t *web_screen(void) { return web_fb; }
 EXPORT uint32_t web_screen_draws(void) { return web_draws; }
 EXPORT uint32_t web_now_ms(void) { return fm1_ms; }
 EXPORT uint32_t web_playing(void) { return sa_g.playing; }
+EXPORT uint32_t web_midi_ch(uint32_t k) { return k < 4u ? sa_u.midi_ch[k] : 0u; }   /* MIDI OUT's channel of a layer */
 /* Sardine's own, for the page and the test: the bar playing, the page shown, the layers in use, the version */
 EXPORT uint32_t web_da_bar(void) { return (uint32_t)sa_g.bar; }
 EXPORT uint32_t web_da_page(void) { return (uint32_t)sa_u.page; }

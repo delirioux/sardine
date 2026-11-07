@@ -253,9 +253,13 @@ static void sa_prefs_save(void)
 #if FELUCCA_FLASH
     sa_pref.magic = SA_PREF_MAGIC;
     sa_pref.look = sa_g.s.look;
-    sa_pref.song = sa_u.song;
-    memcpy(sa_pref.midi_ch, sa_u.midi_ch, sizeof sa_pref.midi_ch);
-    sa_pref.midi_ok = 1;
+    if (sa_u.g) {                                            /* (the screen up: its SONG and MIDI channels; at boot,
+                                                              * before it, the ones kept stay) */
+        sa_pref.song = sa_u.song;
+        memcpy(sa_pref.midi_ch, sa_u.midi_ch, sizeof sa_pref.midi_ch);
+        sa_pref.midi_ok = 2;                                 /* (2: 0.8.6 .. 0.8.20 kept 1 with every channel OFF,
+                                                              * saved at boot before the screen was up: not read) */
+    }
     if (flash_ok && st_save(OBJ_PROJECT0, &sa_pref, sizeof sa_pref) == 0)
         sa_pref_look = sa_pref.look;
 #endif
@@ -589,7 +593,7 @@ static void sa_fw_init(void)
             sa_u.song.on = 0;                                /* (SONG starts OFF: a start plays its own groove) */
         }
     }
-    if (sa_pref.midi_ok)                                     /* MIDI's channels as kept (else 1 2 3 10, sv_init's) */
+    if (sa_pref.midi_ok == 2)                                /* MIDI's channels as kept (else 1 2 3 10, sv_init's) */
         for (int k = 0; k < 4; ++k) sa_u.midi_ch[k] = sa_pref.midi_ch[k] <= 16 ? sa_pref.midi_ch[k] : 0;
     sa_sets_scan();
     sa_apply();
@@ -668,6 +672,14 @@ static void sa_song(void)
         sa_song_end += sv_song_bars(sa_u.song.bars[sa_song_next]);
         sa_song_next = -1;
     }
+}
+
+/* MIDI in: a note on a channel Sardine sends a layer on is its own coming back (a DAW echoing what it gets): dropped */
+static int sa_midi_ours(uint32_t ch)
+{
+    for (int k = 0; k < 4; ++k)
+        if (sa_u.midi_ch[k] && sa_u.midi_ch[k] == ch + 1u) return 1;
+    return 0;
 }
 
 /* ---- MOVES: the UI's held moves onto Felucca's PERFORM effects (perform.c) and the groove ---- */

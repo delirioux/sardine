@@ -63,6 +63,18 @@ w.web_enc(EN.PRESETS, -1); run(0.2);
 press(B.FX); pages.push(w.web_da_fx());                                                // its SOUND page
 press(B.SCL); pages.push(w.web_da_page());                                             // KEY
 check(`PRESETS, FX, SCL: CHORD, SOUND, KEY (${pages.join(" ")})`, pages[0] === 1 && pages[1] === 2 && pages[2] === 1 && pages[3] === 2);
+{   // MIDI in: a note on a channel Sardine sends on (its own, echoed back by a DAW) is not played again
+  w.web_buttons(0); if (w.web_playing()) press(B.PLAY); run(1.5);   // stopped, quiet
+  peak = 0; run(0.3); const quiet = peak;
+  const chs = [0, 1, 2, 3].map(k => w.web_midi_ch(k)).join(' ');
+  check(`MIDI OUT's channels as out of the box after a boot (${chs}; a boot saved them OFF before)`, chs === '1 2 3 10');
+  // (a DAW passing Sardine's notes back, its drums on channel 1: LEAD's sound played them)
+  peak = 0; w.web_midi(0x90, 36, 110); run(0.3); w.web_midi(0x80, 36, 0); run(0.3); const echo = peak;
+  peak = 0; w.web_midi(0x93, 36, 110); run(0.3); w.web_midi(0x83, 36, 0); run(0.3); const other = peak;
+  check(`MIDI in: a note on LEAD's own channel 1 dropped (${echo.toFixed(3)}, quiet ${quiet.toFixed(3)}), on 4 played (${other.toFixed(3)})`,
+        echo < 0.002 && other > 0.01);
+  press(B.PLAY); run(0.3);
+}
 {   // EDIT held: TAPE STOP, the mix slows to silence; let go: back
   peak = 0; run(1); const live = peak;
   w.web_buttons(1 << B.EDIT); run(1.5); peak = 0; run(0.5); const stopped = peak;
