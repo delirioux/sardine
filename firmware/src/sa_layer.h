@@ -294,6 +294,7 @@ const char *sa_build_name(const sa_groove *g, int l);   /* a layer's name in the
 int sa_build_peek(const sa_groove *g);              /* the next layer the build brings in, -1 none */
 void sa_part(sa_groove *g, bool b);                 /* PART A or B: playing, on the next phrase (4 bars); stopped, at once */
 int sa_ab_bars(int i);                              /* A/B by itself: 0 OFF, 8, 16 */
+int sa_part_next(const sa_groove *g, bool *to_b);  /* bars before PART changes (1: the last), 0: none coming */
 #define SA_INTROS 4                                 /* INTRO: OFF, 4, 8, 16 bars */
 #define SA_ARCS 4                                   /* ARC: OFF, 16, 32, 64 bars */
 int sa_intro_bars(int i);

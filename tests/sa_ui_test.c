@@ -792,6 +792,17 @@ int main(int argc, char **argv)
     sv_knob(&ui, SV_K4, -1);
     press(SV_B_GLO);
     CHECK(ui.page == SV_PG_MAIN, "GLO past SONG: back HOME");
+    {   /* (0.8.31) A/B by itself: the badge in the header, two bars before and in the last bar */
+        if (!g.playing) sa_play(&g, true);
+        uint8_t ab0 = g.s.abauto;
+        g.s.abauto = 1;
+        int k = 0;
+        while (k++ < 2000 && !(sa_part_next(&g, 0) == 1 && g.tick % 12 < 6)) run_ms(16);
+        bool tb = false;
+        CHECK(sa_part_next(&g, &tb) == 1 && tb == !g.part_b, "A/B: the last bar before it turns");
+        shot("17z_ab_badge");
+        g.s.abauto = ab0;
+    }
     /* STYLE MIX (0.8.25): GLO held; the layers not kept out, the next style in around the kept ones, then all of it */
     sv_button(&ui, SV_B_GLO, true);
     run_ms(300);

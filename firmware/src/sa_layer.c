@@ -2032,6 +2032,22 @@ void sa_break(sa_groove *g, bool down)
     if (!g->playing && !down) g->brk_on = false;   /* (stopped: no 1 to wait for) */
 }
 int sa_ab_bars(int i) { static const uint8_t B[SA_ABAUTOS] = {0, 8, 16}; return B[clampi(i, 0, SA_ABAUTOS - 1)]; }
+/* (0.8.31) the bars left before PART changes (1: this is the last bar of the old one), the part it goes to; 0: no change
+ * coming (stopped, or nothing cued and A/B OFF) */
+int sa_part_next(const sa_groove *g, bool *to_b)
+{
+    if (!g->playing || g->bar < 0) return 0;
+    int b = g->bar, ab = sa_ab_bars(g->s.abauto);
+    if (g->part_cue != g->part_b) {                /* cued: on the next phrase (every 4 bars) */
+        if (to_b) *to_b = g->part_cue;
+        return (b / 4 + 1) * 4 - b;
+    }
+    if (ab) {                                      /* A/B by itself: every 8 or 16 bars */
+        if (to_b) *to_b = !g->part_b;
+        return (b / ab + 1) * ab - b;
+    }
+    return 0;
+}
 void sa_part(sa_groove *g, bool b)
 {
     g->part_cue = b;

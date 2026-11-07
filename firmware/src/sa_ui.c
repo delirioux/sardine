@@ -653,8 +653,17 @@ static void sv_draw_head(sa_ui *u)
         sv_fmt_int(bd, pend);
         sv_cat(bd, " TO DROP", sizeof bd);
     }
+    /* (0.8.31) PART about to change: a badge, A>B or B>A, blinking on the beats two bars before, on the eighths in the
+     * last bar (the tick: in time) */
+    bool to_b = false;
+    int left = sa_part_next(g, &to_b), ab = 0;
+    if (left == 1 || left == 2) {
+        int t = g->tick < 0 ? 0 : g->tick;
+        ab = 1 + (left == 1 ? t % 12 < 6 : t % 24 < 12);   /* 1 dim, 2 lit */
+    }
     uint32_t sig = sv_hash(sv_hash((uint32_t)g->playing * 3u + (uint32_t)g->s.bpm * 101u + ux.gen * 13u +
-                                   (uint32_t)u->batt * 7777u + (uint32_t)hot * 23u, m), bd);
+                                   (uint32_t)u->batt * 7777u + (uint32_t)hot * 23u + (uint32_t)ab * 50021u +
+                                   (uint32_t)to_b * 4099u, m), bd);
     if (!u->force && sig == u->sig_head)
         return;
     u->sig_head = sig;
@@ -667,6 +676,15 @@ static void sv_draw_head(sa_ui *u)
         int32_t w = text_w(&AF_S, bd) + 10;
         cv_rrect(right - w, 4, w, SV_HEAD - 8, 3, T_ACCENT, T_BG);
         cv_text_in(right - w, 4 + CAP_IN(S, SV_HEAD - 8), w, &AF_S, bd, T_INK, T_ACCENT);
+        right -= w + 6;
+    }
+    if (ab) {
+        const char *ps = to_b ? "A>B" : "B>A";
+        int32_t w = text_w(&AF_S, ps) + 10;
+        bool lit = ab == 2;
+        cv_rrect(right - w, 4, w, SV_HEAD - 8, 3, lit ? T_ACCENT : ux_mix(T_BG, T_ACCENT, 25), T_BG);
+        cv_text_in(right - w, 4 + CAP_IN(S, SV_HEAD - 8), w, &AF_S, ps, lit ? T_INK : T_MID,
+                   lit ? T_ACCENT : ux_mix(T_BG, T_ACCENT, 25));
         right -= w + 6;
     }
     if (m[0])

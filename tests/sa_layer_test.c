@@ -407,6 +407,21 @@ int main(void)
         int flips = 0, last = h.part_b;
         for (int b = 0; b < 32; ++b) { run_bars(&h, 1); flips += h.part_b != last; last = h.part_b; }
         CHECK(flips == 4, "A/B every 8 bars: %d turns in 32", flips);
+        int ok = 0, ones = 0;                       /* (0.8.31) the bars left before PART changes, as the header shows */
+        for (int b = 0; b < 16; ++b) {
+            bool tb = false;
+            int left = sa_part_next(&h, &tb), was_b = h.part_b;
+            run_bars(&h, 1);
+            ones += left == 1;
+            ok += left == 1 ? h.part_b == tb && h.part_b != was_b : h.part_b == was_b && left >= 1 && left <= 8;
+        }
+        CHECK(ok == 16 && ones == 2, "A/B: the bars left before it turns, right every bar (%d of 16, %d last bars)", ok, ones);
+        h.s.abauto = 0;
+        sa_part(&h, !h.part_b);
+        int cue = sa_part_next(&h, 0);
+        CHECK(cue >= 1 && cue <= 4, "PART cued: on the phrase, %d bars left", cue);
+        sa_part(&h, h.part_b);
+        CHECK(sa_part_next(&h, 0) == 0, "nothing cued, A/B OFF: no change coming");
         sa_settings z;
         sa_random(&z, 7, &(sa_pool){0});
         CHECK(z.progb != 0 && z.patb[BS] != 0 && z.patb[BS] != z.code[BS].pat + 1, "a fresh groove has a B");
