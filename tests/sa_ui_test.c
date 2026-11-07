@@ -716,6 +716,10 @@ int main(int argc, char **argv)
     CHECK(g.solo == 0, "SOLO off: all");
     press(SV_B_GLO);
     CHECK(ui.mixmute == 3, "GLO a fourth time: STYLE");
+    press(SV_B_SEQ);                               /* (0.8.28) the style as it is: SEQ takes it all the same, lit */
+    CHECK(ui.style_pick == g.s.style && ui.req_act == SV_SA_STYLE && ui.req_slot == g.s.style && ui.hot == 0,
+          "STYLE unchanged, SEQ: a fresh groove in the same style, the card lit");
+    ui.req_act = -1;
     sv_knob(&ui, SV_K1, 5);
     sv_knob(&ui, SV_K2, 2);
     sv_knob(&ui, SV_K3, 1);

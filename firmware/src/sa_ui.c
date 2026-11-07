@@ -329,7 +329,7 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
     case SV_PG_MIXER:
         if (u->mixmute == 6) {                     /* STYLE MIX: TO KEEP OUT IN */
             int k = sv_clampi(u->mix_pick, 0, SAS_NSTYLES - 1);
-            sv_card_txt(&c[0], "TO", SAS_STYLE[k].name, k * 1000 / (SAS_NSTYLES - 1), false);
+            sv_card_txt(&c[0], "TO", SAS_STYLE[k].name, k * 1000 / (SAS_NSTYLES - 1), g->mx_state != 0);
             sv_card_txt(&c[1], "KEEP", sv_mix_keep_name(u->mix_keep), u->mix_keep * 1000 / (SV_MIX_KEEPS - 1), false);
             sv_bars_txt(t, sv_mix_out_bars(u->mix_out));
             sv_card_txt(&c[2], "OUT", t, u->mix_out * 1000 / (SV_MIX_OUTS - 1), false);
@@ -341,7 +341,7 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
             static const char *const ST[SA_STARTS] = {"FULL", "KICK", "PAD", "EMPTY"}, *const BU[3] = {"HAND", "8 BARS",
                                                                                                   "16 BARS"};
             int k = sv_clampi(u->style_pick, 0, SAS_NSTYLES - 1);
-            sv_card_txt(&c[0], "STYLE", SAS_STYLE[k].name, k * 1000 / (SAS_NSTYLES - 1), false);
+            sv_card_txt(&c[0], "STYLE", SAS_STYLE[k].name, k * 1000 / (SAS_NSTYLES - 1), g->set_next != 0);
             sv_card_txt(&c[1], "START", ST[sv_clampi(u->live_start, 1, SA_STARTS - 1)], -1, false);
             sv_card_txt(&c[2], "BUILD", BU[sv_clampi(u->live_build, 0, 2)], u->live_build * 500, false);
             sv_card_off(&c[3]);
@@ -363,7 +363,7 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
             static const char *const IN[SA_INTROS] = {"OFF", "4 BARS", "8 BARS", "16 BARS"};
             static const char *const AR[SA_ARCS] = {"OFF", "16 BARS", "32 BARS", "64 BARS"};
             int k = sv_clampi(u->style_pick, 0, SAS_NSTYLES - 1);
-            sv_card_txt(&c[0], "STYLE", SAS_STYLE[k].name, k * 1000 / (SAS_NSTYLES - 1), k != s->style);
+            sv_card_txt(&c[0], "STYLE", SAS_STYLE[k].name, k * 1000 / (SAS_NSTYLES - 1), k != s->style || g->set_next);
             c[0].name = true;
             sv_card_txt(&c[1], "INTRO", IN[s->intro % SA_INTROS], s->intro * 1000 / (SA_INTROS - 1), false);
             sv_card_txt(&c[2], "ARC", AR[s->arc % SA_ARCS], s->arc * 1000 / (SA_ARCS - 1), false);
@@ -2145,17 +2145,20 @@ void sv_button(sa_ui *u, int b, bool down)
             if (g->mx_state) { sv_msg(u, "MIXING"); break; }
             u->req_act = SV_SA_MIX;
             u->req_slot = sv_clampi(u->mix_pick, 0, SAS_NSTYLES - 1);
+            u->hot = 0, u->hot_ms = 700;           /* (the style lit: SEQ took it, changed or not) */
             break;
         }
         if (u->page == SV_PG_MIXER && u->mixmute == 4 && !(g->playing && sa_build_peek(g) >= 0)) {
             /* LIVE: the mix set up, its START in, the rest waiting (a build playing: SEQ brings the next in) */
             u->req_act = SV_SA_LIVE;
             u->req_slot = sv_clampi(u->style_pick, 0, SAS_NSTYLES - 1);
+            u->hot = 0, u->hot_ms = 700;
             break;
         }
         if (u->page == SV_PG_MIXER && u->mixmute == 3) {
             u->req_act = SV_SA_STYLE;
             u->req_slot = sv_clampi(u->style_pick, 0, SAS_NSTYLES - 1);
+            u->hot = 0, u->hot_ms = 700;
             break;
         }
         sa_drop(g);
