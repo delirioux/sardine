@@ -494,6 +494,14 @@ static void sa_apply(void)
                 const sa_code *c = &s->code[SA_L_DRUM0 + r];
                 int vv = c->type == SA_T_DRUM ? c->amode % SA_DVARS : 0;
                 drum_lane_ov_t ov = r == SA_DR_CLAP ? CLAP[vv] : r == SA_DR_PERC ? PERC[vv] : VAR[vv];
+                if (r == SA_DR_KICK && SA_KIT_INKEY(s->kit)) {   /* the kick on the key's root (about E1 .. D#2) */
+                    int k = ((s->harm.key - 4) % 12 + 12) % 12;
+                    ov.semi = (int8_t)sv_clampi(ov.semi + (k > 6 ? k - 12 : k), -12, 12);
+                }
+                if (r == SA_DR_KICK && s->kit == SA_KIT_RUMBLE) {   /* RUMBLE: the tail long and dark */
+                    ov.decay = (int8_t)sv_clampi(ov.decay + 40, -64, 64);
+                    ov.tone = (int8_t)sv_clampi(ov.tone - 16, -64, 64);
+                }
                 drum_lane_ov[SA_PART_DRUMS][LANE[r]] = ov;
                 if (r == SA_DR_HATS) drum_lane_ov[SA_PART_DRUMS][4] = ov;
             }

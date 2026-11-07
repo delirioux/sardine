@@ -429,7 +429,7 @@ int main(int argc, char **argv)
         lint_where = nm;
         sv_draw_all(&ui);
     }
-    CHECK(SA_KITS == 20, "twenty kits (%d)", SA_KITS);
+    CHECK(SA_KITS == 24 && !strcmp(sa_kit_name(SA_KIT_RUMBLE), "RUMBLE") && SA_KIT_INKEY(SA_KIT_HYPNO) && !SA_KIT_INKEY(SA_KIT_ACID), "24 kits, the last four with the kick in key (%d)", SA_KITS);
     g.s.kit = SA_KIT_HARD;
     shot("16_drums_kit");
     /* KEY on SCL, and back */

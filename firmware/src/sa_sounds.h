@@ -308,25 +308,25 @@ typedef struct {
     const char *kick, *hats, *hat_dv, *clap, *xrow, *xpat;   /* hat_dv: HAT OPEN SHAKER; clap: "S" snare, "C" clap */
 } sas_style;
 static const sas_style SAS_STYLE[] = {
-    {"NIGHT", "SLOW, DARK, FILTERED", 98, 104, {SA_KIT_DEEP, SA_KIT_LOFI}, SA_SC_MINOR, 12, 20, 90, 62, 30,
+    {"NIGHT", "SLOW, DARK, FILTERED", 98, 104, {SA_KIT_HYPNO, SA_KIT_LOFI}, SA_SC_MINOR, 12, 20, 90, 62, 30,
      {"DEEP SUB", "SUB"}, {"SUB HOLD", "HALF"}, {"DARK PAD", "NIGHT"}, {"WASH", "TWO HALVES"}, {"AIR LEAD", "AIR LEAD"},
      {"HOLD NOTE", "CALL"}, 35, "HALF", "SPARSE", "HAT", "C", "RIM", "SYNCO"},
     {"FILTER", "FRENCH TOUCH, FILTERED DISCO", 122, 126, {SA_KIT_DISCO, SA_KIT_HOUSE}, SA_SC_DORIAN, 18, 50, 60, 55, 45,
      {"FAT BASS", "OCTAVE"}, {"OCTAVE", "ROOT 8THS"}, {"E-PIANO", "ORGAN"}, {"HOUSE", "CHARLESTON"}, {0, 0}, {0, 0}, 0,
      "4 FLOOR", "OFFBEAT", "OPEN", "C", "HATS", 0},
-    {"DEEP", "WARM, SOFT, DEEP HOUSE", 120, 122, {SA_KIT_DEEP, SA_KIT_ROOM}, SA_SC_MINOR, 22, 30, 80, 85, 0,
+    {"DEEP", "WARM, SOFT, DEEP HOUSE", 120, 122, {SA_KIT_DEEP, SA_KIT_HYPNO}, SA_SC_MINOR, 22, 30, 80, 85, 0,
      {"SINE BASS", "SUB"}, {"ROLLER", "SYNCO"}, {"E-PIANO", "SOFT PAD"}, {"STAB 2", "WASH"}, {0, 0}, {0, 0}, 0,
      "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
     {"TECH", "TECH HOUSE, ROLLING", 124, 127, {SA_KIT_TECH, SA_KIT_MINIMAL}, SA_SC_MINOR, 16, 40, 60, 100, 0,
      {"TECH BASS", "REESE"}, {"ROLLER", "SYNCO"}, {"DUB CHORD", "TECH STAB"}, {"STAB 1", "STAB 2"}, {0, 0}, {0, 0}, 0,
      "4 FLOOR", "OFFBEAT", "HAT", "C", "RIM", "SYNCO"},
-    {"MINIMAL", "SPARSE, CLICKY", 124, 126, {SA_KIT_MINIMAL, SA_KIT_TIGHT}, SA_SC_PHRYGIAN, 10, 30, 50, 90, 20,
+    {"MINIMAL", "SPARSE, CLICKY", 124, 126, {SA_KIT_MINIMAL, SA_KIT_PUNCH}, SA_SC_PHRYGIAN, 10, 30, 50, 90, 20,
      {"SUB", "SQUARE"}, {"SYNCO", "2-STEP"}, {"PLUCK", "FM PLUCK"}, {"STAB 1", "PUSH"}, {0, 0}, {0, 0}, 0,
      "4 FLOOR", "SKIP", "HAT", "C", "RIM", "CLAVE"},
-    {"TECHNO", "DARK, DRIVING", 128, 132, {SA_KIT_TECH, SA_KIT_HARD}, SA_SC_MINOR, 0, 45, 70, 100, 30,
+    {"TECHNO", "DARK, DRIVING", 128, 132, {SA_KIT_TECH, SA_KIT_RUMBLE}, SA_SC_MINOR, 0, 45, 70, 100, 30,
      {"REESE", "TECH BASS"}, {"PUMP 16", "ROLLER"}, {"DUB STAB", "SPACE STAB"}, {"STAB 2", "OFFBEATS"}, {0, 0}, {0, 0}, 0,
      "4 FLOOR", "16THS", "HAT", "C", "RIM", "SYNCO"},
-    {"HARD", "HARD TECHNO, PUNISHING", 140, 148, {SA_KIT_IRON, SA_KIT_HARD}, SA_SC_PHRYGIAN, 0, 55, 50, 100, 40,
+    {"HARD", "HARD TECHNO, PUNISHING", 140, 148, {SA_KIT_RUMBLE, SA_KIT_HARD}, SA_SC_PHRYGIAN, 0, 55, 50, 100, 40,
      {"GROWL", "REESE"}, {"ROLLER", "PUMP 16"}, {"TECH STAB", "ORCH HIT"}, {"OFFBEATS", "STAB 1"}, {"HOOVER", "SAW LEAD"},
      {"TONES UP", "RIFF"}, 40, "4 FLOOR", "16THS", "HAT", "C", "RIM", "SYNCO"},
     {"GABBER", "HARDCORE, DISTORTED", 170, 180, {SA_KIT_IRON, SA_KIT_HARD}, SA_SC_MINOR, 0, 30, 40, 100, 20,
@@ -353,7 +353,7 @@ static const sas_style SAS_STYLE[] = {
     {"BREAKS", "BROKEN BEATS, RAVE", 128, 132, {SA_KIT_BREAKS, SA_KIT_DUSTY}, SA_SC_MINOR, 14, 30, 60, 100, 20,
      {"REESE", "FM BASS"}, {"SYNCO", "GROWL"}, {"RAVE", "TECH STAB"}, {"STAB 1", "PUSH"}, {0, 0}, {0, 0}, 0,
      "BROKEN", "8THS", "HAT", "S", "RIM", "SYNCO"},
-    {"DUB", "DUB TECHNO, ECHOES", 118, 122, {SA_KIT_DUB, SA_KIT_DEEP}, SA_SC_MINOR, 12, 30, 100, 80, 20,
+    {"DUB", "DUB TECHNO, ECHOES", 118, 122, {SA_KIT_DUB, SA_KIT_SOFT}, SA_SC_MINOR, 12, 30, 100, 80, 20,
      {"RUMBLE", "DEEP SUB"}, {"HALF", "SUB HOLD"}, {"DUB STAB", "ECHO CHORD"}, {"STAB 2", "OFFBEATS"}, {0, 0}, {0, 0}, 0,
      "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
     {"AMBIENT", "SPACE, BARELY A BEAT", 88, 96, {SA_KIT_ROOM, SA_KIT_DEEP}, SA_SC_MAJOR, 10, 10, 100, 80, 10,
@@ -472,6 +472,12 @@ static const uint8_t SAS_KIT[SA_KITS][8] = {
     {6, 58, 36, 58, 50, 100, 0, 64},     /* LOFI: dark, driven hard */
     {5, 46, 92, 30, 100, 118, 0, 96},    /* IRON: hard, very driven, short */
     {4, 64, 76, 50, 74, 104, 0, 36},     /* ACID: the 80, for a 303 line */
+    /* 0.8, loosely after the kits of two other FM-1 firmwares (HYP-1's and DUB-1's): their kicks tuned to the key's root
+     * (SA_KIT_INKEY: sa_fw.c) */
+    {9, 58, 70, 70, 58, 100, 1, 14},     /* HYPNO: a deep kick, long, a little click; metallic hats */
+    {5, 48, 80, 46, 90, 112, 0, 84},     /* RUMBLE: a hard kick, driven, its tail long and dark (sa_fw.c): a techno rumble */
+    {5, 60, 76, 30, 100, 110, 0, 60},    /* PUNCH: short and hard, the click up */
+    {9, 56, 30, 64, 28, 92, 1, 0},       /* SOFT: a muffled thump, darker hats */
 };
 static inline int16_t sas_clamp(int v, int lo, int hi) { return (int16_t)(v < lo ? lo : v > hi ? hi : v); }
 /* a knob 0..100 around a kit's own value v (50: v itself) */

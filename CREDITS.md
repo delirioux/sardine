@@ -4,6 +4,9 @@
 
 - **The drums**: the DRUM engine's model kits (Felucca's, below), all synthesised: Sardine's kits are their own
   settings of them; no drum samples
+- **HYPNO, RUMBLE, PUNCH, SOFT**: loosely after the kits of [HYP-1](https://github.com/rustypawz/fm1-HYP1) and
+  [DUB-1](https://github.com/sbegueria/fm1-dub), FM-1 firmwares (GPL-3.0): the ideas (a kick on the key's root, a
+  rumble, a punchy and a soft kick), no code
 - **The piano**: six notes of the Kawai grand of the [Versilian Community Sample Library](https://github.com/sgossner/VCSL)
   (Sam Gossner and contributors, CC0 1.0), made bright by `tools/si_piano.py` (Sill's)
 - **Sill** and **Daurade** (delirioux, GPL-3.0-only): the machine Sardine runs on: the glue, the cards and the frame, the
