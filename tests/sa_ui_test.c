@@ -341,7 +341,11 @@ int main(int argc, char **argv)
     all_palettes("chord_arp");
     press(SV_B_SEQ);
     bars(1);
-    CHECK(g.s.code[SA_L_CHORD].amode == SA_AR_UP, "ARP UP dropped");
+    {
+        const sa_code *c = &g.s.code[SA_L_CHORD];
+        CHECK(c->amode == SA_AR_PINKY && c->arate == SA_RATE_8 && c->arange == 1 && c->agate == 70,
+              "ARP on: PINKY, 1/8, one octave, gate 70, dropped");
+    }
     fx_to(SVP_GATE);
     press(SV_B_REC);
     sv_key(&ui, SV_KEY_LO + 2, true);

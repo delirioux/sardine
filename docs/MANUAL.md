@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.12. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.13. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -125,7 +125,8 @@ type sets its DEPTH when you pick it: PADS 100 %, KEYS 80 %, BASS 50 %, LEADS 10
 back (50: over most of a beat), SOURCE whether it follows the kick layer's hits (KICK: mute the kick and it stops) or
 every beat (BEAT). The drums never duck.
 
-Every synth layer has an arpeggiator: OFF until you turn MODE. It plays the chord of the bar over the notes the pattern holds,
+Every synth layer has an arpeggiator: OFF until you turn MODE. Turned on from OFF it starts as PINKY at 1/8, one octave,
+gate 70; turn on from there (left for UP and the rest). It plays the chord of the bar over the notes the pattern holds,
 so it is always in key, and swings with FEEL. GATE cuts a held chord to a rhythm by its volume, without a new attack.
 
 ## Steps (REC)

@@ -1884,7 +1884,14 @@ void sv_knob(sa_ui *u, int k, int d)
         }
         break;
     case SVP_ARP:
-        if (i == 0) e->amode = (uint8_t)sv_clampi(e->amode + d, 0, SA_AR_MODES - 1);
+        if (i == 0 && e->amode == SA_AR_OFF && d > 0) {   /* ARP on: PINKY, 1/8, one octave, gate 70 */
+            e->amode = SA_AR_PINKY;
+            e->arate = SA_RATE_8;
+            e->arange = 1;
+            e->agate = 70;
+        } else if (i == 0) {
+            e->amode = (uint8_t)sv_clampi(e->amode + d, 0, SA_AR_MODES - 1);
+        }
         else if (i == 1) e->arate = (uint8_t)sv_clampi(e->arate + d, 0, SA_RATES - 1);
         else if (i == 2) e->arange = (uint8_t)sv_clampi(e->arange + d, 1, 4);
         else SV_ADJ(e->agate, 5, 10, 100);
