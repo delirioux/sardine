@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.34. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.35. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -216,8 +216,11 @@ FX: **MIX** (VOLUME, KIT, INSTR, MUTE), **KIT** (KIT, TUNE, TONE, DECAY: the who
 **MOD** (three modifiers, and **CHANCE**: how likely each hit plays, 100 % always; lower and hits drop out at random,
 so the pattern changes as it plays). The kits, all synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY,
 CLASSIC, ROOM, VINTAGE, MINIMAL, VOLT (electro), GARAGE, DISCO, BREAKS, DUB, LOFI, IRON (industrial), ACID, and four
-loosely after the kits of two other FM-1 firmwares, HYP-1 and DUB-1, their kick tuned to the key's root: HYPNO (deep
-and long), RUMBLE (hard and driven, a long dark tail), PUNCH (short and hard) and SOFT (a muffled thump).
+loosely after the kits of two other FM-1 firmwares, HYP-1 and DUB-1, whose kick follows the chords: each kick tuned to
+the root of the chord playing (between about E1 and D#2), so the kick and the bass move together through the
+progression: HYPNO (deep and long), RUMBLE (hard and driven, a long dark tail), PUNCH (short and hard) and SOFT (a
+muffled thump). The styles where a tuned kick sounds best take them: NIGHT, DEEP, TECH, MINIMAL, TECHNO, HARD,
+TRANCE, PROG and DUB now and then, AMBIENT, a fresh groove in them often on one.
 
 ## MOVES
 

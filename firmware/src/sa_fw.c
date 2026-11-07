@@ -68,10 +68,20 @@ static void sa_wave(void)
     for (uint32_t i = 0; i < 96u; ++i) sa_u.wave[i] = (int8_t)(s[at + i * st] * 120 / pk);
     sa_u.wave_n = 96;
 }
+/* (0.8.35) an in-key kit's kick on the chord's root, each kick (about E1 .. D#2): it follows the progression. The
+ * row's variation's own tuning under it (sa_apply keeps it) */
+static int8_t sa_kick_semi0;
+static int sa_kick_off(int pc)
+{
+    int k = ((pc - 4) % 12 + 12) % 12;
+    return k > 6 ? k - 12 : k;
+}
 static void sa_sound(void *ctx, const sa_event *e)
 {
     (void)ctx;
     uint32_t p = e->part % SA_PARTS;
+    if (e->on && p == SA_PART_DRUMS && e->note == 36 && SA_KIT_INKEY(sa_g.s.kit))
+        drum_lane_ov[SA_PART_DRUMS][0].semi = (int8_t)sv_clampi(sa_kick_semi0 + sa_kick_off(sa_g.chord_pc[0]), -12, 12);
     if (e->on)
         trk_note_on(&trk[p], e->note, e->vel);
     else
@@ -608,9 +618,11 @@ static void sa_apply(void)
                 const sa_code *c = &s->code[SA_L_DRUM0 + r];
                 int vv = c->type == SA_T_DRUM ? c->amode % SA_DVARS : 0;
                 drum_lane_ov_t ov = r == SA_DR_CLAP ? CLAP[vv] : r == SA_DR_PERC ? PERC[vv] : VAR[vv];
-                if (r == SA_DR_KICK && SA_KIT_INKEY(s->kit)) {   /* the kick on the key's root (about E1 .. D#2) */
-                    int k = ((s->harm.key - 4) % 12 + 12) % 12;
-                    ov.semi = (int8_t)sv_clampi(ov.semi + (k > 6 ? k - 12 : k), -12, 12);
+                if (r == SA_DR_KICK && SA_KIT_INKEY(s->kit)) {   /* the kick on the chord's root (sa_sound, each
+                                                                  * kick); till the first, the key's */
+                    sa_kick_semi0 = ov.semi;
+                    ov.semi = (int8_t)sv_clampi(ov.semi + sa_kick_off(sa_g.playing ? sa_g.chord_pc[0] : s->harm.key),
+                                                -12, 12);
                 }
                 if (r == SA_DR_KICK && s->kit == SA_KIT_RUMBLE) {   /* RUMBLE: the tail long and dark */
                     ov.decay = (int8_t)sv_clampi(ov.decay + 40, -64, 64);

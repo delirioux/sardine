@@ -500,3 +500,6 @@ EXPORT void web_test_solo(uint32_t slot, uint32_t sound, uint32_t pat)
 EXPORT void web_usb_host(uint32_t on) { usb.config = (uint8_t)(on ? 1u : 0u); if (on) midi_links++; }
 EXPORT uint32_t web_midi_out_next(void) { return mo_r == mo_w ? 0u : midi_out_q[mo_r++ % MQ]; }
 EXPORT uint32_t web_da_partb(void) { return sv_hashb(sv_hashb(2166136261u, sa_g.s.patb, sizeof sa_g.s.patb), &sa_g.s.progb, 1); }
+EXPORT int32_t web_kick_semi(void) { return drum_lane_ov[SA_PART_DRUMS][0].semi; }   /* (the test: the kick's tuning) */
+EXPORT void web_test_kit(uint32_t k) { sa_g.s.kit = (uint8_t)(k % SA_KITS); }
+EXPORT uint32_t web_chord_root(void) { return sa_g.chord_pc[0]; }

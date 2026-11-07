@@ -144,6 +144,17 @@ const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice
     w.web_buttons(1 << B.SEQ); run(1.3); w.web_buttons(0); run(0.3);
     check("HOME, SEQ held: the part resting new, the one playing as it is", w.web_da_partb() !== b0 && w.web_da_groove() === a0);
   }
+  // (0.8.35) an in-key kit (HYPNO): the kick on each bar's chord root
+  {
+    w.web_test_kit(20); run(0.2);
+    if (!w.web_playing()) press(B.PLAY);
+    const seen = new Map();
+    for (let i = 0; i < 240; i++) { run(0.1); seen.set(w.web_chord_root(), w.web_kick_semi()); }
+    const off = (pc) => { const k = (((pc - 4) % 12) + 12) % 12; return k > 6 ? k - 12 : k; };
+    const ok = [...seen].every(([pc, st]) => st === off(pc));
+    check(`HYPNO: the kick on the chord's root (${[...seen].map(([pc, st]) => pc + ":" + st).join(" ")})`, ok && seen.size >= 2);
+    press(B.PLAY); run(0.2);
+  }
   // (0.8.29) MIDI OUT's controllers: a host connects, each layer's volume, cutoff and pan on its channel
   while (w.web_midi_out_next()) {}
   w.web_usb_host(1); run(0.3);

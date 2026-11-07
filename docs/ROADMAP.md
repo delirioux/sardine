@@ -1,6 +1,6 @@
 # The road to 1.0
 
-Sardine 0.8.34 has everything planned for 1.0. What is left is listening on the FM-1 and tuning what it shows.
+Sardine 0.8.35 has everything planned for 1.0. What is left is listening on the FM-1 and tuning what it shows.
 
 ## To check on the FM-1
 
@@ -30,7 +30,8 @@ Sardine 0.8.34 has everything planned for 1.0. What is left is listening on the 
 - How much ENV and the filter move a sound
 - How each of the twenty styles feels
 - The fills, the filter dip into the 1 after them, the SWEEP
-- The new kits HYPNO, RUMBLE, PUNCH, SOFT, and their kick on the key's root
+- The new kits HYPNO, RUMBLE, PUNCH, SOFT, their kick following the chords (the jumps between roots: musical, or
+  too much?), and which styles now take them
 - LIVE: KICK, PAD, EMPTY; SEQ bringing each layer in; BUILD by itself; the order it builds in
 - MIDI OUT: each layer on its channel (1 2 3 10 at every start), OFF, the log; the drums' GM notes in a DAW; CC7, CC74
   and CC10 following the mix in a DAW (and not flooding it during a SWEEP or 3D ORBIT)
