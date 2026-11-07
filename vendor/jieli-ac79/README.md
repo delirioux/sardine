@@ -7,4 +7,5 @@ layout, kept here so a build needs no download: `tools/fm1pkg_make.py` puts them
 - `cpu/wl82/tools/cfg_tool.bin`
 - `cpu/wl82/tools/cfg/eq_cfg_hw.bin`
 
-They are JieLi's, unchanged, under the SDK's own terms; not part of Sardine's GPL-3.0 code.
+They are JieLi's, unchanged, under the SDK's Apache-2.0 licence (`LICENSES/Apache-2.0.txt`, LICENSING.md); not part of
+Sardine's GPL-3.0 code.

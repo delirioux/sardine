@@ -85,7 +85,7 @@ All by Hügelton Instruments (Leo Kuroshita), in this tree:
 | The second core: Melodee's by keremimo (<https://github.com/keremimo/melodee>), in felucca-bsp under MPL-2.0 by agreement, with charlesvestal's start and API (X0X, <https://github.com/charlesvestal/fm1-x0x>) | MPL-2.0 | `firmware/bsp/chip/fm1_cpu1.{h,S}`, `firmware/bsp/NOTICE` |
 | The parts' split across the two cores, its measurements and hardening after Jangada by zednaked (<https://github.com/zednaked/jangada>); credited in its files | GPL-3.0 | `firmware/src/fx.c`, `tests/c1_host.h`, `tests/dualcore_test.c` |
 | DotGothic16 font by The DotGothic16 Project Authors (<https://github.com/fontworks-fonts/DotGothic16>): the browser emulator's knob labels, served with its page (cut to printable ASCII; the font declares no Reserved Font Name) | SIL OFL 1.1 | `web/emu/fonts/DotGothic16-subset.woff`, `LICENSES/OFL-DotGothic16.txt` (also `web/emu/fonts/OFL.txt`) |
-| JieLi AC79 SDK by JieLi Technology: three of its files go into every `.fwsc` package (below); none are in this tree | Apache-2.0 | `LICENSES/Apache-2.0.txt` |
+| JieLi AC79 SDK by JieLi Technology: three of its files go into every `.fwsc` package (below); kept in `vendor/jieli-ac79` | Apache-2.0 | `LICENSES/Apache-2.0.txt` |
 
 On the device, HOME held > ABOUT opens the information screen; turning PRESETS scrolls on into
 CREDITS, a short list of these authors, licences and source URLs.
