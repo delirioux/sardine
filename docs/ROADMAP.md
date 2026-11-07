@@ -29,6 +29,13 @@ Sardine 0.8.5 has everything planned for 1.0. What is left is listening on the F
 - RAM: 68.8 of 73.7 KB in use; a big new feature needs room found first
 - No cymbals, for good: synthesised, they never sound right; the PERC row is short percussion
 
+## Later
+
+- MIDI clock in and out (USB and the TRS jack), Felucca's midi_clock.c: in time with other gear
+- More moves from Felucca's PERFORM: REPEAT 1/8 1/16 1/32, REVERSE, FREEZE, OCT UP / DN, FLANGER, PHASER, CRUSH; a
+  MOVES page on GLO picks what each held button plays
+- Motion: a knob move recorded into the pattern, played back each bar or phrase
+
 ## Not planned
 
 - Bluetooth (audio and MIDI): the latency and the system's overhead are too much for a live box; MIDI is over USB
