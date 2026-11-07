@@ -1898,7 +1898,12 @@ void sv_knob(sa_ui *u, int k, int d)
         break;
     case SVP_PAN: {
         sa_pan *p = &s->pan[l];
-        if (i == 0) p->mode = (uint8_t)sv_clampi(p->mode + d, 0, SA_PAN_MODES - 1);
+        if (i == 0 && p->mode == SA_PAN_FIXED && d > 0) {   /* moving: SWEEP, from the centre, all the way, a bar */
+            p->mode = SA_PAN_SWEEP;
+            p->pos = 0;
+            p->width = 100;
+            p->rate = SA_PRATE_BAR;
+        } else if (i == 0) p->mode = (uint8_t)sv_clampi(p->mode + d, 0, SA_PAN_MODES - 1);
         else if (i == 1) p->pos = (int8_t)sv_clampi(p->pos + d * 2, -50, 50);
         else if (i == 2) SV_ADJ(p->width, 5, 0, 100);
         else p->rate = (uint8_t)sv_clampi(p->rate + d, 0, SA_PRATES - 1);
@@ -1907,8 +1912,14 @@ void sv_knob(sa_ui *u, int k, int d)
     case SVP_3D: {                                 /* (turning ANGLE HEIGHT DISTANCE turns it on) */
         int pp = sv_clampi(e->part, 0, SA_SYNTHS - 1);
         sa_3d *d3 = &s->d3[pp];
+        if (!d3->on && (i > 0 || d > 0)) {         /* on: ORBIT round you over 2 bars, level, near (10) */
+            d3->on = SA_3D_ORBIT;
+            s->d3rate[pp] = SA_PRATE_2BARS;
+            d3->el = 0;
+            d3->dist = 10;
+            if (i == 0) break;
+        }
         if (i == 0) { d3->on = (uint8_t)sv_clampi(d3->on + d, 0, SA_3D_MODES - 1); break; }
-        if (!d3->on) d3->on = SA_3D_FIXED;        /* (turning the others turns it on) */
         if (i == 1 && (d3->on == SA_3D_ORBIT || d3->on == SA_3D_FLY))
             s->d3rate[pp] = (uint8_t)sv_clampi(s->d3rate[pp] + d, 0, SA_PRATES - 1);
         else if (i == 1) d3->az = (uint8_t)sv_wrap(d3->az + d, SA_AZ_STEPS);

@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.13. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.14. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -87,8 +87,8 @@ LEAD lead lines and the bass lines). FX turns through its pages:
 | --- | --- | --- | --- | --- | --- |
 | MIX (the first) | VOLUME (fades it in and out) | TYPE (BASS KEYS PADS LEADS FX) | INSTR (the sound, by name; the header says it whole) | MUTE | at once |
 | ARP | MODE (OFF, UP, DOWN, UP-DOWN, DOWN-UP, CONVERGE, DIVERGE, RANDOM, THUMB, PINKY, STRUM) | RATE | RANGE | GATE | waits for SEQ |
-| PAN | MODE (FIXED, SWEEP, PING-PONG, RANDOM) | PAN | WIDTH | RATE (SWEEP) | at once |
-| 3D | MODE (OFF FIXED ORBIT RANDOM FLY) | ANGLE (FIXED) or RATE (ORBIT, FLY) | HEIGHT | DIST | at once |
+| PAN | MODE (FIXED, SWEEP, PING-PONG, RANDOM; from FIXED: SWEEP from C, WIDTH 100, a bar) | PAN | WIDTH | RATE (SWEEP) | at once |
+| 3D | MODE (OFF FIXED ORBIT RANDOM FLY; on: ORBIT, 2 bars, level, DIST 10) | ANGLE (FIXED) or RATE (ORBIT, FLY) | HEIGHT | DIST | at once |
 | PUMP | DEPTH (of HOME's PUMP) | RELEASE | SOURCE (KICK, BEAT) | PUMP ON / OFF | at once |
 | GATE | a ready gate (or OFF) | DEPTH | WIDTH | SMOOTH | waits for SEQ |
 | MOD | MOD 1 | MOD 2 | MOD 3 | MOD 4 | waits for SEQ |
@@ -110,7 +110,8 @@ LEAD lead lines and the bass lines). FX turns through its pages:
 **3D** places the layer around you, for headphones: from above (FRONT up) the dot is the layer, near you or far; beside
 it, from the side, its height; the dot moves as the layer does. **MODE**: FIXED (where ANGLE says), ORBIT (round you
 over RATE, a quarter bar to four bars), RANDOM (each note somewhere else round you) and FLY (an orbit rising and
-falling about HEIGHT). Turning ANGLE, HEIGHT or DIST from OFF turns it on, FIXED. On, the angle pans the layer (the PAN
+falling about HEIGHT). Turned on from OFF (MODE, or any of the knobs) it starts as ORBIT over two bars, level
+(HEIGHT 0), near (DIST 10). On, the angle pans the layer (the PAN
 page rests), behind sounds a touch darker and softer, below darker, above brighter, far quieter, darker and wetter, and
 the layer narrows to a point. These are cues the ear reads, not a measured head model: left, right and far come across
 best; front against back and up against down are subtler and differ from one listener to the next. On speakers it is
