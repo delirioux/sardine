@@ -230,6 +230,21 @@ static const spat SPAT[] = {
     {"CALL", 5, 4, {N(0, 4, 2, 0, 110), N(3, 2, 4, 0, 100), N(6, 4, 2, 0, 105), N(12, 6, 1, 0, 100)}},
     {"HOLD NOTE", 5, 1, {N(0, 32, 0, 0, 105)}},
     {"HOLD CHORD", 5, 1, {N(0, 32, SA_CH, 0, 100)}},
+    /* (0.8.23) more lead lines, for the styles: after the others (a saved layer keeps its pattern) */
+    {"HOOK", 5, 7, {N(0, 2, 4, 0, 110), N(2, 2, 2, 0, 95), N(4, 3, 0, 0, 105), N(7, 2, 1, 0, 95), N(8, 2, 2, 0, 105),
+                    N(11, 2, 1, 0, 95), N(12, 4, 0, 0, 100)}},
+    {"ECHOES", 5, 3, {N(0, 3, 0, 0, 110), N(6, 3, 2, 0, 95), N(11, 3, 4, 0, 100)}},
+    {"BLIPS", 5, 3, {N(2, 1, 4, 0, 105), N(7, 1, 2, 0, 90), N(13, 1, 4, 0, 100)}},
+    {"ANTHEM", 5, 16, {N(0, 1, 0, 0, 115), N(1, 1, 0, 0, 80), N(2, 1, 4, 0, 100), N(3, 1, 0, 0, 80),
+                       N(4, 1, 2, 0, 105), N(5, 1, 0, 0, 80), N(6, 1, 4, 0, 100), N(7, 1, 0, 0, 80),
+                       N(8, 1, 1, 0, 110), N(9, 1, 0, 0, 80), N(10, 1, 4, 0, 100), N(11, 1, 0, 0, 80),
+                       N(12, 1, 2, 0, 105), N(13, 1, 0, 0, 80), N(14, 1, 4, 0, 100), N(15, 1, 2, 0, 85)}},
+    {"SQUELCH", 5, 8, {N(0, 2, 0, 0, 120), N(2, 1, 0, 1, 90), N(3, 2, 3, 0, 105), N(6, 2, 2, 0, 100),
+                       N(8, 1, 0, 0, 115), N(9, 1, 4, 0, 90), N(11, 2, 1, 0, 100), N(14, 2, 2, 1, 110)}},
+    {"DISCO RUN", 5, 8, {N(0, 1, 0, 0, 110), N(2, 1, 4, 0, 95), N(4, 1, 2, 0, 105), N(6, 1, 4, 0, 95),
+                         N(8, 1, 1, 0, 110), N(10, 1, 4, 0, 95), N(12, 1, 2, 0, 105), N(14, 1, 4, 0, 95)}},
+    {"TWO NOTES", 5, 2, {N(0, 15, 0, 0, 105), N(8, 15, 2, 0, 100)}},
+    {"UPBEATS", 5, 4, {N(2, 1, 0, 0, 105), N(6, 1, 2, 0, 95), N(10, 1, 0, 0, 105), N(14, 1, 4, 0, 95)}},
 };
 #undef N
 #define NSPAT ((int)(sizeof SPAT / sizeof SPAT[0]))
@@ -1288,7 +1303,8 @@ static const char *const BASS[] = {"OFFBEAT", "ROLLER", "ROOT 8THS", "OCTAVE", "
 static const char *const STABS[] = {"STAB 1", "STAB 2", "OFFBEATS", "HOUSE", "CHARLESTON", "DOWNBEAT", "PUSH",
                                     "DOTTED"};
 static const char *const PADS[] = {"WASH", "TWO HALVES", "SWELL"};
-static const char *const LEADS[] = {"TONES UP", "RIFF", "PLUCKS", "CALL"};
+static const char *const LEADS[] = {"TONES UP", "RIFF", "PLUCKS", "CALL", "HOOK", "ECHOES", "ANTHEM", "UPBEATS",
+                                   "TWO NOTES"};
 #define NL(a) ((int)(sizeof a / sizeof a[0]))
 
 /* another pattern of a list than cur (cur not in it: any of it); -1 none */

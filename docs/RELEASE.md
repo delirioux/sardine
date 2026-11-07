@@ -1,4 +1,4 @@
-Sardine 0.8.22: live club mixing for the FM-1.
+Sardine 0.8.23: live club mixing for the FM-1.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
   through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, ARP, PAN, 3D, PUMP, GATE, MOD; DRUMS: MIX, KIT, MOD), HOME back to them all
@@ -23,7 +23,8 @@ Sardine 0.8.22: live club mixing for the FM-1.
 - An arpeggiator on every synth layer, off until you turn it on; GATE, PAN and four modifiers on every layer
 - Every start a fresh groove; SETS keeps eight grooves (LOAD on the one, STORE, NEW, CLEAR) and LAST, the last groove,
   by itself
-- 81 synth sounds, among them an AMBIENT set in a big hall; 24 synthesised drum kits (HYPNO, RUMBLE, PUNCH, SOFT: the kick in key); 24 drum and 29 synth patterns
+- 94 synth sounds, among them an AMBIENT set in a big hall and thirteen leads made for the styles (every style two
+  leads and two lead lines of its own, the singing ones with a vibrato); 24 synthesised drum kits (HYPNO, RUMBLE, PUNCH, SOFT: the kick in key); 24 drum and 37 synth patterns
 - On Felucca 1.8.2-beta: newer FM-1 units' flash is recognised
 
 Install it from the site with a Chromium browser (Chrome, Edge) and a USB cable. The package also holds three files of

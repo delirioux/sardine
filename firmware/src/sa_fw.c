@@ -431,6 +431,16 @@ static void sa_load_synth(uint32_t part, int sound)
     }
     if (snd->fm6)
         sa_fm6_load(&trk[part], snd->fm6);
+    int vib = snd->vib;                                      /* (0.8.23) a lead's vibrato: in after a third of a second */
+    static const char *const VIB1[] = {"FLUTE", "WHISTLE", "AIR LEAD", "VOX LEAD"};
+    for (unsigned k = 0; !vib && k < sizeof VIB1 / sizeof VIB1[0]; ++k)
+        if (sound == sas_find(VIB1[k])) vib = 1;
+    if (vib) {
+        trk[part].p[P_LRATE] = 89;                           /* 5.4 Hz */
+        trk[part].p[P_LWAVE] = 0;                            /* SIN */
+        trk[part].p[P_LFADE] = 80;
+        trk[part].p[P_LD_PIT] = (int16_t)vib;
+    }
     sa_base[part].bright = snd->bright >= 0 ? trk[part].p[P_E0 + snd->bright] : 0;
     sa_base[part].fenv = trk[part].p[P_ED_FLT];
     sa_base[part].dist = snd->dist >= 0 ? snd->dist : trk[part].p[P_DIST];

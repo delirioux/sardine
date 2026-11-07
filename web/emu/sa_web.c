@@ -476,3 +476,23 @@ EXPORT uint32_t web_da_scope(uint32_t p) { return p < SA_SYNTHS ? sa_scope_w[p] 
 EXPORT uint32_t web_da_groove(void) { return sv_hashb(2166136261u, sa_g.s.code, sizeof sa_g.s.code); }
 EXPORT uint32_t web_da_set_used(uint32_t k) { return k < SV_SLOTS ? sa_u.sets[k].used : 0u; }
 EXPORT uint32_t web_sample_rate(void) { return FS; }
+/* (tools: the lead audition, sa_lead_levels.mjs) one synth layer alone, a sound and a pattern on it */
+EXPORT uint32_t web_sound_count(void) { return (uint32_t)SAS_NSOUNDS; }
+EXPORT const char *web_sound_name(uint32_t i) { return sas_of((int)i)->name; }
+EXPORT uint32_t web_sound_role(uint32_t i) { return sas_of((int)i)->role; }
+EXPORT uint32_t web_pat_count(void) { return (uint32_t)sa_synth_pats(); }
+EXPORT const char *web_pat_name(uint32_t i) { return sa_pat_name(SA_T_SYNTH, (int)i); }
+EXPORT void web_test_solo(uint32_t slot, uint32_t sound, uint32_t pat)
+{
+    for (int l = 0; l < SA_LAYERS; ++l) sa_mute(&sa_g, l, l != (int)slot);
+    sa_code *cs[2] = {&sa_g.s.code[slot], &sa_g.ed[slot]};
+    for (int k = 0; k < 2; ++k) {
+        cs[k]->amode = SA_AR_OFF;
+        cs[k]->pat = (uint8_t)pat;
+        cs[k]->own = 0;
+        for (int i = 0; i < SA_MODS; ++i) cs[k]->mod[i].type = SA_M_OFF;
+    }
+    sa_g.build_out = 0;
+    sa_g.s.patb[slot] = 0;
+    sa_sound_now(&sa_g, (int)slot, (int)sound);
+}

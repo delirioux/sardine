@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.22. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.23. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -366,6 +366,22 @@ The last sixteen sounds are for wide, deep club nights: pads (WIDE PAD, DARK PAD
 PAD, SKY, TAPE PAD, CHOIR AIR), dub stabs with long tails (DUB STAB, SPACE STAB, ECHO CHORD), RUMBLE (a low bass sent
 into the hall), DEEP SUB and AIR LEAD. Each spreads its voices across the stereo field and has its own reverb and
 delay. The room every layer plays in is a big hall; the drums send little into it.
+
+## LEADS of the styles
+
+Every STYLE has two lead sounds and two lead lines of its own, picked for its music (a fresh groove takes one of
+each): SOFT LEAD (a warm triangle, DEEP, PROG, GARAGE, DUB, LOFI), FILTER LEAD (a resonant saw that talks with ENV,
+FILTER), BLIP (a short square into the echo, TECH, MINIMAL), DARK SAW (a saw on a sub, low and driven, TECHNO),
+ACID LEAD and RUBBER (squelching, gliding, ACID and TECHNO), PLUCK LEAD (a plucked saw into a long delay, TRANCE,
+PROG, MINIMAL), RAVE LEAD (a wide pulse, BREAKS, HAPPY), SCREECH (a driven saw, HARD, GABBER), DUB LEAD (a soft
+triangle drowned in echoes, NIGHT, DUB), STRING LEAD (a chorused string line, DISCO), PAN FLUTE (breathy, DEEP, AFRO,
+AMBIENT, LOFI) and VOX CHOP (a short sung vowel, FILTER, TECH, GARAGE). The singing ones (SOFT LEAD, FILTER LEAD,
+DUB LEAD, STRING LEAD, PAN FLUTE, and FLUTE, WHISTLE, AIR LEAD, VOX LEAD) get a vibrato a third of a second into a
+held note.
+
+The lead lines: TONES UP, RIFF, PLUCKS, CALL, HOLD NOTE, HOLD CHORD, and HOOK (a one-bar tune), ECHOES (three notes
+the delay answers), BLIPS (three short ones), ANTHEM (sixteenths over the chord, trance), SQUELCH (an acid line
+jumping octaves), DISCO RUN (octaves), TWO NOTES (two long ones) and UPBEATS (on the offbeats).
 
 ## MENU
 
