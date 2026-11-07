@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.24. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.25. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -25,7 +25,7 @@ into one of eight sets (SAVE, below).
 | ENV | held: a drum fill (below) |
 | ARP | held: BREAK (below) |
 | LFO | held: SWEEP (below) |
-| GLO | GLOBAL: the MIXER, each press its next page (MUTE, SOLO, STYLE, LIVE, SONG), past the last back |
+| GLO | GLOBAL: the MIXER, each press its next page (MUTE, SOLO, STYLE, LIVE, SONG), past the last back; held: **STYLE MIX** (below) |
 | PLAY | start, stop |
 | OCT- OCT+ | the keys' octave (the one it moved to lit); held: WASH, THROW (below) |
 
@@ -307,6 +307,27 @@ rim, toms, lead; PAD: the pad, kick, bass, hats, clap, snare, lead, perc, rim, t
 page lists it: what is in lit, the next in the accent. Then **PLAY**, and **SEQ** on any page brings the next layer in on
 the next 1, as long as nothing else waits to drop (that first). Stopped, SEQ brings it in at once. Loading a set or a new
 groove ends the build.
+
+## STYLE MIX
+
+<p align="center">
+<img src="screens/stylemix.png" alt="STYLE MIX" width="200">
+</p>
+
+**GLO** held: **STYLE MIX**, from the style playing into another, as a DJ blends two records. **TO** (KNOB 1) is the
+style to go to, **KEEP** (KNOB 2) what plays on through it (**BASS**, **KICK**, **BASS+KICK**, **DRUMS**, **BASS+DRUMS**
+or **NOTHING**), **OUT** (KNOB 3) how long the rest takes to fade out (1, 2 or 4 bars), **IN** (KNOB 4) how long the new
+style takes to fade in (2, 4, 8 or 16 bars). **SEQ** starts it on the next 1:
+
+1. OUT: everything but what you keep fades out smoothly.
+2. On the 1 after it, a fresh groove in the new style comes in around what you kept, in the old key (so the kept bass and
+   the new layers agree) and still at the old tempo. Its layers fade in one after another: the drums first, then BASS,
+   CHORD and LEAD, all at full by the end of IN, while the tempo glides bar by bar to the new style's.
+3. On the 1 after IN, what you kept becomes the new style's own too (the bass swap): the mix is over, MIXED.
+
+The page shows each layer's level as it moves (the kept ones in the accent) and how far the mix is. Stopped, SEQ puts the
+new style in at once. Loading a set, a new groove or another style ends a mix; PLAY stopping it mid-way finishes it.
+GLO goes back.
 
 ## SONG
 

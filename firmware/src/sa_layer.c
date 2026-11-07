@@ -1411,6 +1411,7 @@ void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p)
 void sa_init(sa_groove *g, float sample_rate)
 {
     memset(g, 0, sizeof *g);
+    sa_mix_end(g);
     g->sr = sample_rate;
     sa_defaults(&g->s);
     g->tick = -1;
@@ -1678,11 +1679,158 @@ static void set_now(sa_groove *g)
 
 void sa_set_arm(sa_groove *g, const sa_settings *s)
 {
+    sa_mix_end(g);                                 /* (a mix playing: over, what was armed instead) */
     g->set_next = s;
     if (!g->playing) {
         set_now(g);
         chord_of_bar(g, 0);
     }
+}
+
+/* ---- STYLE MIX (0.8.25) ------------------------------------------------------------------------------------- */
+static float smooth01(float x) { x = x < 0.0f ? 0.0f : x > 1.0f ? 1.0f : x; return x * x * (3.0f - 2.0f * x); }
+void sa_mix_end(sa_groove *g)
+{
+    g->mx_state = 0;
+    g->mx_next = 0;
+    for (int l = 0; l < SA_LAYERS; ++l) g->mx_gain[l] = 1.0f;
+    for (int p = 0; p < SA_SYNTHS; ++p) g->mx_off[p] = 0;
+}
+void sa_mix(sa_groove *g, sa_settings *next, uint16_t keep, int out_bars, int in_bars)
+{
+    if (!g->playing) {                             /* stopped: in at once */
+        sa_set_arm(g, next);
+        return;
+    }
+    g->set_next = 0;
+    g->drop_armed = false;
+    g->mx_next = next;
+    g->mx_keep = keep;
+    g->mx_out = (uint8_t)clampi(out_bars, 1, 16);
+    g->mx_in = (uint8_t)clampi(in_bars, 1, 32);
+    g->mx_bar0 = g->bar + 1;                       /* (from the next 1) */
+    g->mx_from = g->s.style;
+    g->mx_state = 1;
+    msg(g, "MIX: OUT ON THE 1");
+}
+float sa_mix_pos(const sa_groove *g)
+{
+    if (!g->mx_state || g->bar < g->mx_bar0) return 0.0f;
+    int n = g->mx_state == 1 ? g->mx_out : g->mx_in;
+    float tf = g->sr * 60.0f / (float)clampi(g->s.bpm, 60, 200) / 24.0f;
+    float pos = (float)(g->tick < 0 ? 0 : g->tick) + 1.0f - (tf > 0.0f ? g->wait / tf : 0.0f);
+    float x = ((float)(g->bar - g->mx_bar0) * (float)SA_TPB + pos) / ((float)n * (float)SA_TPB);
+    return x < 0.0f ? 0.0f : x > 1.0f ? 1.0f : x;
+}
+/* a layer's slots kept with it: its code, its cards, its B pattern; a synth layer's 3D and pump; a drum row the kit
+ * (swapped between two grooves, or copied) */
+static void mix_swap_b(void *a, void *b, size_t n)
+{
+    uint8_t *x = (uint8_t *)a, *y = (uint8_t *)b;
+    for (size_t i = 0; i < n; ++i) { uint8_t t = x[i]; x[i] = y[i]; y[i] = t; }
+}
+static void mix_kept(sa_settings *a, sa_settings *b, uint16_t keep, bool swap)
+{
+#define MXF(f) (swap ? mix_swap_b(&a->f, &b->f, sizeof a->f) : (void)memcpy(&a->f, &b->f, sizeof a->f))
+    bool drums = false;
+    for (int l = 0; l < SA_LAYERS; ++l) {
+        if (!((keep >> l) & 1u)) continue;
+        MXF(code[l]);
+        MXF(live[l]);
+        MXF(gate[l]);
+        MXF(pan[l]);
+        MXF(patb[l]);
+        if (l < SA_SYNTHS) {
+            MXF(d3[l]);
+            MXF(pl[l]);
+            MXF(d3rate[l]);
+        }
+        drums |= l >= SA_L_DRUM0;
+    }
+    if (drums) {
+        MXF(kit);
+        MXF(ktune);
+        MXF(ktone);
+        MXF(kdecay);
+        MXF(kdrive);
+        MXF(dvol);
+        MXF(dmute);
+    }
+#undef MXF
+}
+/* on the bar line: OUT over, the next groove in, the kept layers the old ones, in the old key and tempo (no copy of a
+ * whole groove: the kept slots swapped, then the two grooves, so mx_next holds the new kept ones for the end); IN
+ * over, the kept ones the new ones; the tempo on the way, a step a bar */
+static void mix_bar(sa_groove *g)
+{
+    if (!g->mx_state || !g->mx_next || g->bar < g->mx_bar0) return;
+    int b = g->bar - g->mx_bar0;
+    sa_settings *n = g->mx_next;
+    if (g->mx_state == 1 && b >= g->mx_out) {
+        uint8_t pal = g->s.palette, look = g->s.look, key = g->s.harm.key, bpm = g->s.bpm;
+        for (int p = 0; p < SA_SYNTHS; ++p)
+            if (!((g->mx_keep >> p) & 1u)) part_off(g, p);
+        g->mx_bpm0 = bpm;
+        g->mx_bpm1 = n->bpm;
+        mix_kept(&g->s, n, g->mx_keep, true);
+        mix_swap_b(&g->s, n, sizeof g->s);
+        g->s.palette = pal;
+        g->s.look = look;
+        g->s.harm.key = key;                       /* (in the old key: the kept bass and the new layers agree) */
+        g->s.bpm = bpm;
+        sa_settings_fix(&g->s);
+        memset(g->arp_i, 0, sizeof g->arp_i);
+        g->part_b = g->part_cue = false;
+        g->build_out = 0;
+        bool nob = g->s.progb == 0;
+        for (int l = 0; l < SA_LAYERS; ++l) nob &= g->s.patb[l] == 0;
+        if (nob) sa_make_b(&g->s, (uint32_t)g->s.bpm * 977u + g->s.harm.key * 31u + g->s.harm.prog);
+        sa_edit_reset(g);
+        g->sound_sig++;
+        g->mx_state = 2;
+        g->mx_bar0 = g->bar;
+        msg(g, "MIX: IN");
+        return;
+    }
+    if (g->mx_state != 2) return;
+    if (b >= g->mx_in) {                           /* over: the kept layers the new ones too, on this 1 */
+        for (int p = 0; p < SA_SYNTHS; ++p)
+            if ((g->mx_keep >> p) & 1u) part_off(g, p);
+        mix_kept(&g->s, n, g->mx_keep, false);
+        g->s.bpm = g->mx_bpm1;
+        sa_settings_fix(&g->s);
+        sa_edit_reset(g);
+        g->sound_sig++;
+        sa_mix_end(g);
+        msg(g, "MIXED");
+        return;
+    }
+    g->s.bpm = (uint8_t)(g->mx_bpm0 + (g->mx_bpm1 - g->mx_bpm0) * (b + 1) / (g->mx_in + 1));
+}
+/* each block: the layers' levels in the mix (OUT: those not kept down; IN: drums first, then BASS, CHORD, LEAD) */
+static void mix_block(sa_groove *g)
+{
+    if (!g->mx_state) return;
+    float x = sa_mix_pos(g);
+    for (int l = 0; l < SA_LAYERS; ++l) {
+        float v = 1.0f;
+        if (!((g->mx_keep >> l) & 1u)) {
+            if (g->mx_state == 1) v = g->bar < g->mx_bar0 ? 1.0f : 1.0f - smooth01(x);
+            else {
+                float at = l >= SA_L_DRUM0 ? 0.0f : l == SA_L_BASS ? 0.15f : l == SA_L_CHORD ? 0.35f : 0.6f;
+                v = smooth01((x - at) / (1.0f - at));
+            }
+        }
+        g->mx_gain[l] = v;
+    }
+    for (int p = 0; p < SA_SYNTHS; ++p)
+        g->mx_off[p] = (uint8_t)((1.0f - g->mx_gain[p]) * 127.0f + 0.5f);
+}
+/* a drum hit's velocity in the mix (0: not heard) */
+static int mix_vel(const sa_groove *g, int l, int vel)
+{
+    if (!g->mx_state || l < SA_L_DRUM0) return vel;
+    return (int)((float)vel * g->mx_gain[l] + 0.5f);
 }
 
 static void arrange(sa_groove *g);
@@ -1719,6 +1867,7 @@ static void bar_line(sa_groove *g)
             msg(g, g->part_b ? "PART B" : "PART A");
         }
     }
+    mix_bar(g);
     if (g->set_next) {
         set_now(g);
         msg(g, "IN ON THE 1");
@@ -1733,6 +1882,17 @@ void sa_play(sa_groove *g, bool on)
 {
     if (on == g->playing) return;
     sa_all_off(g);
+    if (g->mx_state == 1 && g->mx_next && g->bar >= g->mx_bar0) {   /* (a mix stopped on its way out: the next
+                                                                    * groove in, all of it; on its way in: done) */
+        g->set_next = g->mx_next;
+    } else if (g->mx_state == 2 && g->mx_next) {
+        mix_kept(&g->s, g->mx_next, g->mx_keep, false);
+        g->s.bpm = g->mx_bpm1;
+        sa_settings_fix(&g->s);
+        sa_edit_reset(g);
+        g->sound_sig++;
+    }
+    sa_mix_end(g);
     g->playing = on;
     g->clock = 0;
     g->wait = 0.0f;
@@ -1974,15 +2134,17 @@ static void do_tick(sa_groove *g)
         uint32_t len = c->type == SA_T_DRUM ? (uint32_t)(g->sr * (c->sound == SA_DV_CRASH ? 0.2f :
                                                                   c->sound == SA_DV_OPEN ? 0.4f : 0.3f))
                                             : (uint32_t)((float)b->dur * tf);
+        int vel = mix_vel(g, b->layer, b->vel);
+        if (vel < 1) continue;                     /* (STYLE MIX: faded all the way) */
         g->hits[b->layer] |= (uint16_t)(1u << (t / SA_TPS));
         if (delay == 0 || g->npend >= SA_PEND) {
             pan_note(g, b->layer);
-            note(g, part, b->note, b->vel, len);
+            note(g, part, b->note, vel, len);
         } else {
             g->pend[g->npend].at = g->clock + delay;
             g->pend[g->npend].part = (uint8_t)part;
             g->pend[g->npend].note = b->note;
-            g->pend[g->npend].vel = b->vel;
+            g->pend[g->npend].vel = (uint8_t)vel;
             g->pend[g->npend].layer = b->layer;
             g->pend[g->npend].len = len;
             g->npend++;
@@ -2074,6 +2236,7 @@ void sa_process(sa_groove *g, int frames)
     }
     pump_block(g);
     gate_block(g, frames);
+    mix_block(g);
     pan_block(g);
 }
 

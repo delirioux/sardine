@@ -638,7 +638,7 @@ static inline void sas_synth(track_t *t, const sas_sound *snd, const sas_base *b
 static inline void sas_block(const sa_groove *g)
 {
     for (int p = 0; p < SA_SYNTHS; ++p) {         /* the pump and the gate together: the gains multiply */
-        int up = (127 - g->duck[p]) * (127 - g->gate_off[p]) / 127;
+        int up = (127 - g->duck[p]) * (127 - g->gate_off[p]) / 127 * (127 - g->mx_off[p]) / 127;   /* (STYLE MIX) */
         trk[p].ex_off = (uint8_t)(127 - up);
         trk[p].p[P_PAN] = g->pan_now[p];          /* the layer's panning */
     }

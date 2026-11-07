@@ -23,6 +23,7 @@
 #define SV_FOOT_Y 202
 #define SV_FOOT_H 38
 #define SV_MENU_HOLD_MS 600
+static void sv_bars_txt(char *t, int n);
 
 static int sv_clampi(int v, int lo, int hi) { return v < lo ? lo : v > hi ? hi : v; }
 static int sv_wrap(int v, int n) { return n > 0 ? ((v % n) + n) % n : 0; }
@@ -326,6 +327,16 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         return;
     }
     case SV_PG_MIXER:
+        if (u->mixmute == 6) {                     /* STYLE MIX: TO KEEP OUT IN */
+            int k = sv_clampi(u->mix_pick, 0, SAS_NSTYLES - 1);
+            sv_card_txt(&c[0], "TO", SAS_STYLE[k].name, k * 1000 / (SAS_NSTYLES - 1), false);
+            sv_card_txt(&c[1], "KEEP", sv_mix_keep_name(u->mix_keep), u->mix_keep * 1000 / (SV_MIX_KEEPS - 1), false);
+            sv_bars_txt(t, sv_mix_out_bars(u->mix_out));
+            sv_card_txt(&c[2], "OUT", t, u->mix_out * 1000 / (SV_MIX_OUTS - 1), false);
+            sv_bars_txt(t, sv_mix_in_bars(u->mix_in));
+            sv_card_txt(&c[3], "IN", t, u->mix_in * 1000 / (SV_MIX_INS - 1), false);
+            return;
+        }
         if (u->mixmute == 4) {                     /* LIVE: STYLE START BUILD */
             static const char *const ST[SA_STARTS] = {"FULL", "KICK", "PAD", "EMPTY"}, *const BU[3] = {"HAND", "8 BARS",
                                                                                                   "16 BARS"};
@@ -598,7 +609,7 @@ static void sv_head_title(const sa_ui *u, char *t, unsigned n)
         break;
     case SV_PG_KEY: sv_cpy(t, "KEY", n); break;
     case SV_PG_SETS: sv_cpy(t, "SETS", n); break;
-    case SV_PG_MIXER: sv_cpy(t, u->mixmute == 5 ? "SONG" : u->mixmute == 4 ? "LIVE" : u->mixmute == 3 ? "STYLE" : u->mixmute == 2 ? "MIXER  SOLO" : u->mixmute ? "MIXER  MUTE" : "MIXER", n); break;
+    case SV_PG_MIXER: sv_cpy(t, u->mixmute == 6 ? "STYLE MIX" : u->mixmute == 5 ? "SONG" : u->mixmute == 4 ? "LIVE" : u->mixmute == 3 ? "STYLE" : u->mixmute == 2 ? "MIXER  SOLO" : u->mixmute ? "MIXER  MUTE" : "MIXER", n); break;
     case SV_PG_EDIT:
         sv_cpy(t, SV_VIEW_NAME[u->view], n);
         sv_cat(t, "  EDIT", n);
@@ -682,7 +693,7 @@ static void sv_draw_foot(sa_ui *u)
     } else if (u->page == SV_PG_EDIT) {
         sv_cpy(r, "KEYS: WRITE", sizeof r);
     } else if (u->page == SV_PG_MIXER) {
-        sv_cpy(r, u->mixmute == 5 ? "GLO: BACK" : u->mixmute == 4 ? (u->g->set_next ? "IN ON THE 1" : u->g->playing && sa_build_peek(u->g) >= 0 ? "SEQ: NEXT IN" : "SEQ: SET IT UP") : u->mixmute == 3 ? (u->g->set_next ? "IN ON THE 1" : "SEQ: A NEW GROOVE") : u->mixmute == 2 ? "GLO: STYLE" :
+        sv_cpy(r, u->mixmute == 6 ? (u->g->mx_state ? "MIXING" : "SEQ: MIX") : u->mixmute == 5 ? "GLO: BACK" : u->mixmute == 4 ? (u->g->set_next ? "IN ON THE 1" : u->g->playing && sa_build_peek(u->g) >= 0 ? "SEQ: NEXT IN" : "SEQ: SET IT UP") : u->mixmute == 3 ? (u->g->set_next ? "IN ON THE 1" : "SEQ: A NEW GROOVE") : u->mixmute == 2 ? "GLO: STYLE" :
                   u->mixmute ? "GLO: SOLO" : "GLO: MUTE", sizeof r);
     }
     uint32_t sig = sv_hash(sv_hash((uint32_t)(now + 1) * 7u + (uint32_t)g->playing * 3u + ux.gen * 11u +
@@ -1333,6 +1344,85 @@ void sv_song_default(sv_song *s)                   /* sets 1..4, 16 bars each */
 }
 int sv_song_bars(int i) { static const uint8_t B[SV_SONG_BARS] = {4, 8, 16, 32, 64}; return B[sv_clampi(i, 0, SV_SONG_BARS - 1)]; }
 
+/* STYLE MIX (0.8.25) */
+#define SV_DRUM_BITS ((uint16_t)(((1u << SA_DROWS) - 1u) << SA_L_DRUM0))
+#define SV_KICK_BIT ((uint16_t)(1u << (SA_L_DRUM0 + SA_DR_KICK)))
+const char *sv_mix_keep_name(int k)
+{
+    static const char *const N[SV_MIX_KEEPS] = {"BASS", "KICK", "BASS+KICK", "DRUMS", "BASS+DRUMS", "NOTHING"};
+    return N[sv_clampi(k, 0, SV_MIX_KEEPS - 1)];
+}
+uint16_t sv_mix_keep_mask(int k)
+{
+    const uint16_t B = (uint16_t)(1u << SA_L_BASS);
+    static const uint16_t M[SV_MIX_KEEPS] = {B, SV_KICK_BIT, B | SV_KICK_BIT, SV_DRUM_BITS, B | SV_DRUM_BITS, 0};
+    return M[sv_clampi(k, 0, SV_MIX_KEEPS - 1)];
+}
+int sv_mix_out_bars(int i) { static const uint8_t B[SV_MIX_OUTS] = {1, 2, 4}; return B[sv_clampi(i, 0, SV_MIX_OUTS - 1)]; }
+int sv_mix_in_bars(int i) { static const uint8_t B[SV_MIX_INS] = {2, 4, 8, 16}; return B[sv_clampi(i, 0, SV_MIX_INS - 1)]; }
+static void sv_bars_txt(char *t, int n)
+{
+    sv_fmt_int(t, n);
+    sv_cat(t, n == 1 ? " BAR" : " BARS", 12);
+}
+
+/* STYLE MIX: from the style playing to the one picked; each layer's level in the mix (the kept ones in the accent),
+ * where it is */
+static void sv_panel_smix(sa_ui *u)
+{
+    const sa_groove *g = u->g;
+    int k = sv_clampi(g->mx_state == 1 && g->mx_next ? g->mx_next->style : g->mx_state == 2 ? g->s.style : u->mix_pick,
+                     0, SAS_NSTYLES - 1),
+        from = sv_clampi(g->mx_state ? g->mx_from : g->s.style, 0, SAS_NSTYLES - 1);
+    uint16_t keep = g->mx_state ? g->mx_keep : sv_mix_keep_mask(u->mix_keep);
+    char t[40];
+    sv_cpy(t, "FROM ", sizeof t);
+    sv_cat(t, SAS_STYLE[from].name, sizeof t);
+    sv_label(10, 4, t, T_MID);
+    cv_free_text(10, 18, &AF_M, SAS_STYLE[k].name, T_THEME, T_SURF, 220);
+    static const char *const N[4] = {"LEAD", "CHORD", "BASS", "DRUMS"};
+    for (int i = 0; i < 4; ++i) {
+        int32_t y = 44 + i * 11, x = 58, w = 150;
+        float v = 1.0f;
+        bool kept;
+        if (i < 3) {
+            v = g->mx_state ? g->mx_gain[i] : 1.0f;
+            kept = (keep >> i) & 1u;
+        } else {
+            float sum = 0.0f;
+            for (int r = 0; r < SA_DROWS; ++r) sum += g->mx_state ? g->mx_gain[SA_L_DRUM0 + r] : 1.0f;
+            v = sum / (float)SA_DROWS;
+            kept = (keep & SV_DRUM_BITS) != 0;
+        }
+        int f = (int)(v * (float)w + 0.5f);
+        cv_free_text(10, y, &AF_S, i == 3 && kept && (keep & SV_DRUM_BITS) == SV_KICK_BIT ? "KICK" : N[i],
+                     kept ? T_ACCENT : T_MID, T_SURF, 46);
+        cv_rect(x, y + 2, w, 6, sv_well());
+        cv_rect(x, y + 2, f > 0 ? f : 1, 6, kept ? T_ACCENT : T_THEME);
+    }
+    if (g->mx_state) {
+        int n = g->mx_state == 1 ? g->mx_out : g->mx_in;
+        float x = sa_mix_pos(g);
+        sv_cpy(t, g->mx_state == 1 ? (g->bar < g->mx_bar0 ? "OUT ON THE 1" : "FADING OUT, ") : "FADING IN, ", sizeof t);
+        if (g->mx_state == 2 || g->bar >= g->mx_bar0) {
+            char a[12];
+            sv_fmt_int(a, (int)(x * (float)n) + 1 > n ? n : (int)(x * (float)n) + 1);
+            sv_cat(t, "BAR ", sizeof t);
+            sv_cat(t, a, sizeof t);
+            sv_cat(t, " OF ", sizeof t);
+            sv_fmt_int(a, n);
+            sv_cat(t, a, sizeof t);
+        }
+        sv_label(10, 92, t, T_ACCENT);
+        cv_rect(10, 108, 220, 4, sv_well());
+        int done = (int)((g->mx_state == 1 ? x * 0.5f : 0.5f + x * 0.5f) * 220.0f);
+        cv_rect(10, 108, done > 0 ? done : 1, 4, T_ACCENT);
+    } else {
+        sv_label(10, 92, g->playing ? "SEQ: MIX INTO IT, FROM THE 1" : "SEQ: IN AT ONCE (STOPPED)", T_DIM);
+        sv_label(10, 106, "THE KEPT ONES PLAY ON THROUGH", T_DIM);
+    }
+}
+
 /* LIVE: the build, in its order: the layers in lit, the next in the accent, the rest dim; before one, how it goes */
 static void sv_panel_live(sa_ui *u)
 {
@@ -1389,6 +1479,7 @@ static void sv_panel_song(sa_ui *u)
 
 static void sv_panel_mixer(sa_ui *u)
 {
+    if (u->mixmute == 6) { sv_panel_smix(u); return; }
     if (u->mixmute == 5) { sv_panel_song(u); return; }
     if (u->mixmute == 4) { sv_panel_live(u); return; }
     if (u->mixmute == 3) { sv_panel_style(u); return; }
@@ -1559,6 +1650,8 @@ void sv_init(sa_ui *u, sa_groove *g)
     u->req_act = -1;
     u->song_step = -1;
     u->live_start = SA_START_KICK;
+    u->mix_out = 1;                                /* (STYLE MIX: 2 bars out, 4 in, the BASS kept) */
+    u->mix_in = 1;
     u->midi_ch[0] = 1, u->midi_ch[1] = 2, u->midi_ch[2] = 3, u->midi_ch[3] = 10;
     sv_song_default(&u->song);
     for (int k = 0; k < 27; ++k)
@@ -1794,6 +1887,13 @@ void sv_knob(sa_ui *u, int k, int d)
         return;
     case SV_PG_MIXER:
         u->changed = true;
+        if (u->mixmute == 6) {                     /* STYLE MIX */
+            if (i == 0) u->mix_pick = sv_clampi(u->mix_pick + d, 0, SAS_NSTYLES - 1);
+            else if (i == 1) u->mix_keep = sv_clampi(u->mix_keep + d, 0, SV_MIX_KEEPS - 1);
+            else if (i == 2) u->mix_out = sv_clampi(u->mix_out + d, 0, SV_MIX_OUTS - 1);
+            else u->mix_in = sv_clampi(u->mix_in + d, 0, SV_MIX_INS - 1);
+            return;
+        }
         if (u->mixmute == 4) {                     /* LIVE */
             if (i == 0) u->style_pick = sv_clampi(u->style_pick + d, 0, SAS_NSTYLES - 1);
             else if (i == 1) u->live_start = sv_clampi(u->live_start + d, 1, SA_STARTS - 1);
@@ -1979,6 +2079,16 @@ void sv_button(sa_ui *u, int b, bool down)
         u->seq_ms = 0;
         if (down) u->seq_fired = false;
     }
+    if (b == SV_B_GLO) {                           /* (0.8.25) held: STYLE MIX (sv_tick); a tap on letting go */
+        if (down) {
+            u->glo_down = true;
+            u->glo_ms = 0;
+            return;
+        }
+        if (!u->glo_down) return;
+        u->glo_down = false;
+        down = true;
+    }
     if (b == SV_B_HOME) {
         if (down) {
             u->home_down = true;
@@ -2031,6 +2141,12 @@ void sv_button(sa_ui *u, int b, bool down)
     switch (b) {
     case SV_B_PLAY: sa_play(g, !g->playing); break;
     case SV_B_SEQ:                                 /* drop what waits; on STYLE: a fresh groove in it */
+        if (u->page == SV_PG_MIXER && u->mixmute == 6) {   /* STYLE MIX: a fresh groove in TO, mixed into */
+            if (g->mx_state) { sv_msg(u, "MIXING"); break; }
+            u->req_act = SV_SA_MIX;
+            u->req_slot = sv_clampi(u->mix_pick, 0, SAS_NSTYLES - 1);
+            break;
+        }
         if (u->page == SV_PG_MIXER && u->mixmute == 4 && !(g->playing && sa_build_peek(g) >= 0)) {
             /* LIVE: the mix set up, its START in, the rest waiting (a build playing: SEQ brings the next in) */
             u->req_act = SV_SA_LIVE;
@@ -2300,6 +2416,15 @@ void sv_tick(sa_ui *u, int ms)
             u->moves |= (uint8_t)(1u << mv);
             sv_msg(u, N[mv]);
         }
+    if (u->glo_down && (u->glo_ms += ms) >= SV_MENU_HOLD_MS) {   /* GLO held: STYLE MIX */
+        u->glo_down = false;
+        if (u->page != SV_PG_MIXER) u->mback = u->page == SV_PG_LAYER ? SV_PG_LAYER : SV_PG_MAIN;
+        u->mixmute = 6;
+        u->rec = false;
+        if (u->mix_pick == u->g->s.style) u->mix_pick = (u->g->s.style + 1) % SAS_NSTYLES;   /* (TO: another one) */
+        if (u->page != SV_PG_MIXER) sv_goto(u, SV_PG_MIXER);
+        else u->force = true;
+    }
     if (u->home_down) {
         u->home_ms += ms;
         if (u->home_ms >= SV_MENU_HOLD_MS && u->page != SV_PG_MENU) {

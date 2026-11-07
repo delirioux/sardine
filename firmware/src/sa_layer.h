@@ -240,6 +240,16 @@ typedef struct {
     bool build_req;
     bool part_b, part_cue;                          /* PART B playing; the PART wanted (in on the next phrase) */
     uint8_t ed_patb[SA_LAYERS], ed_progb;           /* the edit copy of the B patterns and B's progression (SEQ drops) */
+    /* 0.8.25, STYLE MIX (GLO held): one groove into another. mx_state 1: the layers not kept fading out over mx_out
+     * bars from the bar line mx_bar0 (before it: waiting for it); 2: the next groove in, the kept layers still the
+     * old ones, the others fading in over mx_in bars, one after another, the tempo gliding over to the new; then the
+     * kept ones the new ones too, on the 1. mx_next: the next groove (the glue's: the mix's own till it is over) */
+    uint8_t mx_state, mx_out, mx_in, mx_bpm0, mx_bpm1, mx_from;   /* (mx_from: the style mixed from) */
+    uint16_t mx_keep;
+    int mx_bar0;
+    sa_settings *mx_next;                           /* (swapped with: holds the new kept layers in IN) */
+    float mx_gain[SA_LAYERS];                       /* each layer's level in the mix now, 0..1 */
+    uint8_t mx_off[SA_SYNTHS];                      /* 0..127: the synth parts' (the glue's block, with the pump) */
     char msg[24];
     uint8_t msg_new;
     void (*sound)(void *ctx, const sa_event *e);
@@ -291,6 +301,11 @@ int sa_arc_bars(int i);             /* SWEEP: held, the filter closes over two b
 /* a whole groove in (a set loaded, a fresh one): playing, on the next bar line; stopped, at once. What waits for REC
  * goes, the colour and the look stay. s is read on the bar line: the caller keeps it until then */
 void sa_set_arm(sa_groove *g, const sa_settings *s);
+/* STYLE MIX (0.8.25): into the groove next (kept as it is till the mix is over), keep the layers kept through it (a bit
+ * per slot), out over out_bars from the next 1, in over in_bars; stopped: at once. Anything else armed ends it */
+void sa_mix(sa_groove *g, sa_settings *next, uint16_t keep, int out_bars, int in_bars);
+void sa_mix_end(sa_groove *g);                      /* over now: every layer at its level */
+float sa_mix_pos(const sa_groove *g);               /* 0..1 through the phase playing (mx_state) */
 /* a fresh groove from a seed: a kick, hats, a clap or snare and maybe more, a bass, stabs or a pad, now and then a
  * lead, a key, scale, progression, kit, tempo and swing that suit a club. The sounds come from the glue's lists */
 typedef struct { const uint8_t *bass, *keys, *pad, *lead; uint8_t nbass, nkeys, npad, nlead; } sa_pool;

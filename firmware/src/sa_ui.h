@@ -58,7 +58,7 @@ enum { SVP_HOME, SVP_SOUND, SVP_ARP, SVP_PAN, SVP_GATE, SVP_MOD, SVP_MIX, SVP_KI
 #define SV_SETS 8
 #define SV_LAST SV_SETS                       /* the ninth slot: the last groove, kept by itself (LOAD only) */
 #define SV_SLOTS (SV_SETS + 1)
-enum { SV_SA_LOAD, SV_SA_STORE, SV_SA_NEW, SV_SA_CLEAR, SV_SA_ACTS, SV_SA_STYLE = 9, SV_SA_LIVE = 10 };   /* (STYLE, LIVE:
+enum { SV_SA_LOAD, SV_SA_STORE, SV_SA_NEW, SV_SA_CLEAR, SV_SA_ACTS, SV_SA_STYLE = 9, SV_SA_LIVE = 10, SV_SA_MIX = 11 };   /* (STYLE, LIVE, STYLE MIX:
                                                                                                   * GLO's pages) */
 typedef struct {
     uint8_t used, bpm, key, scale, kit, nsyn;
@@ -71,6 +71,14 @@ typedef struct {
  * EDIT STOP (a tape stop), REC WOBBLE (the synth layers' filter on the eighths) */
 enum { SV_MV_WASH, SV_MV_THROW, SV_MV_STOP, SV_MV_WOBBLE, SV_MOVES };
 #define SV_MOVE_MS 300
+/* STYLE MIX's KEEP (the layers playing on through it) and its bars out and in */
+#define SV_MIX_KEEPS 6
+#define SV_MIX_OUTS 3
+#define SV_MIX_INS 4
+const char *sv_mix_keep_name(int k);
+uint16_t sv_mix_keep_mask(int k);
+int sv_mix_out_bars(int i);
+int sv_mix_in_bars(int i);
 #define SV_NEW_MS 1000
 
 /* SONG (GLO's 5th page): up to eight steps, each a set for a number of bars, played in turn round and round
@@ -103,7 +111,12 @@ typedef struct {
 #define SV_MLOG 8
     volatile uint8_t ml_layer[SV_MLOG], ml_ch[SV_MLOG], ml_note[SV_MLOG], ml_vel[SV_MLOG];
     volatile uint32_t ml_n;
-    int mixmute;                          /* GLO's page: 0 VOLUME, 1 MUTE, 2 SOLO, 3 STYLE, 4 LIVE, 5 SONG (GLO turns them) */
+    int mixmute;                          /* GLO's page: 0 VOLUME, 1 MUTE, 2 SOLO, 3 STYLE, 4 LIVE, 5 SONG (GLO turns them);
+                                           * 6 STYLE MIX (GLO held) */
+    int mix_pick, mix_keep, mix_out, mix_in;   /* STYLE MIX (0.8.25): TO (a style), KEEP (SV_MIX_KEEPS), OUT, IN (an index
+                                                * of SV_MIX_OUT / SV_MIX_IN) */
+    bool glo_down;                        /* GLO down: a tap turns GLO's pages (on letting go), held STYLE MIX */
+    int glo_ms;
     int live_start;                       /* LIVE: the START (SA_START_KICK PAD EMPTY), the BUILD (0 BY HAND, 1 8 BARS,
                                            * 2 16 BARS) */
     int live_build;

@@ -774,6 +774,59 @@ int main(int argc, char **argv)
     sv_knob(&ui, SV_K4, -1);
     press(SV_B_GLO);
     CHECK(ui.page == SV_PG_MAIN, "GLO past SONG: back HOME");
+    /* STYLE MIX (0.8.25): GLO held; the layers not kept out, the next style in around the kept ones, then all of it */
+    sv_button(&ui, SV_B_GLO, true);
+    run_ms(300);
+    CHECK(ui.page == SV_PG_MAIN, "GLO down a moment: nothing yet");
+    run_ms(400);
+    CHECK(ui.page == SV_PG_MIXER && ui.mixmute == 6, "GLO held: STYLE MIX");
+    sv_button(&ui, SV_B_GLO, false);
+    CHECK(ui.page == SV_PG_MIXER && ui.mixmute == 6, "let go: STYLE MIX stays");
+    CHECK(sv_mix_keep_mask(ui.mix_keep) == (1u << SA_L_BASS) && sv_mix_out_bars(ui.mix_out) == 2 &&
+          sv_mix_in_bars(ui.mix_in) == 4 && ui.mix_pick != g.s.style, "STYLE MIX: another style, KEEP BASS, 2 out, 4 in");
+    shot("18j_stylemix");
+    press(SV_B_SEQ);
+    CHECK(ui.req_act == SV_SA_MIX && ui.req_slot == ui.mix_pick, "SEQ: the mix asked");
+    ui.req_act = -1;
+    {   /* (the glue: a groove in the style, mixed into) */
+        static sa_settings nx, nx0, old;
+        sa_pool pool;
+        sas_pool_make(&pool);
+        if (!g.playing) sa_play(&g, true);
+        bars(1);
+        g.s.bpm = 120;
+        sas_style_apply(&nx, ui.mix_pick, 4242u, &pool);
+        sas_fix(&nx);
+        nx.bpm = 132;
+        nx0 = nx;
+        old = g.s;
+        sa_mix(&g, &nx, sv_mix_keep_mask(ui.mix_keep), 2, 4);
+        CHECK(g.mx_state == 1 && g.mx_gain[SA_L_LEAD] == 1.0f, "MIX: waiting for the 1");
+        bars(1);
+        run_ms(400);
+        CHECK(g.mx_gain[SA_L_LEAD] < 1.0f && g.mx_gain[SA_L_LEAD] > 0.5f && g.mx_gain[SA_L_BASS] == 1.0f &&
+              g.mx_off[SA_L_LEAD] > 0, "OUT: the LEAD going (%d %%), the BASS kept", (int)(g.mx_gain[SA_L_LEAD] * 100.0f));
+        shot("18j2_stylemix_out");
+        bars(2);
+        CHECK(g.mx_state == 2 && !memcmp(&g.s.code[SA_L_BASS], &old.code[SA_L_BASS], sizeof old.code[0]) &&
+              g.s.code[SA_L_LEAD].sound == nx0.code[SA_L_LEAD].sound && g.s.harm.key == old.harm.key && g.s.bpm == 120,
+              "IN: the new style around the old BASS, in the old key and tempo");
+        CHECK(g.mx_gain[SA_L_LEAD] < 0.05f && g.mx_gain[SA_L_DRUM0] < 0.5f, "IN: the LEAD silent, the drums coming");
+        int d0 = part_on[SA_PART_DRUMS];
+        bars(2);
+        CHECK(part_on[SA_PART_DRUMS] > d0 && g.mx_gain[SA_L_DRUM0] > 0.4f && g.s.bpm > 120 && g.s.bpm < 132,
+              "IN: the drums back (%d hits), the tempo on its way (%d)", part_on[SA_PART_DRUMS] - d0, g.s.bpm);
+        shot("18j3_stylemix_in");
+        bars(2);
+        CHECK(g.mx_state == 0 && g.s.code[SA_L_BASS].sound == nx0.code[SA_L_BASS].sound && g.s.bpm == 132 &&
+              g.mx_off[SA_L_LEAD] == 0 && g.mx_gain[SA_L_DRUM0] == 1.0f, "MIXED: the BASS the new one too, its tempo");
+        sa_mix(&g, &nx, 0, 1, 2);
+        sa_play(&g, false);
+        CHECK(g.mx_state == 0 && g.mx_off[0] == 0, "a mix waiting, stopped: over");
+        sa_play(&g, true);
+    }
+    press(SV_B_GLO);
+    CHECK(ui.page == SV_PG_MAIN, "STYLE MIX, GLO: back");
     g.s.dvol = 80;
     /* SETS */
     ui.sets[0] = (sv_set_info){1, 126, 9, SA_SC_MINOR, SA_KIT_TECH, 3, {0, 1, (uint8_t)(SAS_NSOUNDS - 1)}, 0};

@@ -291,7 +291,12 @@ static void sa_prefs_load(void)
 static void sa_set_do(int act, int k)
 {
     char m[32];
-    if (act != SV_SA_STYLE && act != SV_SA_LIVE) k = k < 0 ? 0 : k >= SV_SLOTS ? SV_SLOTS - 1 : k;
+    if (act != SV_SA_STORE && act != SV_SA_CLEAR) {          /* (a STYLE MIX playing: over before sa_next is written) */
+        fm1_irq_off();
+        sa_mix_end(&sa_g);
+        fm1_irq_on();
+    }
+    if (act != SV_SA_STYLE && act != SV_SA_LIVE && act != SV_SA_MIX) k = k < 0 ? 0 : k >= SV_SLOTS ? SV_SLOTS - 1 : k;
     else k = 0;
     sv_cpy(m, "SET ", sizeof m);
     m[4] = (char)('1' + k);
@@ -311,6 +316,19 @@ static void sa_set_do(int act, int k)
         fm1_irq_on();
         sv_cpy(m, SAS_STYLE[k % SAS_NSTYLES].name, sizeof m);
         sv_cat(m, sa_g.playing ? ": ON THE 1" : " IN", sizeof m);
+        break;
+    }
+    case SV_SA_MIX: {                                        /* STYLE MIX: a fresh groove in a STYLE, mixed into */
+        int k = sa_u.req_slot;
+        sas_style_apply(&sa_next, k, sa_pref.boots * 7919u + fm1_ms * 31u + sa_u.frame, &sa_pl);
+        sa_next.intro = 0;
+        sa_next.arc = sa_g.s.arc;
+        fm1_irq_off();
+        sa_mix(&sa_g, &sa_next, sv_mix_keep_mask(sa_u.mix_keep), sv_mix_out_bars(sa_u.mix_out),
+               sv_mix_in_bars(sa_u.mix_in));
+        fm1_irq_on();
+        sv_cpy(m, "MIX TO ", sizeof m);
+        sv_cat(m, SAS_STYLE[k % SAS_NSTYLES].name, sizeof m);
         break;
     }
     case SV_SA_LIVE: {                                       /* LIVE: a fresh groove in a STYLE, only its START in */
