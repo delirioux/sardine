@@ -1012,7 +1012,7 @@ static void live_default(sa_live *v)
     v->cut = 100;
     v->reso = 30;
     v->env = 50;
-    v->level = 80;
+    v->level = 70;                                 /* (0.8.12: 70, headroom; 80 is the sound as it is) */
 }
 
 /* the synth sounds the first groove uses (sa_sounds.h indices: kept in step with it) */
@@ -1045,7 +1045,7 @@ void sa_defaults(sa_settings *s)
         s->pan[l].rate = SA_PRATE_BAR;
     }
     for (int p = 0; p < SA_SYNTHS; ++p) s->d3rate[p] = SA_PRATE_2BARS;
-    s->dvol = 80;
+    s->dvol = 70;
     for (int p = 0; p < SA_SYNTHS; ++p) {          /* LEAD 10 %, CHORD 80 %, BASS 50 % until the glue sets it by type */
         static const uint8_t DEP[SA_SYNTHS] = {10, 80, 50};
         s->pl[p].depth = DEP[p];

@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.11. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.12. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -220,7 +220,7 @@ move for as long as you hold it (the header names it), its own job not done. The
 </p>
 
 **GLO** opens the MIXER: a level for each layer, LEAD, CHORD, BASS and DRUMS (all the drums together), a row each, on the four
-knobs, at once (80: as it is, the mark); the dot at the end lights as the layer plays. Under them the scope of the whole mix. **GLO** again turns the knobs over to their
+knobs, at once (70 out of the box; 80, the mark, is the sound as it is); the dot at the end lights as the layer plays. Under them the scope of the whole mix. **GLO** again turns the knobs over to their
 MUTE, GLO again to their **SOLO** (turn right: that layer, with any others soloed, alone; left: back), GLO again
 to STYLE (below), GLO again to SONG (below), GLO once more back. SOLO is a live move: not kept with the groove. A layer's VOLUME here is the same as on its own first FX page.
 

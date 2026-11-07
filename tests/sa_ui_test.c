@@ -267,7 +267,7 @@ int main(int argc, char **argv)
     shot("06_bass_mix");
     sv_knob(&ui, SV_K4, -1);
     sv_knob(&ui, SV_K1, -10);
-    CHECK(g.s.live[SA_L_BASS].level == 60, "VOLUME (%d)", g.s.live[SA_L_BASS].level);
+    CHECK(g.s.live[SA_L_BASS].level == 50, "VOLUME (70 less 20) (%d)", g.s.live[SA_L_BASS].level);
     press(SV_B_FX);
     CHECK(sv_page_now(&ui) == SVP_ARP && g.ed[SA_L_BASS].amode == SA_AR_OFF, "FX: ARP on BASS too, OFF");
     press(SV_B_FX);
@@ -628,7 +628,7 @@ int main(int argc, char **argv)
     press(SV_B_GLO);
     CHECK(ui.page == SV_PG_MIXER && sv_page_button(&ui) == SV_B_GLO, "GLO: MIXER");
     sv_knob(&ui, SV_K4, -10);
-    CHECK(g.s.dvol == 60, "MIXER: DRUMS volume (%d)", g.s.dvol);
+    CHECK(g.s.dvol == 50, "MIXER: DRUMS volume (70 less 20) (%d)", g.s.dvol);
     bars(1);
     shot("18b_mixer");
     all_palettes("mixer");
