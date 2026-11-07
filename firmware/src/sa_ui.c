@@ -741,8 +741,7 @@ static void sv_panel_steps(sa_ui *u)
     char t[32];
     sa_pat_label(sv_ed(u), t, sizeof t);
     cv_free_text(10, 3, &AF_S, t, pend ? T_ACCENT : T_THEME, T_SURF, 150);
-    cv_text_r(230, 3, &AF_S, !u->rec ? "REC: KEYS WRITE" : sa_chordy(&o) ? "KEYS: CHORDS" : "KEYS: NOTES",
-              u->rec ? T_ACCENT : T_DIM, T_SURF);
+    cv_text_r(230, 3, &AF_S, sa_chordy(&o) ? "KEYS: CHORDS" : "KEYS: NOTES", T_ACCENT, T_SURF);
     int32_t y0 = 18, h = 80;
     for (int k = 0; k < 16; ++k) {
         int32_t x = 8 + k * 14;
@@ -771,7 +770,7 @@ static void sv_panel_steps(sa_ui *u)
         if (chord) for (int r = 0; r < 3; ++r) cv_rrect(x + 1, y0 + h / 2 - 12 + r * 9, w, 6, 2, c, T_SURF);
         else if (note) cv_rrect(x + 1, y0 + h - 8 - (o.sn[k] - lo) * (h - 10) / (hi - lo), w, 6, 2, c, T_SURF);
     }
-    cv_text_on(10, 104, &AF_S, u->rec ? "KNOB 1 THE STEP, A KEY ITS NOTE" : "KNOB 1 THE STEP, KNOB 4 ITS NOTE", T_DIM, T_SURF);
+    cv_text_on(10, 104, &AF_S, "KNOB 1: STEP. KEY OR KNOB 4: NOTE", T_DIM, T_SURF);
 }
 
 static void sv_panel_gate(sa_ui *u)
@@ -2171,14 +2170,19 @@ void sv_key(sa_ui *u, int note, bool down)
             return;
         }
     }
-    if (lay && u->rec) {
-        if (sv_steps_on(u)) {                      /* a synth layer's step: the key's note (CHORD: the chord) */
-            if (!down) return;
+    if (lay && (u->rec || u->page == SV_PG_EDIT) && sv_steps_on(u)) {
+        /* a synth layer's step (EDIT, or REC): the key's note there (CHORD: the chord), heard as it is pressed */
+        if (down) {
             sa_step_note(u->g, u->layer, sv_clampi(u->scur, 0, 15), note + 12 * u->oct);
             u->scur = (u->scur + 1) % 16;
             u->changed = true;
-            return;
+            u->key_sent[k] = note + 12 * u->oct;
+            sa_key(u->g, k, u->key_sent[k], true, layer);
+        } else if (u->key_sent[k] >= 0) {
+            sa_key(u->g, k, u->key_sent[k], false, layer);
+            u->key_sent[k] = -1;
         }
+        return;
     }
     if (lay && u->view == SV_V_DRUMS) {            /* DRUMS: every key plays the drum picked */
         if (u->g->ed[u->layer].type != SA_T_DRUM) return;

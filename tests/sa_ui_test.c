@@ -483,6 +483,15 @@ int main(int argc, char **argv)
         sv_knob(&ui, SV_K3, -20);
         CHECK(c->sn[9] == SA_NO_NOTE, "LENGTH below 1: the note goes");
     }
+    {   /* EDIT, no REC: a key writes its note at the step too, and sounds */
+        sv_knob(&ui, SV_K1, 11 - ui.scur);
+        int b0 = part_on[SA_L_BASS];
+        sv_key(&ui, 62, true);
+        run_ms(20);
+        CHECK(!ui.rec && g.ed[SA_L_BASS].sn[11] != SA_NO_NOTE && ui.scur == 12 && part_on[SA_L_BASS] > b0,
+              "EDIT: a key writes its note on the step and sounds (REC not needed)");
+        sv_key(&ui, 62, false);
+    }
     sv_knob(&ui, SV_K1, 5 - ui.scur);
     press(SV_B_REC);
     sv_key(&ui, 60, true);

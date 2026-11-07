@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.16. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.17. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -160,12 +160,13 @@ PULSE, 8THS, 16THS, DOTTED, HOLD. **KNOB 3** is the step's LENGTH (on DRUMS its 
 note goes. **KNOB 4** is its **NOTE**: on an empty step it puts a note there (the note before it, else the root), turned
 on it moves it up or down the scale (on CHORD: right the chord on, left off).
 
-Setting a note, step by step: **EDIT**, KNOB 1 to the step, KNOB 4 to the note, KNOB 3 for how long; or REC on and a key.
+Setting a note, step by step: **EDIT**, KNOB 1 to the step, then a key (heard as you press it; the step moves on) or
+KNOB 4 to the note, KNOB 3 for how long.
 
-With **REC** on, LEAD, BASS and CHORD: a key writes at the framed step (the note snapped to the scale, the same note
+In EDIT (and with **REC** on, on the layer's pages too), LEAD, BASS and CHORD: a key writes at the framed step (the note snapped to the scale, the same note
 again takes it off; on CHORD the chord) and the frame moves on. DRUMS: the 16 lowest keys are the steps, glowing dim,
-the hits set full; a key turns its step on or off, the keys above play the drum. Without REC the keys play the layer,
-lit with what it plays. Like a pattern, the steps wait for SEQ. EDIT again goes back.
+the hits set full; a key turns its step on or off, the keys above play the drum. Without REC the drum keys play the
+drum, lit with what it plays. Like a pattern, the steps wait for SEQ. EDIT again goes back.
 
 ## DRUMS
 
