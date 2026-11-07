@@ -1758,6 +1758,22 @@ static void mix_kept(sa_settings *a, sa_settings *b, uint16_t keep, bool swap)
     }
 #undef MXF
 }
+/* (0.8.27) the levels a mix never goes past: each layer's LEVEL and MUTE, the MIXER's DRUMS, from src into dst for the
+ * layers in mask (the drums' own when all the drum rows are): a mix fades from and to the volumes set, the new
+ * style's own levels never in */
+static void mix_levels(sa_settings *dst, const sa_settings *src, uint16_t mask)
+{
+    for (int l = 0; l < SA_LAYERS; ++l)
+        if ((mask >> l) & 1u) {
+            dst->live[l].level = src->live[l].level;
+            dst->live[l].mute = src->live[l].mute;
+        }
+    uint16_t drums = (uint16_t)(((1u << SA_DROWS) - 1u) << SA_L_DRUM0);
+    if ((mask & drums) == drums) {                 /* (a drum row kept: the DRUMS' level kept with it already) */
+        dst->dvol = src->dvol;
+        dst->dmute = src->dmute;
+    }
+}
 /* the key a mix goes into (0.8.26): the next door one on the circle of fifths, so the two share six of their seven
  * notes: minor to major its relative major (a minor third up), major to minor its relative minor (a minor third down),
  * minor to minor or major to major a fifth up (the lift DJs mix into). DORIAN and PHRYGIAN count as minor */
@@ -1784,6 +1800,7 @@ static void mix_bar(sa_groove *g)
         g->mx_bpm1 = n->bpm;
         mix_kept(&g->s, n, g->mx_keep, true);
         mix_swap_b(&g->s, n, sizeof g->s);
+        mix_levels(&g->s, n, (uint16_t)~g->mx_keep);   /* (the new layers at the levels set, the old ones'; now in n) */
         g->s.palette = pal;
         g->s.look = look;
         g->s.harm.key = key;                       /* (a key next door to the old one: the kept bass and the new layers
@@ -1807,6 +1824,7 @@ static void mix_bar(sa_groove *g)
     if (b >= g->mx_in) {                           /* over: the kept layers the new ones too, on this 1 */
         for (int p = 0; p < SA_SYNTHS; ++p)
             if ((g->mx_keep >> p) & 1u) part_off(g, p);
+        mix_levels(n, &g->s, 0xFFFFu);             /* (the levels as they are set now, kept through the swap) */
         mix_kept(&g->s, n, g->mx_keep, false);
         g->s.bpm = g->mx_bpm1;
         sa_settings_fix(&g->s);
@@ -1897,6 +1915,7 @@ void sa_play(sa_groove *g, bool on)
                                                                     * groove in, all of it; on its way in: done) */
         g->set_next = g->mx_next;
     } else if (g->mx_state == 2 && g->mx_next) {
+        mix_levels(g->mx_next, &g->s, 0xFFFFu);
         mix_kept(&g->s, g->mx_next, g->mx_keep, false);
         g->s.bpm = g->mx_bpm1;
         sa_settings_fix(&g->s);

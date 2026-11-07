@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.26. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.27. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -327,7 +327,8 @@ style takes to fade in (2, 4, 8 or 16 bars). **SEQ** starts it on the next 1:
    CHORD and LEAD, all at full by the end of IN, while the tempo glides bar by bar to the new style's.
 3. On the 1 after IN, what you kept becomes the new style's own too (the bass swap): the mix is over, MIXED.
 
-The page shows each layer's level as it moves (the kept ones in the accent) and how far the mix is. Stopped, SEQ puts the
+Every fade goes from and to the volumes you set (each layer's VOLUME and mute, the MIXER's DRUMS), never past them:
+the new style's layers come in at your levels, not at its own. The page shows each layer's level as it moves (the kept ones in the accent) and how far the mix is. Stopped, SEQ puts the
 new style in at once. Loading a set, a new groove or another style ends a mix; PLAY stopping it mid-way finishes it.
 GLO goes back.
 

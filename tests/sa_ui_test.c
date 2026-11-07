@@ -798,6 +798,11 @@ int main(int argc, char **argv)
         sas_style_apply(&nx, ui.mix_pick, 4242u, &pool);
         sas_fix(&nx);
         nx.bpm = 132;
+        nx.live[SA_L_LEAD].level = nx.live[SA_L_BASS].level = 95;   /* (the new style's own levels: never heard) */
+        nx.dvol = 100;
+        g.s.live[SA_L_LEAD].level = 40;
+        g.s.live[SA_L_BASS].level = 55;
+        g.s.dvol = 50;
         nx0 = nx;
         old = g.s;
         sa_mix(&g, &nx, sv_mix_keep_mask(ui.mix_keep), 2, 4);
@@ -816,6 +821,9 @@ int main(int argc, char **argv)
               sa_mix_key(9, SA_SC_MINOR, SA_SC_DORIAN) == 4 && sa_mix_key(7, SA_SC_MAJOR, SA_SC_MAJOR) == 2,
               "the mix's key: A minor to C major, C major to A minor, A minor to E dorian, G major to D major");
         CHECK(g.mx_gain[SA_L_LEAD] < 0.05f && g.mx_gain[SA_L_DRUM0] < 0.5f, "IN: the LEAD silent, the drums coming");
+        CHECK(g.s.live[SA_L_LEAD].level == 40 && g.s.live[SA_L_BASS].level == 55 && g.s.dvol == 50,
+              "IN: the levels as set (LEAD %d, BASS %d, DRUMS %d), not the new style's", g.s.live[SA_L_LEAD].level,
+              g.s.live[SA_L_BASS].level, g.s.dvol);
         int d0 = part_on[SA_PART_DRUMS];
         bars(2);
         CHECK(part_on[SA_PART_DRUMS] > d0 && g.mx_gain[SA_L_DRUM0] > 0.4f && g.s.bpm > 120 && g.s.bpm < 132,
@@ -824,6 +832,8 @@ int main(int argc, char **argv)
         bars(2);
         CHECK(g.mx_state == 0 && g.s.code[SA_L_BASS].sound == nx0.code[SA_L_BASS].sound && g.s.bpm == 132 &&
               g.mx_off[SA_L_LEAD] == 0 && g.mx_gain[SA_L_DRUM0] == 1.0f, "MIXED: the BASS the new one too, its tempo");
+        CHECK(g.s.live[SA_L_LEAD].level == 40 && g.s.live[SA_L_BASS].level == 55 && g.s.dvol == 50,
+              "MIXED: the levels still as set");
         sa_mix(&g, &nx, 0, 1, 2);
         sa_play(&g, false);
         CHECK(g.mx_state == 0 && g.mx_off[0] == 0, "a mix waiting, stopped: over");

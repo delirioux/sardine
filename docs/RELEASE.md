@@ -1,4 +1,4 @@
-Sardine 0.8.26: live club mixing for the FM-1.
+Sardine 0.8.27: live club mixing for the FM-1.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
   through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, ARP, PAN, 3D, PUMP, GATE, MOD; DRUMS: MIX, KIT, MOD), HOME back to them all
@@ -6,7 +6,7 @@ Sardine 0.8.26: live club mixing for the FM-1.
   the keys write the steps
 - STYLE MIX (GLO held): from one style into another, the layers you don't keep fading out over 1 to 4 bars, the new
   style fading in around the kept bass or kick over 2 to 16 bars in a key next door (circle of fifths), the tempo
-  gliding along
+  gliding along, every fade from and to the volumes you set
 - LIVE (GLO): a mix built by hand from the kick, a pad or nothing, a layer at a time on SEQ or every 8/16 bars
 - MIDI OUT (MENU, then HOME): a channel for each layer, what goes out
 - OCT- OCT+ EDIT REC held: WASH, THROW, TAPE STOP, WOBBLE (a tap: the button's own job)
