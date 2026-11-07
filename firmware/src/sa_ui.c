@@ -1012,9 +1012,10 @@ static void sv_panel_menu(sa_ui *u)
 }
 
 /* the copy's bar of a layer, worked out again when it changed */
-static uint16_t sv_ed_bits(sa_ui *u, int l)
+static uint16_t sv_code_bits(sa_ui *u, int l, const sa_code *c);
+static uint16_t sv_ed_bits(sa_ui *u, int l) { return sv_code_bits(u, l, &u->g->ed[l]); }
+static uint16_t sv_code_bits(sa_ui *u, int l, const sa_code *c)   /* (cached: a layer's last) */
 {
-    const sa_code *c = &u->g->ed[l];
     if (u->force || memcmp(&u->ed_code[l], c, sizeof *c)) {
         SV_LOCK();
         u->ed_bits[l] = c->type == SA_T_NONE ? 0 : sa_preview(u->g, c, l, 0);
@@ -1259,11 +1260,13 @@ static void sv_panel_drums(sa_ui *u)
         bool sel = i == u->drow;
         uint16_t bg = sel ? ux_mix(T_SURF, T_THEME, 22) : T_SURF;
         int l = rows[i];
+        static sa_code tb;
         const sa_code *e = &g->ed[l];
+        if (g->part_cue) e = sv_with_b(&tb, e, g->ed_patb[l]);   /* (PART B: the rows' B patterns) */
         bool pend = sa_layer_pending(g, l), mute = g->s.live[l].mute, gone = e->type == SA_T_NONE;
         bool off = e->pat == SA_PAT_OFF && !e->own;
         cv_free_text(10, y + 1, &AF_S, sv_layer_name(u, l), mute || gone || off ? T_DIM : sel ? T_TEXT : T_MID, bg, 64);
-        uint16_t bits = gone || off ? 0 : sv_ed_bits(u, l);
+        uint16_t bits = gone || off ? 0 : sv_code_bits(u, l, e);
         sv_strip(80, y + 2, 152, 8, bits, now, pend ? T_ACCENT : sel ? T_THEME : ux_mix(T_SURF, T_THEME, 70),
                  mute || gone);
         if (mute) cv_rect(80, y + 5, 152, 2, T_ACCENT);
@@ -1641,6 +1644,24 @@ static void sv_fill_apply(sa_ui *u)
 }
 
 /* ALGORITHM on a layer: its pattern (OFF first; in the copy, waits for SEQ) */
+/* the pattern ALGORITHM turned to, briefly in the header (B: B's), whatever the page shows */
+static void sv_algo_say(sa_ui *u, uint8_t pat, bool b)
+{
+    char t[24];
+    sa_code c = u->g->ed[u->layer];
+    c.pat = pat;
+    c.own = 0;
+    if (pat == SA_PAT_OFF) sv_cpy(t, "OFF", sizeof t);
+    else sa_pat_label(&c, t, sizeof t);
+    if (b) {
+        char t2[24] = "B: ";
+        sv_cat(t2, t, sizeof t2);
+        sv_msg(u, t2);
+    } else {
+        sv_msg(u, t);
+    }
+}
+
 static void sv_algo(sa_ui *u, int d)
 {
     sa_groove *g = u->g;
@@ -1656,6 +1677,7 @@ static void sv_algo(sa_ui *u, int d)
         int to = sv_clampi(at + d, 0, n - 1);
         *b = list[to] == SA_PAT_OFF ? SA_PATB_OFF : (uint8_t)(list[to] + 1);
         u->changed = true;
+        sv_algo_say(u, list[to], true);
         return;
     }
     if (e->type == SA_T_NONE) at = -1;
@@ -1671,6 +1693,7 @@ static void sv_algo(sa_ui *u, int d)
         e->own = 0;
     }
     u->changed = true;
+    if (to >= 0) sv_algo_say(u, list[to], false);
 }
 
 /* SOUND's TYPE and SOUND: at once */

@@ -506,6 +506,29 @@ int main(int argc, char **argv)
         sv_button(&ui, SV_B_ENV, false);
         CHECK(!g.fill_on && g.fill_kind == (k0 + 1) % 8, "let go: the groove, the next fill next time");
     }
+    /* DRUMS: a row with no pattern, ALGORITHM: the pattern waits, its name in the header; PART B: its B row */
+    {
+        press(SV_B_HOME);
+        while (ui.view != SV_V_DRUMS) sv_knob(&ui, SV_K_PRESETS, 1);
+        int r = -1;
+        for (int k = 0; k < SA_DROWS && r < 0; ++k)
+            if (g.ed[SA_L_DRUM0 + k].pat == SA_PAT_OFF) r = k;
+        CHECK(r >= 0, "a drum row without a pattern (%d)", r);
+        if (r >= 0) {
+            int l = SA_L_DRUM0 + r;
+            sv_knob(&ui, SV_K1, r - ui.drow);
+            sv_knob(&ui, SV_K_ALGO, 1);
+            CHECK(ui.layer == l && g.ed[l].pat != SA_PAT_OFF && sa_layer_pending(&g, l) && ui.msg[0] && strcmp(ui.msg, "OFF"),
+                  "its pattern waits, named in the header (%s)", ui.msg);
+            shot("13c_drum_new");
+            sa_part(&g, true);
+            sv_knob(&ui, SV_K_ALGO, 1);
+            CHECK(g.ed_patb[l] != 0 && !strncmp(ui.msg, "B: ", 3), "PART B: the row's B pattern (%s)", ui.msg);
+            sa_part(&g, false);
+            sa_edit_reset(&g);
+        }
+        press(SV_B_HOME);
+    }
     /* MOVES: a tap is the button's job; held past 300 ms a move, the button's job not done */
     {
         int o0 = ui.oct;
