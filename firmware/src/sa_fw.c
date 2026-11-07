@@ -593,8 +593,7 @@ static void sa_fw_init(void)
             sa_u.song.on = 0;                                /* (SONG starts OFF: a start plays its own groove) */
         }
     }
-    if (sa_pref.midi_ok == 2)                                /* MIDI's channels as kept (else 1 2 3 10, sv_init's) */
-        for (int k = 0; k < 4; ++k) sa_u.midi_ch[k] = sa_pref.midi_ch[k] <= 16 ? sa_pref.midi_ch[k] : 0;
+    /* (MIDI OUT: every start on 1 2 3 10, sv_init's, whatever was set before: a channel turned OFF comes back) */
     sa_sets_scan();
     sa_apply();
 }
