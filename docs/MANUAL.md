@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.28. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.29. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -440,7 +440,19 @@ CHORD 2, BASS 3, DRUMS 10, at every start (a channel set OFF comes back on). Und
 note (a drum by its name) and its velocity. The drums go out as General MIDI notes (PERC's as the nearest: TAMB 54,
 BONGO 60, WOOD 76, COWBELL 56, CABASA 69, ZAP 80).
 
-MIDI in: notes that come in on a channel Sardine sends a layer on are dropped: they are its own coming back (a DAW
+The notes go out as they play: their velocity (the accents, the phrases, the drum rows' LEVEL and ACCENT, the fills'
+ghost notes and flams, a STYLE MIX's drum fades) and their length, swung by FEEL. Beside them, on each layer's channel,
+three controllers as the layer sounds, sent whenever one changes (and all of them as a host connects):
+
+| CC | What | From |
+| --- | --- | --- |
+| 7 (volume) | the layer's level | its VOLUME, mute and SOLO, a STYLE MIX's fade; DRUMS: the MIXER's DRUMS |
+| 74 (cutoff) | a synth layer's filter | CUTOFF, HOME's FILTER, SWEEP, WOBBLE, the fills' dip, 3D |
+| 10 (pan) | a synth layer's place | PAN (SWEEP, PING-PONG, RANDOM), 3D |
+
+The PUMP is not sent: a DAW's sidechain does it better.
+
+MIDI in: notes (and CC 7, 10, 74) that come in on a channel Sardine sends a layer on are dropped: they are its own coming back (a DAW
 passing through what it gets) and would play again on another layer's sound. Play Sardine from outside on a channel
 it does not send on.
 

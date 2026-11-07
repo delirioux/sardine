@@ -137,6 +137,20 @@ const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice
   const g0 = w.web_da_groove();
   press(B.SEQ); run(0.3);
   check(`STYLE: SEQ, a groove in it (${w.web_da_bpm()} BPM)`, w.web_da_groove() !== g0 && w.web_da_bpm() >= 170 && w.web_da_bpm() <= 180);
+  // (0.8.29) MIDI OUT's controllers: a host connects, each layer's volume, cutoff and pan on its channel
+  press(B.GLO); press(B.GLO); press(B.GLO); run(0.1);        // (from STYLE: LIVE, SONG, back HOME)
+  while (w.web_midi_out_next()) {}
+  w.web_usb_host(1); run(0.3);
+  const cc = () => { const o = {}; for (let p; (p = w.web_midi_out_next()); ) if (((p >> 8) & 0xf0) === 0xb0) o[`${((p >> 8) & 15) + 1}:${(p >> 16) & 0xff}`] = p >>> 24; return o; };
+  let c = cc();
+  check("MIDI OUT: CC7 74 10 on 1 2 3, CC7 on 10, as a host connects",
+        [1, 2, 3].every((ch) => c[`${ch}:7`] === 88 && c[`${ch}:74`] !== undefined && c[`${ch}:10`] !== undefined) && c["10:7"] === 88 && c["10:74"] === undefined);
+  run(0.5);
+  check("MIDI OUT: nothing changed, nothing sent", Object.keys(cc()).length === 0);
+  press(B.GLO); run(0.1);                                    // the MIXER: LEAD's volume down
+  w.web_enc(EN.K1, -10); run(0.2);
+  c = cc();
+  check(`MIDI OUT: LEAD's volume turned, CC7 on 1 (${c["1:7"]})`, c["1:7"] === 63 && c["2:7"] === undefined);
 }
 
 console.log(fails ? `sardine emu: ${fails} FAILED` : "sardine emu: all passed");

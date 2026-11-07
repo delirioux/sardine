@@ -496,3 +496,6 @@ EXPORT void web_test_solo(uint32_t slot, uint32_t sound, uint32_t pat)
     sa_g.s.patb[slot] = 0;
     sa_sound_now(&sa_g, (int)slot, (int)sound);
 }
+/* (the test: MIDI OUT) a host on the USB, and what went out to it, a USB-MIDI packet at a time (0: none) */
+EXPORT void web_usb_host(uint32_t on) { usb.config = (uint8_t)(on ? 1u : 0u); if (on) midi_links++; }
+EXPORT uint32_t web_midi_out_next(void) { return mo_r == mo_w ? 0u : midi_out_q[mo_r++ % MQ]; }

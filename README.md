@@ -39,7 +39,8 @@ second colour, until SEQ drops them in on the one.
   one by one (ARP), a filter SWEEP (LFO)
 - Held from any page: WASH (OCT-), THROW (OCT+), TAPE STOP (EDIT), WOBBLE (REC); a tap still does the button's job
 - A MIXER on GLO: every layer's volume, mute and solo on the knobs
-- MIDI OUT over USB, a channel for each layer (or OFF), and a page that shows what goes out
+- MIDI OUT over USB, a channel for each layer (or OFF): the notes as they play, with each layer's volume, cutoff and pan
+  as CCs (7, 74, 10), and a page that shows what goes out
 - The synth layers pump under the kick (PUMP), with REVERB, DELAY and WIDTH for the space they sit in
 - GATE cuts a held pad to a rhythm; PAN sweeps; 3D puts a layer in front, behind, above or flying around you (on headphones)
 - The keys play the layer you are on, lit with what it plays; on DRUMS they play the drum you picked
@@ -60,7 +61,7 @@ second colour, until SEQ drops them in on the one.
 
 ## Install
 
-Version 0.8.28: [install it on the FM-1](https://delirioux.github.io/sardine/install/) from Chrome or Edge (Web MIDI), with
+Version 0.8.29: [install it on the FM-1](https://delirioux.github.io/sardine/install/) from Chrome or Edge (Web MIDI), with
 the FM-1 on USB, or [try it in the browser](https://delirioux.github.io/sardine/try/) first. The `dev` branch's test
 build: [install](https://delirioux.github.io/sardine/dev/install/), [try](https://delirioux.github.io/sardine/dev/try/).
 Installing firmware is at your own risk; Felucca's [installer](https://hugelton.github.io/Felucca/webapp/installer/)

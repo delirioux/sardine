@@ -96,6 +96,66 @@ static void sa_sound(void *ctx, const sa_event *e)
     }
 }
 
+/* (0.8.29) MIDI OUT's controllers, on each layer's channel, as the layer sounds: CC7 its volume (LEVEL, mute, SOLO,
+ * a STYLE MIX's fade; DRUMS the MIXER's DRUMS), CC74 a synth layer's cutoff (CUTOFF, FILTER, SWEEP, WOBBLE, the fills'
+ * dip, 3D), CC10 its pan (PAN, 3D). Sent when one changes, at most every 10 ms, from the main loop; all again when a
+ * host connects or a channel changes. The pump is not sent (a DAW's sidechain does that) */
+static uint8_t sa_cc_last[4][3], sa_cc_ch[4];
+static uint32_t sa_cc_ms, sa_cc_link;
+static void sa_midi_cc(void)
+{
+    static const uint8_t CC[3] = {7, 74, 10};
+    if (fm1_ms - sa_cc_ms < 10u)
+        return;
+    sa_cc_ms = fm1_ms;
+    if (midi_out_link() != sa_cc_link) {                     /* (a host anew: everything again) */
+        sa_cc_link = midi_out_link();
+        memset(sa_cc_last, 0xFF, sizeof sa_cc_last);
+    }
+    const sa_settings *s = &sa_g.s;
+    for (int l = 0; l < 4; ++l) {
+        uint8_t ch = sa_u.midi_ch[l];
+        if (ch != sa_cc_ch[l]) {
+            sa_cc_ch[l] = ch;
+            memset(sa_cc_last[l], 0xFF, sizeof sa_cc_last[l]);
+        }
+        if (!ch || ch > 16)
+            continue;
+        int v[3] = {-1, -1, -1};
+        bool solo_out = sa_g.solo && !((sa_g.solo >> l) & 1u);
+        if (l < 3) {
+            const sa_code *c = &s->code[l];
+            if (c->type != SA_T_SYNTH || c->part >= SA_SYNTHS)
+                continue;
+            int p = c->part;
+            float gn = sa_g.mx_state ? sa_g.mx_gain[l] : 1.0f;
+            v[0] = s->live[l].mute || solo_out ? 0 : (int)((float)(s->live[l].level * 127 / 100) * gn + 0.5f);
+            const sas_sound *snd = sas_of(c->sound);
+            if (snd->bright >= 0 && sa_loaded[p] == c->sound) {
+                int base = sa_base[p].bright < 24 ? 24 : sa_base[p].bright;
+                v[1] = trk[p].p[P_E0 + snd->bright] * 127 / base;
+            }
+            v[2] = trk[p].p[P_PAN] + 64;
+        } else {
+            v[0] = s->dmute || solo_out ? 0 : s->dvol * 127 / 100;
+        }
+        for (int k = 0; k < 3; ++k) {
+            if (v[k] < 0)
+                continue;
+            uint8_t x = (uint8_t)(v[k] > 127 ? 127 : v[k]);
+            if (x == sa_cc_last[l][k])
+                continue;
+            if (midi_out_room() < 16u)                       /* (the notes first: tried again next time) */
+                return;
+            fm1_irq_off();
+            int ok = midi_out_try(0x0Bu | (0xB0u | (ch - 1u)) << 8 | (uint32_t)CC[k] << 16 | (uint32_t)x << 24);
+            fm1_irq_on();
+            if (ok)
+                sa_cc_last[l][k] = x;
+        }
+    }
+}
+
 static void sa_audio_pre(uint32_t n)
 {
     sa_process(&sa_g, (int)n);
@@ -873,6 +933,7 @@ static void sa_frame(void)
     sa_song();
     sa_moves();
     sa_apply();
+    sa_midi_cc();
     if (sa_wait_slot >= 0 && !sa_g.playing) {                /* a set stored while playing: now */
         int k = sa_wait_slot;
         sa_wait_slot = -1;
