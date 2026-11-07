@@ -209,6 +209,12 @@ int main(int argc, char **argv)
     sv_knob(&ui, SV_K1, 20);
     CHECK(ui.home2 && g.s.mreso == 40, "HOME, FX: RESO (%d)", g.s.mreso);
     shot("02c_home_reso");
+    press(SV_B_FX);                                /* (0.8.32) PARTS: PHRASE A/B EVOLVE */
+    CHECK(ui.home2 == 2, "FX again: HOME PARTS");
+    sv_knob(&ui, SV_K3, 2);
+    CHECK(g.s.evolve == 2, "EVOLVE: MORE");
+    shot("02d_home_parts");
+    sv_knob(&ui, SV_K3, -2);
     press(SV_B_FX);
     CHECK(!ui.home2, "FX again: FILTER FEEL PUMP SPACE");
     sv_knob(&ui, SV_K1, 0);
@@ -598,13 +604,22 @@ int main(int argc, char **argv)
     /* SEQ held a second: a whole new groove, as at power-on (asked of the glue) */
     {
         ui.req_act = -1;
+        CHECK(ui.page == SV_PG_MAIN, "(on HOME)");
+        sv_button(&ui, SV_B_SEQ, true);
+        run_ms(1100);
+        CHECK(ui.req_act == SV_SA_PART && !strcmp(ui.msg, g.part_b ? "NEW A" : "NEW B"),
+              "SEQ held a second on HOME: the part resting, new (%s)", ui.msg);
+        sv_button(&ui, SV_B_SEQ, false);
+        ui.req_act = -1;
+        to_view(SV_V_BASS);
         sv_button(&ui, SV_B_SEQ, true);
         run_ms(500);
         CHECK(ui.req_act < 0, "SEQ held half a second: nothing yet");
         run_ms(600);
-        CHECK(ui.req_act == SV_SA_NEW && !strcmp(ui.msg, "A NEW GROOVE"), "SEQ held a second: A NEW GROOVE");
+        CHECK(ui.req_act == SV_SA_NEW && !strcmp(ui.msg, "A NEW GROOVE"), "SEQ held a second on a layer: A NEW GROOVE");
         sv_button(&ui, SV_B_SEQ, false);
         ui.req_act = -1;
+        press(SV_B_HOME);
     }
     /* MOVES: a tap is the button's job; held past 300 ms a move, the button's job not done */
     {

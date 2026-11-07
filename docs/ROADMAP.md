@@ -1,6 +1,6 @@
 # The road to 1.0
 
-Sardine 0.8.31 has everything planned for 1.0. What is left is listening on the FM-1 and tuning what it shows.
+Sardine 0.8.32 has everything planned for 1.0. What is left is listening on the FM-1 and tuning what it shows.
 
 ## To check on the FM-1
 
@@ -17,6 +17,7 @@ Sardine 0.8.31 has everything planned for 1.0. What is left is listening on the 
 - The style leads (SOFT LEAD, FILTER LEAD, BLIP, DARK SAW, ACID LEAD, RUBBER, PLUCK LEAD, RAVE LEAD, SCREECH, DUB
   LEAD, STRING LEAD, PAN FLUTE, VOX CHOP): levelled by numbers only (tools/sa_lead_levels.mjs), not by ear; the
   vibrato's depth and speed
+- EVOLVE LIGHT and MORE over a long A/B run: does it stay the same track, moving? NEW on HOME (SEQ held)
 - STYLE MIX: the fades (smooth, no clicks), the kept bass in the new key's chords (a fifth up, or the relative key), the tempo glide, the bass swap
   at the end; GLO's tap now acting on letting go
 - The RAVE leads (STORM, TWISTER, BUZZSAW, SIREN, ZAPPER, WOBBLER, POWER, HYPERSAW, TORNADO, STROBE): their

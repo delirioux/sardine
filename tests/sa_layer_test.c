@@ -422,6 +422,33 @@ int main(void)
         CHECK(cue >= 1 && cue <= 4, "PART cued: on the phrase, %d bars left", cue);
         sa_part(&h, h.part_b);
         CHECK(sa_part_next(&h, 0) == 0, "nothing cued, A/B OFF: no change coming");
+        {   /* (0.8.32) EVOLVE: the part that goes to rest comes back other; NEW: all of the resting part */
+            static sa_settings rz;
+            sa_random(&rz, 11, &(sa_pool){0});
+            h.s = rz;
+            h.part_b = h.part_cue = false;
+            sa_edit_reset(&h);
+            sa_settings before = h.s;
+            h.s.evolve = 1;
+            h.s.abauto = 1;
+            bool was_b = h.part_b;
+            for (int b = 0; b < 9 && h.part_b == was_b; ++b) run_bars(&h, 1);
+            int diff = 0;
+            for (int l = 0; l < SA_LAYERS; ++l)
+                diff += was_b ? h.s.patb[l] != before.patb[l] : h.s.code[l].pat != before.code[l].pat;
+            CHECK(h.part_b != was_b && diff == 1 && !memcmp(h.ed, h.s.code, sizeof h.ed),
+                  "EVOLVE LIGHT: the part gone to rest, one layer new (%d), nothing left waiting", diff);
+            h.s.evolve = 0;
+            h.s.abauto = 0;
+            sa_part(&h, h.part_b);
+            before = h.s;
+            int n = sa_part_new(&h), d2 = 0;
+            for (int l = 0; l < SA_LAYERS; ++l)
+                d2 += h.part_b ? h.s.code[l].pat != before.code[l].pat : h.s.patb[l] != before.patb[l];
+            bool prog = h.part_b ? h.s.harm.prog != before.harm.prog : h.s.progb != before.progb;
+            CHECK(n >= 3 && d2 == n && prog && !memcmp(&h.s.code[SA_L_DRUM0], &before.code[SA_L_DRUM0], sizeof h.s.code[0]),
+                  "NEW: the resting part, %d layers and its chords, the kick left", n);
+        }
         sa_settings z;
         sa_random(&z, 7, &(sa_pool){0});
         CHECK(z.progb != 0 && z.patb[BS] != 0 && z.patb[BS] != z.code[BS].pat + 1, "a fresh groove has a B");

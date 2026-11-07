@@ -166,9 +166,11 @@ typedef struct {
      * step up in its second half, bar 4 an answer on the root and space at its end) */
     uint8_t patb[SA_LAYERS];
     uint8_t progb, phrase, abauto;
+    uint8_t evolve;                                 /* 0.8.32, EVOLVE: 0 OFF, 1 LIGHT, 2 MORE (a part renewed as it rests) */
 } sa_settings;
 #define SA_PATB_OFF 255
 #define SA_ABAUTOS 3
+#define SA_EVOLVES 3
 
 typedef struct {
     uint8_t on, part, note, vel;                    /* part 3: note is a General MIDI drum note */
@@ -294,7 +296,10 @@ const char *sa_build_name(const sa_groove *g, int l);   /* a layer's name in the
 int sa_build_peek(const sa_groove *g);              /* the next layer the build brings in, -1 none */
 void sa_part(sa_groove *g, bool b);                 /* PART A or B: playing, on the next phrase (4 bars); stopped, at once */
 int sa_ab_bars(int i);                              /* A/B by itself: 0 OFF, 8, 16 */
-int sa_part_next(const sa_groove *g, bool *to_b);  /* bars before PART changes (1: the last), 0: none coming */
+int sa_part_next(const sa_groove *g, bool *to_b);
+/* (0.8.32) the part resting (the one not playing) renewed: fresh lines in its kind on every layer it can (not its own
+ * edits, not what waits for SEQ), new chords; returns the layers renewed. EVOLVE does one or two on each turn */
+int sa_part_new(sa_groove *g);  /* bars before PART changes (1: the last), 0: none coming */
 #define SA_INTROS 4                                 /* INTRO: OFF, 4, 8, 16 bars */
 #define SA_ARCS 4                                   /* ARC: OFF, 16, 32, 64 bars */
 int sa_intro_bars(int i);

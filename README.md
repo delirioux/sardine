@@ -27,7 +27,8 @@ second colour, until SEQ drops them in on the one.
 **Tunes, not loops**
 
 - The synth layers phrase over four bars (A A A' B): bar 3 lifts, bar 4 answers on the root and leaves room for the fill
-- Every groove has a PART B, its own lines and chords: ALGORITHM on HOME, or by itself every 8 or 16 bars
+- Every groove has a PART B, its own lines and chords: ALGORITHM on HOME, or by itself every 8 or 16 bars; EVOLVE
+  reworks each part while it rests, so it never loops the same
 - LIVE: a mix built by hand, from the kick alone or a soft pad, a layer at a time on SEQ (or every 8 or 16 bars)
 - STYLE MIX (GLO held): blend into another style like a DJ: keep the bass or kick, fade the rest out, the new style in
 - Twenty styles, from NIGHT (slow and dark) to GABBER, a groove in one press; INTRO builds it up, ARC drops and lifts it
@@ -61,7 +62,7 @@ second colour, until SEQ drops them in on the one.
 
 ## Install
 
-Version 0.8.31: [install it on the FM-1](https://delirioux.github.io/sardine/install/) from Chrome or Edge (Web MIDI), with
+Version 0.8.32: [install it on the FM-1](https://delirioux.github.io/sardine/install/) from Chrome or Edge (Web MIDI), with
 the FM-1 on USB, or [try it in the browser](https://delirioux.github.io/sardine/try/) first. The `dev` branch's test
 build: [install](https://delirioux.github.io/sardine/dev/install/), [try](https://delirioux.github.io/sardine/dev/try/).
 Installing firmware is at your own risk; Felucca's [installer](https://hugelton.github.io/Felucca/webapp/installer/)
@@ -85,7 +86,7 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
 | FX | the layer's next page |
 | SELECT | the tempo |
 | ALGORITHM | the layer's pattern (waits for SEQ); on HOME: PART A or B |
-| SEQ | drops what waits, on the next bar line; in a LIVE build, the next layer; held: a whole new groove |
+| SEQ | drops what waits, on the next bar line; in a LIVE build, the next layer; held: a whole new groove (on HOME: the part resting new) |
 | EDIT (or REC) | the pattern editor: the only place the keys change a pattern |
 | SCL / SAVE | the key and the chords / the sets |
 | ENV / ARP / LFO | held: fill / BREAK / SWEEP |

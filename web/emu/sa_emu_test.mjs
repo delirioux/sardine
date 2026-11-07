@@ -137,8 +137,14 @@ const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice
   const g0 = w.web_da_groove();
   press(B.SEQ); run(0.3);
   check(`STYLE: SEQ, a groove in it (${w.web_da_bpm()} BPM)`, w.web_da_groove() !== g0 && w.web_da_bpm() >= 170 && w.web_da_bpm() <= 180);
+  // (0.8.32) SEQ held a second on HOME: the part resting (B, while A plays) new, the groove playing as it is
+  {
+    press(B.GLO); press(B.GLO); press(B.GLO); run(2);        // (from STYLE: LIVE, SONG, back HOME; the style in)
+    const a0 = w.web_da_groove(), b0 = w.web_da_partb();
+    w.web_buttons(1 << B.SEQ); run(1.3); w.web_buttons(0); run(0.3);
+    check("HOME, SEQ held: the part resting new, the one playing as it is", w.web_da_partb() !== b0 && w.web_da_groove() === a0);
+  }
   // (0.8.29) MIDI OUT's controllers: a host connects, each layer's volume, cutoff and pan on its channel
-  press(B.GLO); press(B.GLO); press(B.GLO); run(0.1);        // (from STYLE: LIVE, SONG, back HOME)
   while (w.web_midi_out_next()) {}
   w.web_usb_host(1); run(0.3);
   const cc = () => { const o = {}; for (let p; (p = w.web_midi_out_next()); ) if (((p >> 8) & 0xf0) === 0xb0) o[`${((p >> 8) & 15) + 1}:${(p >> 16) & 0xff}`] = p >>> 24; return o; };

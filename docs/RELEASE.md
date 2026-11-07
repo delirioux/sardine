@@ -1,4 +1,4 @@
-Sardine 0.8.31: live club mixing for the FM-1.
+Sardine 0.8.32: live club mixing for the FM-1.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
   through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, ARP, PAN, PAN 3D, PUMP, GATE, MOD; DRUMS: MIX, KIT, MOD), HOME back to them all
@@ -18,7 +18,8 @@ Sardine 0.8.31: live club mixing for the FM-1.
 - GLO: a MIXER, the four layers' volumes, mutes and solos; STYLE; SONG, eight steps of sets played in turn
 - Phrases: the synth layers over four bars, A A A' B (a lift in bar 3, an answer on the root in bar 4); PART A and B,
   each layer's second line and a progression of its own, on HOME's ALGORITHM or by themselves every 8 or 16 bars; a
-  badge (A>B, B>A) blinks on the beats two bars before the change, on the eighths in the last bar
+  badge (A>B, B>A) blinks on the beats two bars before the change, on the eighths in the last bar; EVOLVE (LIGHT,
+  MORE) reworks a part while it rests; SEQ held on HOME renews the resting part at once
 - SELECT is the tempo, ALGORITHM the pattern; SEQ drops what waits on the one; REC records steps on the keys
 - DRUMS: seven rows on channels of their own (KICK SNARE CLAP HATS TOMS RIM PERC), each drum switched at once, in eight variations (TIGHT ROOM HIGH LOW, 80 10 DEEP);
   VOLUME and ACCENT per row, CHANCE beside the modifiers; the kit's TUNE, TONE and DECAY on its KIT page

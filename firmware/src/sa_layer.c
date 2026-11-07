@@ -1175,6 +1175,7 @@ void sa_settings_fix(sa_settings *s)
             s->code[l].sound = SA_DV_TAMB;
     s->phrase = (uint8_t)(s->phrase ? 1 : 0);
     s->abauto = (uint8_t)(s->abauto % SA_ABAUTOS);
+    s->evolve = (uint8_t)(s->evolve % SA_EVOLVES);
     if (s->progb > SA_PROGS) s->progb = 0;
     for (int l = 0; l < SA_LAYERS; ++l) {
         int t = s->code[l].type == SA_T_DRUM ? sa_drum_pats() : sa_synth_pats();
@@ -1350,6 +1351,70 @@ void sa_make_b(sa_settings *s, uint32_t seed)
         if (p >= 0 && p != h->pat) s->patb[SA_L_DRUM0 + SA_DR_HATS] = (uint8_t)(p + 1);
     }
     s->progb = (uint8_t)((s->harm.prog + 1 + rnd(&r, SA_PROGS - 1)) % SA_PROGS + 1);
+}
+
+/* ---- EVOLVE (0.8.32): a part renewed while it rests ---- */
+static int other_drum(uint32_t *r, const char *const *names, int n, int cur)
+{
+    int c[16], m = 0;
+    for (int i = 0; i < n && i < 16; ++i) {
+        int p = pat_find(SA_T_DRUM, names[i]);
+        if (p != cur && streq(DPAT[p].name, names[i])) c[m++] = p;
+    }
+    return m ? c[rnd(r, m)] : -1;
+}
+/* a layer of the part (b: B) its new line; false: none to give */
+static bool renew_layer(sa_groove *g, int l, bool b, uint32_t *r)
+{
+    static const char *const HATS2[] = {"OFFBEAT", "16THS", "SKIP", "8THS", "SHUFFLE"};
+    static const char *const EXTRA[] = {"SYNCO", "CLAVE", "TRESILLO", "UPBEATS", "SPARSE", "GALLOP"};
+    sa_settings *s = &g->s;
+    sa_code *c = &s->code[l];
+    if (c->type == SA_T_NONE || c->own || sa_layer_pending(g, l)) return false;
+    int cur = b && s->patb[l] && s->patb[l] != SA_PATB_OFF ? s->patb[l] - 1 : c->pat;
+    if (cur == SA_PAT_OFF || (b && s->patb[l] == SA_PATB_OFF)) return false;   /* (OFF stays OFF: it is the mix's) */
+    int n = -1;
+    if (l == SA_L_LEAD) n = other_in(r, LEADS, NL(LEADS), cur);
+    else if (l == SA_L_BASS) n = other_in(r, BASS, NL(BASS), cur);
+    else if (l == SA_L_CHORD) {
+        int pad = 0;
+        for (int i = 0; i < NL(PADS); ++i) pad |= pat_find(SA_T_SYNTH, PADS[i]) == cur;
+        n = pad ? other_in(r, PADS, NL(PADS), cur) : other_in(r, STABS, NL(STABS), cur);
+    } else if (l == SA_L_DRUM0 + SA_DR_HATS) n = other_drum(r, HATS2, NL(HATS2), cur);
+    else if (l >= SA_L_DRUM0 + SA_DR_TOMS) n = other_drum(r, EXTRA, NL(EXTRA), cur);   /* (TOMS RIM PERC; the kick,
+                                                     * the snare and the clap are the backbone: left) */
+    if (n < 0 || n == cur) return false;
+    if (b) g->s.patb[l] = g->ed_patb[l] = (uint8_t)(n + 1);
+    else c->pat = g->ed[l].pat = (uint8_t)n;
+    return true;
+}
+/* up to n of the resting part's layers, picked at random; chords: its progression too */
+static int part_renew(sa_groove *g, bool b, int n, bool chords, uint32_t seed)
+{
+    uint32_t r = seed * 2654435761u ^ 0x5BD1E995u;
+    if (!r) r = 1;
+    int order[SA_LAYERS], m = 0, done = 0;
+    for (int l = 0; l < SA_LAYERS; ++l) order[m++] = l;
+    for (int i = m - 1; i > 0; --i) { int j = rnd(&r, i + 1), t = order[i]; order[i] = order[j]; order[j] = t; }
+    for (int i = 0; i < m && done < n; ++i) done += renew_layer(g, order[i], b, &r);
+    if (chords) {
+        sa_harm *h = &g->s.harm;
+        if (b) {
+            int cur = g->s.progb ? g->s.progb - 1 : h->prog;
+            if (g->ed_progb == g->s.progb)
+                g->s.progb = g->ed_progb = (uint8_t)((cur + 1 + rnd(&r, SA_PROGS - 1)) % SA_PROGS + 1);
+        } else if (!memcmp(&g->ed_harm, h, sizeof *h)) {
+            h->prog = (uint8_t)((h->prog + 1 + rnd(&r, SA_PROGS - 1)) % SA_PROGS);
+            g->ed_harm.prog = h->prog;
+        }
+    }
+    return done;
+}
+int sa_part_new(sa_groove *g)
+{
+    int n = part_renew(g, !g->part_b, SA_LAYERS, true, g->clock * 2246822519u + (uint32_t)g->bar * 977u + 7u);
+    g->sound_sig++;
+    return n;
 }
 
 void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p)
@@ -1891,9 +1956,17 @@ static void bar_line(sa_groove *g)
         int ab = sa_ab_bars(g->s.abauto);
         if (ab && g->bar > 0 && g->bar % ab == 0) g->part_cue = !g->part_b;
         if (g->part_cue != g->part_b) {
+            bool rest = g->part_b;                 /* (the part that goes to rest) */
             g->part_b = g->part_cue;
             for (int l = 0; l < SA_LAYERS; ++l) g->arp_i[l] = 0;
             msg(g, g->part_b ? "PART B" : "PART A");
+            if (g->s.evolve) {                     /* EVOLVE: it comes back other: LIGHT a layer, MORE two (and now
+                                                    * and then its chords) */
+                uint32_t sd = (uint32_t)g->bar * 2654435761u + g->clock;
+                bool ch = g->s.evolve == 2 && (sd >> 7) % 2u == 0;
+                part_renew(g, rest, g->s.evolve == 2 ? 2 : 1, ch, sd);
+                msg(g, g->part_b ? "PART B, A EVOLVES" : "PART A, B EVOLVES");
+            }
         }
     }
     mix_bar(g);

@@ -299,12 +299,20 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
     char t[20];
     switch (u->page) {
     case SV_PG_MAIN:
-        if (u->home2) {                            /* HOME, FX: the whole mix's RESO and WIDTH */
+        if (u->home2 == 1) {                       /* HOME, FX: SPACE, the whole mix's RESO and WIDTH */
             sv_card_num(&c[0], "RESO", s->mreso, 0, 100);
             sv_card_num(&c[1], "WIDTH", s->width, 0, 100);
-            sv_card_txt(&c[2], "PHRASE", s->phrase ? "OFF" : "ON", s->phrase ? 0 : 1000, false);
+            sv_card_off(&c[2]);
+            sv_card_off(&c[3]);
+            return;
+        }
+        if (u->home2 == 2) {                       /* HOME, FX twice: PARTS (0.8.32) */
             static const char *const AB[SA_ABAUTOS] = {"OFF", "8 BARS", "16 BARS"};
-            sv_card_txt(&c[3], "A/B", AB[s->abauto % SA_ABAUTOS], s->abauto * 500, false);
+            static const char *const EV[SA_EVOLVES] = {"OFF", "LIGHT", "MORE"};
+            sv_card_txt(&c[0], "PHRASE", s->phrase ? "OFF" : "ON", s->phrase ? 0 : 1000, false);
+            sv_card_txt(&c[1], "A/B", AB[s->abauto % SA_ABAUTOS], s->abauto * 500, false);
+            sv_card_txt(&c[2], "EVOLVE", EV[s->evolve % SA_EVOLVES], s->evolve * 500, false);
+            sv_card_off(&c[3]);
             return;
         }
         sv_card_txt(&c[0], "FILTER", s->filter >= 100 ? "OPEN" : "", s->filter * 10, false);
@@ -619,7 +627,7 @@ static void sv_head_title(const sa_ui *u, char *t, unsigned n)
     if (u->msg_ms > 0) { sv_cpy(t, u->msg, n); return; }
     switch (u->page) {
     case SV_PG_MAIN:
-        sv_cpy(t, u->home2 ? "HOME  SPACE" : u->g->playing ? u->g->chord_name : "HOME", n);
+        sv_cpy(t, u->home2 == 1 ? "HOME  SPACE" : u->home2 == 2 ? "HOME  PARTS" : u->g->playing ? u->g->chord_name : "HOME", n);
         sv_cat(t, u->g->part_b ? "  B" : u->g->part_cue ? "  >B" : "  A", n);
         if (u->g->part_b && !u->g->part_cue) sv_cat(t, ">A", n);
         break;
@@ -723,7 +731,7 @@ static void sv_draw_foot(sa_ui *u)
         sv_cpy(r, "FX: ", sizeof r);
         sv_cat(r, sv_page_name(pg[(sv_clampi(u->fx, 0, np - 1) + 1) % np]), sizeof r);
     } else if (u->page == SV_PG_MAIN) {
-        sv_cpy(r, u->home2 ? "FX: FILTER" : "FX: RESO", sizeof r);
+        sv_cpy(r, u->home2 == 2 ? "FX: FILTER" : u->home2 == 1 ? "FX: PARTS" : "FX: RESO", sizeof r);
     } else if (u->page == SV_PG_EDIT) {
         sv_cpy(r, "KEYS: WRITE", sizeof r);
     } else if (u->page == SV_PG_MIXER) {
@@ -1663,7 +1671,7 @@ static void sv_view(sa_ui *u, int v)
     u->fx = 0;
     u->rec = false;
     u->force = true;
-    u->home2 = false;
+    u->home2 = 0;
     if (v == SV_V_HOME) {
         u->page = SV_PG_MAIN;
         u->layer = -1;
@@ -1900,11 +1908,15 @@ void sv_knob(sa_ui *u, int k, int d)
     switch (u->page) {
     case SV_PG_MAIN:
         u->changed = true;
-        if (u->home2) {
+        if (u->home2 == 1) {
             if (i == 0) s->mreso = (uint8_t)sv_clampi(s->mreso + d * 2, 0, 100);
             else if (i == 1) s->width = (uint8_t)sv_clampi(s->width + d * 2, 0, 100);
-            else if (i == 2) s->phrase = (uint8_t)(d > 0 ? 0 : 1);
-            else s->abauto = (uint8_t)sv_clampi(s->abauto + d, 0, SA_ABAUTOS - 1);
+            return;
+        }
+        if (u->home2 == 2) {
+            if (i == 0) s->phrase = (uint8_t)(d > 0 ? 0 : 1);
+            else if (i == 1) s->abauto = (uint8_t)sv_clampi(s->abauto + d, 0, SA_ABAUTOS - 1);
+            else if (i == 2) s->evolve = (uint8_t)sv_clampi(s->evolve + d, 0, SA_EVOLVES - 1);
             return;
         }
         if (i == 0) s->filter = (uint8_t)sv_clampi(s->filter + d * 2, 0, 100);
@@ -2261,8 +2273,8 @@ void sv_button(sa_ui *u, int b, bool down)
         }
         break;
     case SV_B_FX:
-        if (u->page == SV_PG_MAIN) {               /* HOME: its second page, RESO WIDTH */
-            u->home2 = !u->home2;
+        if (u->page == SV_PG_MAIN) {               /* HOME: its pages, SPACE and PARTS */
+            u->home2 = (u->home2 + 1) % 3;
             u->force = true;
             break;
         }
@@ -2454,9 +2466,14 @@ void sv_tick(sa_ui *u, int ms)
     if (u->main_ms > 0) u->main_ms -= ms;
     if (u->seq_down && !u->seq_fired && (u->seq_ms += ms) >= SV_NEW_MS && u->req_act < 0) {   /* SEQ held: NEW */
         u->seq_fired = true;
-        u->req_act = SV_SA_NEW;
         u->req_slot = 0;
-        sv_msg(u, "A NEW GROOVE");
+        if (u->page == SV_PG_MAIN) {               /* (0.8.32) on HOME: the part resting, new */
+            u->req_act = SV_SA_PART;
+            sv_msg(u, g->part_b ? "NEW A" : "NEW B");
+        } else {
+            u->req_act = SV_SA_NEW;
+            sv_msg(u, "A NEW GROOVE");
+        }
     }
     for (int mv = 0; mv < SV_MOVES; ++mv)          /* MOVES: held long enough */
         if ((u->hb_down >> mv) & 1u && !((u->moves >> mv) & 1u) && (u->hb_ms[mv] += ms) >= SV_MOVE_MS) {

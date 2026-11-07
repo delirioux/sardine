@@ -58,7 +58,8 @@ enum { SVP_HOME, SVP_SOUND, SVP_ARP, SVP_PAN, SVP_GATE, SVP_MOD, SVP_MIX, SVP_KI
 #define SV_SETS 8
 #define SV_LAST SV_SETS                       /* the ninth slot: the last groove, kept by itself (LOAD only) */
 #define SV_SLOTS (SV_SETS + 1)
-enum { SV_SA_LOAD, SV_SA_STORE, SV_SA_NEW, SV_SA_CLEAR, SV_SA_ACTS, SV_SA_STYLE = 9, SV_SA_LIVE = 10, SV_SA_MIX = 11 };   /* (STYLE, LIVE, STYLE MIX:
+enum { SV_SA_LOAD, SV_SA_STORE, SV_SA_NEW, SV_SA_CLEAR, SV_SA_ACTS, SV_SA_STYLE = 9, SV_SA_LIVE = 10, SV_SA_MIX = 11,
+       SV_SA_PART = 12 };   /* (STYLE, LIVE, STYLE MIX:
                                                                                                   * GLO's pages) */
 typedef struct {
     uint8_t used, bpm, key, scale, kit, nsyn;
@@ -103,7 +104,8 @@ typedef struct {
     int drow;                             /* DRUMS: the row picked (the last one: + ADD) */
     int back;                             /* the page KEY goes back to */
     int mback;                            /* the page the MIXER goes back to */
-    bool home2;                           /* HOME's second page (FX): RESO, WIDTH */
+    int home2;                            /* HOME's page (FX turns them): 0 FILTER FEEL PUMP SPACE, 1 SPACE (RESO, WIDTH),
+                                           * 2 PARTS (PHRASE, A/B, EVOLVE) */
     bool menu2;                           /* MENU's second page (FX): MIDI */
     uint8_t midi_ch[4];                   /* MIDI: the channel each layer sends on (LEAD CHORD BASS DRUMS): 0 OFF, 1..16
                                            * (the glue keeps them with the preferences) */

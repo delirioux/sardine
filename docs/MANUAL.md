@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.31. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.32. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -17,7 +17,7 @@ into one of eight sets (SAVE, below).
 | FX | the layer's next page; past the last, back to its home page |
 | SELECT | the tempo, everywhere |
 | ALGORITHM | the layer's pattern (OFF first); it waits for SEQ. On HOME: PART A or B |
-| SEQ | drops what waits, on the next bar line (stopped: at once); nothing waiting, a LIVE build: its next layer in; held a second: **a whole new groove**, as at power-on (on the next 1) |
+| SEQ | drops what waits, on the next bar line (stopped: at once); nothing waiting, a LIVE build: its next layer in; held a second: **a whole new groove**, as at power-on (on the next 1); on HOME: **the part resting new** (below) |
 | REC | on a layer: its EDIT (on GATE: the gate's steps on the keys); held: WOBBLE (below) |
 | SCL | the key and the chords, again: back |
 | SAVE | the sets, again: back |
@@ -58,7 +58,8 @@ shows its sound dimmed and OFF, a muted one is crossed out. The knobs act at onc
 (the swing of the off sixteenths), **PUMP** (how deep the synth layers duck under the kick; each layer's own share on its PUMP page) and **SPACE** (the room:
 reverb and delay together; at 70 each sound has its own). **FX** on HOME turns the knobs over to **RESO** (resonance on the whole mix's
 filter, over each synth layer's own: ride FILTER down with it up for the filter-house sweep) and **WIDTH** (the stereo
-spread, 70: each sound's own), **PHRASE** and **A/B** (below); FX again back.
+spread, 70: each sound's own) on **HOME SPACE**; FX again **HOME PARTS**: **PHRASE**, **A/B** and **EVOLVE** (below);
+FX again back.
 
 ### Phrases, PART A and B
 
@@ -74,6 +75,14 @@ stopped, at once. **A/B** (HOME, FX) OFF, 8 or 16 bars: the parts take turns by 
 ALGORITHM on a layer page picks that layer's B line (the top shows it) and KEY's third knob is **B CHORDS**; both wait for
 SEQ like any pattern. An edited (own) pattern is A's; B plays its line, or A's when B is "as A". An older set
 gets a B made from its A when it loads. PART goes back to A when a set comes in.
+
+**Keeping it moving.** **EVOLVE** (HOME PARTS) OFF, LIGHT or MORE: each time a part goes to rest it is reworked while
+it is silent, so it comes back other: LIGHT one layer a new line of its kind (LEAD, CHORD, BASS, the hats, or the toms,
+rim or perc row), MORE two, and now and then new chords. The kick, snare and clap stay (the backbone), and so do your own
+edited patterns, layers waiting for SEQ and layers that are OFF. With A/B every 8 bars and EVOLVE on, it never loops
+the same. **SEQ held a second on HOME** does it all at once, by hand: the part resting (B while A plays, A while B
+plays) gets new lines on every layer it can, and new chords (the header: NEW B). If no change is coming it says CUE IT:
+ALGORITHM on HOME cues it, or A/B brings it. SEQ held on any other page is still a whole new groove.
 
 When PART is about to change (cued, or A/B by itself), a badge at the top of every page says which way, **A>B** or
 **B>A**: two bars before, it blinks on the beats; in the last bar, on the eighths. The next 1 is the change.

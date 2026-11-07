@@ -351,6 +351,17 @@ static void sa_prefs_load(void)
 static void sa_set_do(int act, int k)
 {
     char m[32];
+    if (act == SV_SA_PART) {                                 /* (0.8.32) SEQ held on HOME: the part resting, new */
+        fm1_irq_off();
+        int n = sa_part_new(&sa_g);
+        bool b = !sa_g.part_b, coming = sa_part_next(&sa_g, 0) > 0;
+        fm1_irq_on();
+        sv_cpy(m, n ? (b ? "NEW B" : "NEW A") : "NOTHING TO RENEW", sizeof m);
+        if (n && !coming) sv_cat(m, ": CUE IT", sizeof m);
+        sv_msg(&sa_u, m);
+        sa_u.changed = true;
+        return;
+    }
     if (act != SV_SA_STORE && act != SV_SA_CLEAR) {          /* (a STYLE MIX playing: over before sa_next is written) */
         fm1_irq_off();
         sa_mix_end(&sa_g);
