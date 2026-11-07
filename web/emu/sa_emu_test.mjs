@@ -155,6 +155,20 @@ const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice
     check(`HYPNO: the kick on the chord's root (${[...seen].map(([pc, st]) => pc + ":" + st).join(" ")})`, ok && seen.size >= 2);
     press(B.PLAY); run(0.2);
   }
+  // (0.8.36) a key plays one note: Sardine's, in the scale (Felucca's own keyboard silent)
+  {
+    w.web_usb_host(1); run(0.2);
+    while (w.web_midi_out_next()) {}
+    let twice = 0;
+    for (let k = 0; k < 27; k++) {
+      w.web_keys(1 << k); run(0.1);
+      let n = 0; for (let p; (p = w.web_midi_out_next()); ) if (((p >> 8) & 0xf0) === 0x90 && (p >>> 24)) n++;
+      w.web_keys(0); run(0.1);
+      while (w.web_midi_out_next()) {}
+      twice += n !== 1;
+    }
+    check(`the keys: one note each (${twice} of 27 not)`, twice === 0);
+  }
   // (0.8.29) MIDI OUT's controllers: a host connects, each layer's volume, cutoff and pan on its channel
   while (w.web_midi_out_next()) {}
   w.web_usb_host(1); run(0.3);

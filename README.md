@@ -17,7 +17,7 @@ All sounds are synthesised; no samples.
 
 ## Try it, install it
 
-Version 0.8.35:
+Version 0.8.36:
 
 - **[Try it in the browser](https://delirioux.github.io/sardine/try/)**: the whole firmware, the FM-1's screen and
   controls, sound and all, before you install anything.
