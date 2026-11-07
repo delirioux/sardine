@@ -39,7 +39,12 @@ typedef struct {
     uint8_t wide, rev, dly;               /* the stereo spread of its voices, its reverb and delay sends (0: its role's) */
     uint8_t vib;                          /* (0.8.23) a vibrato that fades in after the note's start: the LFO's pitch
                                            * depth (1: +-19 cents, 2: +-38), 5.4 Hz, a third of a second in; 0 none */
+    const struct sas_motion *mo;          /* (0.8.24) a RAVE sound's movement (0: none) */
 } sas_sound;
+/* (0.8.24) what moves in a RAVE sound: the envelope's pitch and shape depth (the pitch only on sounds without a
+ * sustain: it ends on the note), the LFO (its tempo SYNC as Felucca's: 1 4BAR 2 2BAR 3 1/1 4 1/2 5 1/4 6 1/8 7 8T
+ * 8 1/16 9 16T 10 1/32; its wave 0 SIN 1 TRI 2 SAW 3 SQR 4 S&H) onto the filter, the shape (PWM, the sync) and the level */
+typedef struct sas_motion { int8_t epit, eshp; uint8_t lsync, lwave; int8_t lflt, lshp; uint8_t lamp; } sas_motion;
 
 /* ---- the own sounds (Felucca's preset layout: {name, E0..E7, ATK DEC SUS REL, ENV->FLT, mono, FX(dist, chorus,
  * delay, reverb)}; ANALOG's E: WAVE DTN MIX NOIS CUT RES DRV KTR). Sill's, as they are ---- */
@@ -92,6 +97,26 @@ static const preset_t SAS_PANFLUTE = {"PAN FLUTE", {3, 0, 0, 22, 90, 10, 0, 64},
 static const preset_t SAS_SCREECH = {"SCREECH", {0, 18, 64, 0, 96, 40, 90, 64}, {0, 60, 100, 25}, 10, 1, FX(40, 0, 30, 25)};
 static const preset_t SAS_VOXCHOP = {"VOX CHOP", {64, 20, 30, 0, 90, 20, 80, 40}, {0, 50, 30, 30}, 0, 1, FX(0, 20, 60, 40)};
 static const preset_t SAS_TRIOACID = {"RUBBER", {2, 0, 0, 3, 0, 46, 100, 40}, {0, 52, 40, 25}, 50, 1, FX(15, 0, 55, 20)};
+/* (0.8.24) RAVE: ten wild ones, detuned squares and saws that stab, gate, sweep and scream */
+static const preset_t SAS_STORM = {"STORM", {1, 16, 64, 0, 100, 30, 45, 64}, {0, 56, 0, 18}, 34, 1, FX(25, 30, 70, 30)};
+static const preset_t SAS_TWISTER = {"TWISTER", {1, 16, 64, 0, 96, 30, 45, 64}, {0, 64, 110, 20}, 20, 1, FX(20, 30, 60, 30)};
+static const preset_t SAS_BUZZSAW = {"BUZZSAW", {4, 20, 64, 0, 100, 25, 70, 64}, {0, 64, 110, 20}, 16, 1, FX(30, 20, 40, 25)};
+static const preset_t SAS_SIREN = {"SIREN", {5, 40, 127, 0, 110, 20, 50, 64}, {0, 64, 110, 25}, 10, 1, FX(20, 20, 50, 35)};
+static const preset_t SAS_ZAPPER = {"ZAPPER", {2, 6, 64, 0, 110, 10, 30, 64}, {0, 50, 0, 20}, 0, 1, FX(10, 0, 70, 30)};
+static const preset_t SAS_WOBBLER = {"WOBBLER", {6, 8, 64, 0, 60, 70, 40, 64}, {0, 64, 115, 20}, 10, 1, FX(20, 0, 40, 25)};
+static const preset_t SAS_POWER = {"POWER", {0, 7, 12, 8, 0, 96, 30, 64}, {0, 60, 70, 20}, 20, 1, FX(25, 0, 40, 25)};
+static const preset_t SAS_HYPERSAW = {"HYPERSAW", {0, 0, 0, 30, 0, 110, 15, 64}, {0, 64, 105, 30}, 10, 1, FX(15, 100, 50, 40)};
+static const preset_t SAS_TORNADO = {"TORNADO", {1, 12, 64, 40, 88, 80, 30, 64}, {0, 64, 110, 30}, 10, 1, FX(15, 20, 50, 40)};
+static const preset_t SAS_STROBE = {"STROBE", {4, 14, 64, 0, 96, 20, 30, 64}, {0, 64, 115, 20}, 10, 1, FX(15, 30, 40, 30)};
+/*                                   epit eshp lsync lwave lflt lshp lamp */
+static const sas_motion SAM_STORM = {3, 0, 0, 0, 0, 0, 0};
+static const sas_motion SAM_TWISTER = {0, 0, 8, 3, 0, 0, 110};      /* a 1/16 gate */
+static const sas_motion SAM_BUZZSAW = {0, 0, 6, 1, 0, 40, 0};       /* the pulse's width, by the 1/8 */
+static const sas_motion SAM_SIREN = {0, 50, 2, 1, 0, 40, 0};        /* the sync swept by the note and over 2 bars */
+static const sas_motion SAM_ZAPPER = {63, 0, 0, 0, 0, 0, 0};        /* down an octave as it hits */
+static const sas_motion SAM_WOBBLER = {0, 0, 6, 1, 45, 0, 0};       /* the filter by the 1/8 */
+static const sas_motion SAM_TORNADO = {0, 0, 1, 1, 28, 0, 0};       /* the filter over 4 bars */
+static const sas_motion SAM_STROBE = {0, 0, 10, 3, 0, 0, 127};      /* a 1/32 gate */
 
 #include "sa_fm6.inc"
 
@@ -107,6 +132,9 @@ static const preset_t SAS_TRIOACID = {"RUBBER", {2, 0, 0, 3, 0, 46, 100, 40}, {0
 /* (0.8.23) a lead of the styles: its glide, CUTOFF and RESO's E, trim, spread, reverb and delay, vibrato */
 #define SL(n, e, own, gl, b, rs, tr, w, rv, dl, vb) {(n), SAS_R_LEAD, (uint8_t)(e), 0, SAS_KEEP, (int8_t)(gl), SAS_LEGATO, \
                                                      &(own), 0, (int8_t)(b), (int8_t)(rs), (int8_t)(tr), (w), (rv), (dl), (vb)}
+/* (0.8.24) a RAVE lead: as SL, and its movement (0: none) */
+#define SR(n, e, own, gl, b, rs, tr, w, rv, dl, mo) {(n), SAS_R_LEAD, (uint8_t)(e), 0, SAS_KEEP, (int8_t)(gl), SAS_LEGATO, \
+                                                     &(own), 0, (int8_t)(b), (int8_t)(rs), (int8_t)(tr), (w), (rv), (dl), 0, (mo)}
 #define SF(n, r, patch, gl, v, tr) {(n), (r), (uint8_t)SAS_FM6, 0, SAS_KEEP, (int8_t)(gl), (int8_t)(v), 0, (patch), 2, -1, \
                                     (int8_t)(tr)}
 #define B SAS_R_BASS
@@ -217,6 +245,17 @@ static const sas_sound SAS_SOUND[] = {
     SL("STRING LEAD", SAS_ANALOG, SAS_STRINGLEAD, 6, 4, 5, -6, 80, 0, 0, 1),
     SL("PAN FLUTE", SAS_ANALOG, SAS_PANFLUTE, 10, 4, 5, -18, 30, 60, 0, 2),
     SL("VOX CHOP", SAS_VOICE, SAS_VOXCHOP, SAS_KEEP, -1, -1, -3, 40, 0, 50, 0),
+    /* RAVE (0.8.24) */
+    SR("STORM", SAS_ANALOG, SAS_STORM, SAS_KEEP, 4, 5, 12, 60, 0, 70, &SAM_STORM),
+    SR("TWISTER", SAS_ANALOG, SAS_TWISTER, SAS_KEEP, 4, 5, 2, 60, 0, 50, &SAM_TWISTER),
+    SR("BUZZSAW", SAS_ANALOG, SAS_BUZZSAW, 4, 4, 5, -7, 40, 0, 0, &SAM_BUZZSAW),
+    SR("SIREN", SAS_ANALOG, SAS_SIREN, 10, 4, 5, -9, 40, 0, 0, &SAM_SIREN),
+    SR("ZAPPER", SAS_ANALOG, SAS_ZAPPER, SAS_KEEP, 4, 5, 12, 50, 0, 70, &SAM_ZAPPER),
+    SR("WOBBLER", SAS_ANALOG, SAS_WOBBLER, 6, 4, 5, -1, 30, 0, 0, &SAM_WOBBLER),
+    SR("POWER", SAS_TRIO, SAS_POWER, 4, 5, 6, 4, 40, 0, 0, 0),
+    SR("HYPERSAW", SAS_TRIO, SAS_HYPERSAW, 4, 5, 6, -1, 110, 0, 0, 0),
+    SR("TORNADO", SAS_ANALOG, SAS_TORNADO, 6, 4, 5, 10, 60, 0, 0, &SAM_TORNADO),
+    SR("STROBE", SAS_ANALOG, SAS_STROBE, SAS_KEEP, 4, 5, 6, 60, 0, 0, &SAM_STROBE),
 };
 #undef S
 #undef SG
@@ -224,6 +263,7 @@ static const sas_sound SAS_SOUND[] = {
 #undef SF
 #undef SA
 #undef SL
+#undef SR
 #undef B
 #undef K
 #undef P
@@ -388,8 +428,8 @@ static const sas_style SAS_STYLE[] = {
      {"WOW BASS", "FAT BASS"}, {"2-STEP", "SYNCO"}, {"ORGAN", "E-PIANO"}, {"STAB 2", "PUSH"}, {"VOX CHOP", "SOFT LEAD"},
      {"UPBEATS", "HOOK"}, 50, "2-STEP", "SHUFFLE", "HAT", "C", "RIM", "SYNCO"},
     {"BREAKS", "BROKEN BEATS, RAVE", 128, 132, {SA_KIT_BREAKS, SA_KIT_DUSTY}, SA_SC_MINOR, 14, 30, 60, 100, 20,
-     {"REESE", "FM BASS"}, {"SYNCO", "GROWL"}, {"RAVE", "TECH STAB"}, {"STAB 1", "PUSH"}, {"RAVE LEAD", "HOOVER"},
-     {"RIFF", "ANTHEM"}, 50, "BROKEN", "8THS", "HAT", "S", "RIM", "SYNCO"},
+     {"REESE", "FM BASS"}, {"SYNCO", "GROWL"}, {"RAVE", "TECH STAB"}, {"STAB 1", "PUSH"}, {"RAVE LEAD", "HYPERSAW"},
+     {"RIFF", "RATTLE"}, 50, "BROKEN", "8THS", "HAT", "S", "RIM", "SYNCO"},
     {"DUB", "DUB TECHNO, ECHOES", 118, 122, {SA_KIT_DUB, SA_KIT_SOFT}, SA_SC_MINOR, 12, 30, 100, 80, 20,
      {"RUMBLE", "DEEP SUB"}, {"HALF", "SUB HOLD"}, {"DUB STAB", "ECHO CHORD"}, {"STAB 2", "OFFBEATS"}, {"DUB LEAD", "SOFT LEAD"},
      {"ECHOES", "TWO NOTES"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
@@ -400,8 +440,8 @@ static const sas_style SAS_STYLE[] = {
      {"FM BASS", "SQUARE"}, {"SYNCO", "OCTAVE"}, {"FM PLUCK", "PLUCK"}, {"STAB 1", "PUSH"}, {"VOX LEAD", "ROBOT"},
      {"RIFF", "UPBEATS"}, 50, "BROKEN", "16THS", "HAT", "S", "TOMS", "SYNCO"},
     {"HAPPY", "BRIGHT, EURO, HANDS UP", 138, 142, {SA_KIT_VINTAGE, SA_KIT_CLASSIC}, SA_SC_MAJOR, 0, 50, 70, 100, 0,
-     {"OCTAVE", "FAT BASS"}, {"OCTAVE", "OFFBEAT"}, {"PIANO", "RAVE"}, {"HOUSE", "OFFBEATS"}, {"RAVE LEAD", "SUPER LEAD"},
-     {"HOOK", "ANTHEM"}, 70, "4 FLOOR", "OFFBEAT", "OPEN", "C", "RIM", "SYNCO"},
+     {"OCTAVE", "FAT BASS"}, {"OCTAVE", "OFFBEAT"}, {"PIANO", "RAVE"}, {"HOUSE", "OFFBEATS"}, {"RAVE LEAD", "STORM"},
+     {"HOOK", "RATTLE"}, 70, "4 FLOOR", "OFFBEAT", "OPEN", "C", "RIM", "SYNCO"},
     {"LOFI", "LO-FI HOUSE, DUSTY", 116, 120, {SA_KIT_LOFI, SA_KIT_DUSTY}, SA_SC_DORIAN, 30, 25, 70, 70, 20,
      {"FAT BASS", "SUB"}, {"ROOT 8THS", "SYNCO"}, {"TAPE PAD", "E-PIANO"}, {"WASH", "STAB 2"}, {"SOFT LEAD", "PAN FLUTE"},
      {"CALL", "TWO NOTES"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},

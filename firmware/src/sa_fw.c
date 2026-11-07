@@ -441,6 +441,17 @@ static void sa_load_synth(uint32_t part, int sound)
         trk[part].p[P_LFADE] = 80;
         trk[part].p[P_LD_PIT] = (int16_t)vib;
     }
+    if (snd->mo) {                                           /* (0.8.24) a RAVE sound's movement */
+        const sas_motion *m = snd->mo;
+        trk[part].p[P_ED_PIT] = m->epit;
+        trk[part].p[P_ED_SHP] = m->eshp;
+        trk[part].p[P_LSYNC] = m->lsync;
+        trk[part].p[P_LWAVE] = m->lwave;
+        trk[part].p[P_LD_FLT] = m->lflt;
+        trk[part].p[P_LD_SHP] = m->lshp;
+        trk[part].p[P_LD_AMP] = m->lamp;
+        trk[part].p[P_LPHASE] = m->lamp ? 64 : 0;            /* (a gate starts open: the note's start heard) */
+    }
     sa_base[part].bright = snd->bright >= 0 ? trk[part].p[P_E0 + snd->bright] : 0;
     sa_base[part].fenv = trk[part].p[P_ED_FLT];
     sa_base[part].dist = snd->dist >= 0 ? snd->dist : trk[part].p[P_DIST];

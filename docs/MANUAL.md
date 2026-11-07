@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.23. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.24. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -382,6 +382,16 @@ held note.
 The lead lines: TONES UP, RIFF, PLUCKS, CALL, HOLD NOTE, HOLD CHORD, and HOOK (a one-bar tune), ECHOES (three notes
 the delay answers), BLIPS (three short ones), ANTHEM (sixteenths over the chord, trance), SQUELCH (an acid line
 jumping octaves), DISCO RUN (octaves), TWO NOTES (two long ones) and UPBEATS (on the offbeats).
+
+### RAVE
+
+Ten wild leads for the peak of the night, at the end of the LEADS: STORM (detuned squares that stab, a bite of pitch
+on each hit), TWISTER (the same held, chopped in sixteenths), BUZZSAW (a driven pulse, its width moving by the
+eighth), SIREN (a synced saw screaming as its sync sweeps over two bars), ZAPPER (each note falls an octave as it
+hits), WOBBLER (the filter wobbling by the eighth), POWER (three saws in fifths and octaves), HYPERSAW (three wide
+detuned saws), TORNADO (a noisy square, the filter rising and falling over four bars) and STROBE (chopped in 32nds).
+The tempo moves them all. Their line is RATTLE: sixteenths hammering the root, up to the fifth and the octave at the
+end. HAPPY plays STORM, BREAKS HYPERSAW, both now and then with RATTLE.
 
 ## MENU
 
