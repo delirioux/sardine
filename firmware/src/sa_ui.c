@@ -97,13 +97,14 @@ static int32_t sv_icon_mid(int32_t x, int32_t cy, uint32_t size, uint32_t id, ui
 }
 
 /* ---- the cards ---------------------------------------------------------------------------------------------- */
-typedef struct { char label[12], val[20]; int ratio; bool pend, off, name; } sv_card;   /* name: a sound's name (cut if long) */
+typedef struct { char label[12], val[20]; int ratio; bool pend, off, name, dim; } sv_card;   /* name: a sound's name (cut if
+                                                                                  * long); dim: greyed, not to be turned */
 static void sv_card_num(sv_card *c, const char *label, int v, int lo, int hi)
 {
     sv_cpy(c->label, label, sizeof c->label);
     sv_fmt_int(c->val, v);
     c->ratio = hi > lo ? (v - lo) * 1000 / (hi - lo) : -1;
-    c->pend = c->off = c->name = false;
+    c->pend = c->off = c->name = c->dim = false;
 }
 static void sv_card_txt(sv_card *c, const char *label, const char *val, int ratio, bool pend)
 {
@@ -111,7 +112,7 @@ static void sv_card_txt(sv_card *c, const char *label, const char *val, int rati
     sv_cpy(c->val, val, sizeof c->val);
     c->ratio = ratio;
     c->pend = pend;
-    c->off = c->name = false;
+    c->off = c->name = c->dim = false;
 }
 static void sv_card_off(sv_card *c)
 {
@@ -123,9 +124,10 @@ static void sv_card_off(sv_card *c)
 static void sv_draw_card(sa_ui *u, int i, const sv_card *c)
 {
     bool hot = u->hot == i && u->hot_ms > 0;
-    uint16_t lc = hot || c->pend ? T_ACCENT : T_MID, vc = hot || c->pend ? T_ACCENT : T_THEME;
+    uint16_t lc = c->dim ? T_DIM : hot || c->pend ? T_ACCENT : T_MID, vc = c->dim ? T_DIM : hot || c->pend ? T_ACCENT : T_THEME;
     uint32_t sig = sv_hash(sv_hash(2166136261u + (uint32_t)i * 7u + ux.gen * 131u + (uint32_t)hot * 3u +
-                                   (uint32_t)c->pend * 5u + (uint32_t)c->off * 11u + (uint32_t)u->page * 977u, c->label),
+                                   (uint32_t)c->pend * 5u + (uint32_t)c->off * 11u + (uint32_t)c->dim * 13u + (uint32_t)u->page * 977u,
+                                   c->label),
                            c->val) + (uint32_t)(c->ratio + 1) * 31u;
     if (!u->force && sig == u->sig_card[i])
         return;
@@ -158,6 +160,18 @@ static bool sv_synth_view(const sa_ui *u) { return sv_on_layer(u) && u->view >= 
 static bool sv_drum_view(const sa_ui *u) { return sv_on_layer(u) && u->view == SV_V_DRUMS; }
 /* the code the screen edits (the copy) and what plays */
 static sa_code *sv_ed(sa_ui *u) { return &u->g->ed[sv_clampi(u->layer, 0, SA_LAYERS - 1)]; }
+/* (0.8.30) PAN and PAN 3D: one or the other on a layer. PAN is on when it moves or sits off the centre; PAN 3D wins
+ * (a groove of before with both: its PAN greyed, PAN 3D as it was) */
+static bool sv_pan3d_on(const sa_ui *u)
+{
+    int l = sv_clampi(u->layer, 0, SA_LAYERS - 1);
+    return u->g->s.d3[sv_clampi(u->g->s.code[l].part, 0, SA_SYNTHS - 1)].on != SA_3D_OFF;
+}
+static bool sv_pan_on(const sa_ui *u)
+{
+    const sa_pan *p = &u->g->s.pan[sv_clampi(u->layer, 0, SA_LAYERS - 1)];
+    return !sv_pan3d_on(u) && (p->mode != SA_PAN_FIXED || p->pos != 0);
+}
 static const sa_code *sv_live(const sa_ui *u) { return &u->g->s.code[sv_clampi(u->layer, 0, SA_LAYERS - 1)]; }
 static const char *sv_layer_name(const sa_ui *u, int l)
 {
@@ -232,7 +246,7 @@ static int sv_page_now(const sa_ui *u)
 }
 static const char *sv_page_name(int pg)
 {
-    static const char *const N[] = {"HOME", "SOUND", "ARP", "PAN", "GATE", "MOD", "MIX", "KIT", "3D", "PUMP"};
+    static const char *const N[] = {"HOME", "SOUND", "ARP", "PAN", "GATE", "MOD", "MIX", "KIT", "PAN 3D", "PUMP"};
     return N[sv_clampi(pg, 0, 9)];
 }
 /* REC on a synth layer, off GATE: the steps take the cards and the panel */
@@ -495,6 +509,7 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         } else {
             sv_card_off(&c[3]);
         }
+        if (sv_pan3d_on(u)) for (int k = 0; k < 4; ++k) c[k].dim = true;   /* (PAN 3D on: PAN greyed) */
         break;
     }
     case SVP_GATE: {
@@ -535,6 +550,7 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
                sv_cat(t, a, sizeof t); }
         sv_card_txt(&c[2], "HEIGHT", t, (d3->el + 50) * 10, false);
         sv_card_num(&c[3], "DIST", d3->dist, 0, 100);
+        if (sv_pan_on(u)) for (int k = 0; k < 4; ++k) c[k].dim = true;      /* (PAN on: PAN 3D greyed) */
         break;
     }
     case SVP_PUMP: {
@@ -824,7 +840,9 @@ static void sv_panel_pan(sa_ui *u)
     const sa_code *c = &g->s.code[l];
     static const char *const SAY[SA_PAN_MODES] = {"WHERE PAN SAYS", "FROM SIDE TO SIDE OVER RATE",
                                                   "EACH NOTE ON THE OTHER SIDE", "EACH NOTE SOMEWHERE IN WIDTH"};
-    cv_text_on(10, 38, &AF_S, SAY[p->mode % SA_PAN_MODES], T_MID, T_SURF);
+    bool blocked = sv_pan3d_on(u);
+    cv_text_on(10, 38, &AF_S, blocked ? "OFF: PAN 3D MOVES THIS LAYER" : SAY[p->mode % SA_PAN_MODES],
+               blocked ? T_ACCENT : T_MID, T_SURF);
     int32_t x0 = 20, w = 200, y = 74;
     cv_rect(x0, y, w, 2, T_LINE);
     cv_rect(x0 + w / 2, y - 6, 1, 14, T_DIM);
@@ -839,7 +857,7 @@ static void sv_panel_pan(sa_ui *u)
     int now = c->type == SA_T_SYNTH && c->part < SA_SYNTHS ? g->pan_now[c->part] : 0;
     int32_t px = x0 + (now + 64) * w / 128;
     cv_rrect(px - 5, y - 6, 10, 14, 3, T_ACCENT, T_SURF);
-    cv_text_on(10, 100, &AF_S, "AT ONCE, AS THE SOUND", T_DIM, T_SURF);
+    cv_text_on(10, 100, &AF_S, blocked ? "PAN 3D OFF FIRST, TO USE PAN" : "AT ONCE, AS THE SOUND", T_DIM, T_SURF);
 }
 
 static void sv_panel_arp(sa_ui *u)
@@ -1208,6 +1226,13 @@ static void sv_panel_3d(sa_ui *u)
     int32_t x = cx + sa_sin5(d->az) * rr / 127, y = cy - sa_sin5(d->az + 18) * rr / 127;
     int32_t sz = 8 + d->el * 4 / 50;                                  /* (above: a bigger dot, below: smaller) */
     cv_rrect(x - sz / 2, y - sz / 2, sz, sz, sz / 2, dot, T_SURF);
+    if (sv_pan_on(u)) {                            /* (PAN on: PAN 3D greyed, why) */
+        sv_label(130, 44, "OFF: PAN IS ON", T_ACCENT);
+        sv_label(130, 62, "SET PAN TO", T_DIM);
+        sv_label(130, 78, "FIXED, C, TO", T_DIM);
+        sv_label(130, 94, "USE PAN 3D", T_DIM);
+        return;
+    }
     /* the side view: you, the height */
     int32_t sx = 186, sy = 78;
     cv_rect(sx - 30, sy, 60, 1, T_LINE);
@@ -2000,6 +2025,7 @@ void sv_knob(sa_ui *u, int k, int d)
         break;
     case SVP_PAN: {
         sa_pan *p = &s->pan[l];
+        if (sv_pan3d_on(u)) { sv_msg(u, "PAN 3D IS ON: OFF FIRST"); break; }
         if (i == 0 && p->mode == SA_PAN_FIXED && d > 0) {   /* moving: SWEEP, from the centre, all the way, a bar */
             p->mode = SA_PAN_SWEEP;
             p->pos = 0;
@@ -2014,6 +2040,7 @@ void sv_knob(sa_ui *u, int k, int d)
     case SVP_3D: {                                 /* (turning ANGLE HEIGHT DISTANCE turns it on) */
         int pp = sv_clampi(e->part, 0, SA_SYNTHS - 1);
         sa_3d *d3 = &s->d3[pp];
+        if (sv_pan_on(u)) { sv_msg(u, "PAN IS ON: FIXED C FIRST"); break; }
         if (!d3->on && (i > 0 || d > 0)) {         /* on: ORBIT round you over 2 bars, level, near (10) */
             d3->on = SA_3D_ORBIT;
             s->d3rate[pp] = SA_PRATE_2BARS;

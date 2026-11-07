@@ -1,7 +1,7 @@
-Sardine 0.8.29: live club mixing for the FM-1.
+Sardine 0.8.30: live club mixing for the FM-1.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
-  through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, ARP, PAN, 3D, PUMP, GATE, MOD; DRUMS: MIX, KIT, MOD), HOME back to them all
+  through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, ARP, PAN, PAN 3D, PUMP, GATE, MOD; DRUMS: MIX, KIT, MOD), HOME back to them all
 - EDIT: a pattern editor, KNOB 1 the step, KNOB 2 ready fills (drum fills, lines in the key, chord rhythms), REC:
   the keys write the steps
 - STYLE MIX (GLO held): from one style into another, the layers you don't keep fading out over 1 to 4 bars, the new
@@ -22,7 +22,7 @@ Sardine 0.8.29: live club mixing for the FM-1.
 - DRUMS: seven rows on channels of their own (KICK SNARE CLAP HATS TOMS RIM PERC), each drum switched at once, in eight variations (TIGHT ROOM HIGH LOW, 80 10 DEEP);
   VOLUME and ACCENT per row, CHANCE beside the modifiers; the kit's TUNE, TONE and DECAY on its KIT page
 - PUMP per layer: its depth (set by the sound's type), release, and the kick or every beat
-- 3D: a synth layer placed around you for headphones (angle, height, distance), fixed or moving (ORBIT, RANDOM,
+- PAN 3D (one or the other with PAN, the other greyed): a synth layer placed around you for headphones (angle, height, distance), fixed or moving (ORBIT, RANDOM,
   FLY), drawn on a circle
 - An arpeggiator on every synth layer, off until you turn it on; GATE, PAN and four modifiers on every layer
 - Every start a fresh groove; SETS keeps eight grooves (LOAD on the one, STORE, NEW, CLEAR) and LAST, the last groove,

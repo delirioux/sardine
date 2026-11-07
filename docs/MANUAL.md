@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.29. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.30. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -88,7 +88,7 @@ LEAD lead lines and the bass lines). FX turns through its pages:
 | MIX (the first) | VOLUME (fades it in and out) | TYPE (BASS KEYS PADS LEADS FX) | INSTR (the sound, by name; the header says it whole) | MUTE | at once |
 | ARP | MODE (OFF, UP, DOWN, UP-DOWN, DOWN-UP, CONVERGE, DIVERGE, RANDOM, THUMB, PINKY, STRUM) | RATE | RANGE | GATE | waits for SEQ |
 | PAN | MODE (FIXED, SWEEP, PING-PONG, RANDOM; from FIXED: SWEEP from C, WIDTH 100, a bar) | PAN | WIDTH | RATE (SWEEP) | at once |
-| 3D | MODE (OFF FIXED ORBIT RANDOM FLY; on: ORBIT, 2 bars, level, DIST 10) | ANGLE (FIXED) or RATE (ORBIT, FLY) | HEIGHT | DIST | at once |
+| PAN 3D | MODE (OFF FIXED ORBIT RANDOM FLY; on: ORBIT, 2 bars, level, DIST 10) | ANGLE (FIXED) or RATE (ORBIT, FLY) | HEIGHT | DIST | at once |
 | PUMP | DEPTH (of HOME's PUMP) | RELEASE | SOURCE (KICK, BEAT) | PUMP ON / OFF | at once |
 | GATE | a ready gate (or OFF) | DEPTH | WIDTH | SMOOTH | waits for SEQ |
 | MOD | MOD 1 | MOD 2 | MOD 3 | MOD 4 | waits for SEQ |
@@ -104,18 +104,21 @@ LEAD lead lines and the bass lines). FX turns through its pages:
 </p>
 
 <p align="center">
-<img src="screens/3d.png" alt="3D" width="200">
+<img src="screens/3d.png" alt="PAN 3D" width="200">
 </p>
 
-**3D** places the layer around you, for headphones: from above (FRONT up) the dot is the layer, near you or far; beside
+**PAN 3D** places the layer around you, for headphones: from above (FRONT up) the dot is the layer, near you or far; beside
 it, from the side, its height; the dot moves as the layer does. **MODE**: FIXED (where ANGLE says), ORBIT (round you
 over RATE, a quarter bar to four bars), RANDOM (each note somewhere else round you) and FLY (an orbit rising and
 falling about HEIGHT). Turned on from OFF (MODE, or any of the knobs) it starts as ORBIT over two bars, level
-(HEIGHT 0), near (DIST 10). On, the angle pans the layer (the PAN
-page rests), behind sounds a touch darker and softer, below darker, above brighter, far quieter, darker and wetter, and
+(HEIGHT 0), near (DIST 10). On, the angle pans the layer, behind sounds a touch darker and softer, below darker, above brighter, far quieter, darker and wetter, and
 the layer narrows to a point. These are cues the ear reads, not a measured head model: left, right and far come across
 best; front against back and up against down are subtler and differ from one listener to the next. On speakers it is
 panning and tone.
+
+**PAN or PAN 3D**, one at a time on a layer: both move it left and right. PAN is on when it moves (SWEEP, PING-PONG,
+RANDOM) or sits off the centre; PAN 3D when its MODE is not OFF. While one is on the other's cards are greyed, its knobs
+do nothing, and its page says why and what to do: PAN 3D OFF first to use PAN; PAN back to FIXED, C, to use PAN 3D.
 
 <p align="center">
 <img src="screens/pump.png" alt="PUMP" width="200">
@@ -447,8 +450,8 @@ three controllers as the layer sounds, sent whenever one changes (and all of the
 | CC | What | From |
 | --- | --- | --- |
 | 7 (volume) | the layer's level | its VOLUME, mute and SOLO, a STYLE MIX's fade; DRUMS: the MIXER's DRUMS |
-| 74 (cutoff) | a synth layer's filter | CUTOFF, HOME's FILTER, SWEEP, WOBBLE, the fills' dip, 3D |
-| 10 (pan) | a synth layer's place | PAN (SWEEP, PING-PONG, RANDOM), 3D |
+| 74 (cutoff) | a synth layer's filter | CUTOFF, HOME's FILTER, SWEEP, WOBBLE, the fills' dip, PAN 3D |
+| 10 (pan) | a synth layer's place | PAN (SWEEP, PING-PONG, RANDOM) or PAN 3D |
 
 The PUMP is not sent: a DAW's sidechain does it better.
 

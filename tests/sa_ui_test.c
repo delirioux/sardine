@@ -276,9 +276,16 @@ int main(int argc, char **argv)
     CHECK(g.s.pan[SA_L_BASS].mode == SA_PAN_SWEEP && g.s.pan[SA_L_BASS].pos == 0 && g.s.pan[SA_L_BASS].width == 100 &&
           g.s.pan[SA_L_BASS].rate == SA_PRATE_BAR, "PAN moving: SWEEP from the centre, WIDTH 100, a bar");
     shot("07_bass_pan");
+    press(SV_B_FX);                                /* (0.8.30) PAN on: PAN 3D greyed, not turned */
+    CHECK(sv_page_now(&ui) == SVP_3D, "FX: PAN 3D");
+    sv_knob(&ui, SV_K1, 1);
+    CHECK(!g.s.d3[SA_L_BASS].on && strstr(ui.msg, "PAN IS ON"), "PAN on: PAN 3D stays OFF, says why (%s)", ui.msg);
+    shot("07a_bass_3d_blocked");
+    fx_to(SVP_PAN);
     sv_knob(&ui, SV_K1, -1);
+    CHECK(g.s.pan[SA_L_BASS].mode == SA_PAN_FIXED && g.s.pan[SA_L_BASS].pos == 0, "PAN back to FIXED C: off");
     press(SV_B_FX);
-    CHECK(sv_page_now(&ui) == SVP_3D, "FX: 3D");
+    CHECK(sv_page_now(&ui) == SVP_3D, "FX: PAN 3D again");
     sv_knob(&ui, SV_K1, 1);
     CHECK(g.s.d3[SA_L_BASS].on == SA_3D_ORBIT && g.s.d3rate[SA_L_BASS] == SA_PRATE_2BARS && g.s.d3[SA_L_BASS].el == 0 &&
           g.s.d3[SA_L_BASS].dist == 10, "3D on: ORBIT over 2 bars, level, DIST 10");
@@ -288,6 +295,13 @@ int main(int argc, char **argv)
     sv_knob(&ui, SV_K4, 10);
     CHECK(g.s.d3[SA_L_BASS].on == SA_3D_FIXED && g.s.d3[SA_L_BASS].az == 27 && g.s.d3[SA_L_BASS].el == 20 &&
           g.s.d3[SA_L_BASS].dist == 60, "3D FIXED: ANGLE HEIGHT DISTANCE");
+    fx_to(SVP_PAN);                                /* (0.8.30) PAN 3D on: PAN greyed, not turned */
+    sv_knob(&ui, SV_K1, 1);
+    sv_knob(&ui, SV_K3, -4);
+    CHECK(g.s.pan[SA_L_BASS].mode == SA_PAN_FIXED && g.s.pan[SA_L_BASS].width == 100 && strstr(ui.msg, "PAN 3D IS ON"),
+          "PAN 3D on: PAN stays as it is, says why (%s)", ui.msg);
+    shot("07a2_bass_pan_blocked");
+    fx_to(SVP_3D);
     run_ms(50);
     CHECK(g.pan_now[SA_L_BASS] > 30, "3D: behind on the right pans right (%d)", g.pan_now[SA_L_BASS]);
     shot("07b_bass_3d");
