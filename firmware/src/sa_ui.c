@@ -1974,6 +1974,11 @@ void sv_knob(sa_ui *u, int k, int d)
 void sv_button(sa_ui *u, int b, bool down)
 {
     sa_groove *g = u->g;
+    if (b == SV_B_SEQ) {                           /* (held a second: a new groove, sv_tick; a tap acts as ever) */
+        u->seq_down = down;
+        u->seq_ms = 0;
+        if (down) u->seq_fired = false;
+    }
     if (b == SV_B_HOME) {
         if (down) {
             u->home_down = true;
@@ -2276,6 +2281,12 @@ void sv_tick(sa_ui *u, int ms)
     if (u->hot_ms > 0) u->hot_ms -= ms;
     if (u->msg_ms > 0) u->msg_ms -= ms;
     if (u->main_ms > 0) u->main_ms -= ms;
+    if (u->seq_down && !u->seq_fired && (u->seq_ms += ms) >= SV_NEW_MS && u->req_act < 0) {   /* SEQ held: NEW */
+        u->seq_fired = true;
+        u->req_act = SV_SA_NEW;
+        u->req_slot = 0;
+        sv_msg(u, "A NEW GROOVE");
+    }
     for (int mv = 0; mv < SV_MOVES; ++mv)          /* MOVES: held long enough */
         if ((u->hb_down >> mv) & 1u && !((u->moves >> mv) & 1u) && (u->hb_ms[mv] += ms) >= SV_MOVE_MS) {
             static const char *const N[SV_MOVES] = {"WASH", "THROW", "TAPE STOP", "WOBBLE"};

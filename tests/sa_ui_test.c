@@ -570,6 +570,17 @@ int main(int argc, char **argv)
         }
         press(SV_B_HOME);
     }
+    /* SEQ held a second: a whole new groove, as at power-on (asked of the glue) */
+    {
+        ui.req_act = -1;
+        sv_button(&ui, SV_B_SEQ, true);
+        run_ms(500);
+        CHECK(ui.req_act < 0, "SEQ held half a second: nothing yet");
+        run_ms(600);
+        CHECK(ui.req_act == SV_SA_NEW && !strcmp(ui.msg, "A NEW GROOVE"), "SEQ held a second: A NEW GROOVE");
+        sv_button(&ui, SV_B_SEQ, false);
+        ui.req_act = -1;
+    }
     /* MOVES: a tap is the button's job; held past 300 ms a move, the button's job not done */
     {
         int o0 = ui.oct;

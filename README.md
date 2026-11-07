@@ -44,7 +44,7 @@ second colour, until SEQ drops them in on the one.
 - The keys play the layer you are on, lit with what it plays; on DRUMS they play the drum you picked
 - EDIT: a step editor with ready fills; there the keys write the steps
 
-**Every start a fresh groove** (other sounds, patterns, kit, key); eight sets keep the ones you want, LAST the last one.
+**Every start a fresh groove** (other sounds, patterns, kit, key), and one any time with SEQ held; eight sets keep the ones you want, LAST the last one.
 
 <p align="center">
 <img src="docs/screens/home.png" alt="HOME" width="200">
@@ -59,7 +59,7 @@ second colour, until SEQ drops them in on the one.
 
 ## Install
 
-Version 0.8.18: [install it on the FM-1](https://delirioux.github.io/sardine/install/) from Chrome or Edge (Web MIDI), with
+Version 0.8.19: [install it on the FM-1](https://delirioux.github.io/sardine/install/) from Chrome or Edge (Web MIDI), with
 the FM-1 on USB, or [try it in the browser](https://delirioux.github.io/sardine/try/) first. The `dev` branch's test
 build: [install](https://delirioux.github.io/sardine/dev/install/), [try](https://delirioux.github.io/sardine/dev/try/).
 Installing firmware is at your own risk; Felucca's [installer](https://hugelton.github.io/Felucca/webapp/installer/)
@@ -82,7 +82,7 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
 | FX | the layer's next page |
 | SELECT | the tempo |
 | ALGORITHM | the layer's pattern (waits for SEQ); on HOME: PART A or B |
-| SEQ | drops what waits, on the next bar line; in a LIVE build, the next layer |
+| SEQ | drops what waits, on the next bar line; in a LIVE build, the next layer; held: a whole new groove |
 | EDIT (or REC) | the pattern editor: the only place the keys change a pattern |
 | SCL / SAVE | the key and the chords / the sets |
 | ENV / ARP / LFO | held: fill / BREAK / SWEEP |

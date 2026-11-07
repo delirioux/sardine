@@ -71,6 +71,7 @@ typedef struct {
  * EDIT STOP (a tape stop), REC WOBBLE (the synth layers' filter on the eighths) */
 enum { SV_MV_WASH, SV_MV_THROW, SV_MV_STOP, SV_MV_WOBBLE, SV_MOVES };
 #define SV_MOVE_MS 300
+#define SV_NEW_MS 1000
 
 /* SONG (GLO's 5th page): up to eight steps, each a set for a number of bars, played in turn round and round
  * while SONG is ON (the glue loads each on its bar line); kept with the preferences */
@@ -109,6 +110,8 @@ typedef struct {
     sv_song song;                         /* SONG (the glue keeps it) */
     int song_pick;                        /* SONG: the step KNOB 1 picked */
     int song_step;                        /* SONG: the step playing (-1: none; the glue sets it) */
+    bool seq_down, seq_fired;            /* SEQ held (SV_NEW_MS): a whole new groove, as at power-on */
+    int seq_ms;
     uint8_t hb_down, moves;               /* MOVES: OCT- OCT+ EDIT REC held (a bit each, SV_MV_*); the moves on */
     int hb_ms[4];                         /* .. how long each has been held */
     int style_pick;                       /* the MIXER's STYLE page: the style SEQ makes a groove in */
