@@ -526,6 +526,11 @@ int main(int argc, char **argv)
             CHECK(g.ed_patb[l] != 0 && !strncmp(ui.msg, "B: ", 3), "PART B: the row's B pattern (%s)", ui.msg);
             sa_part(&g, false);
             sa_edit_reset(&g);
+            g.s.live[l].mute = 1;                   /* muted: a new pattern waits lit, SEQ brings it in with it */
+            sv_knob(&ui, SV_K_ALGO, 1);
+            press(SV_B_SEQ);
+            bars(2);
+            CHECK(!g.s.live[l].mute && g.s.code[l].pat != SA_PAT_OFF, "a muted row's new pattern: in with it");
         }
         press(SV_B_HOME);
     }
@@ -560,7 +565,7 @@ int main(int argc, char **argv)
     {
         int d0 = part_on[SA_PART_DRUMS], b0 = part_on[SA_L_BASS], c0 = part_on[SA_L_CHORD];
         sv_button(&ui, SV_B_ARP, true);
-        bars(1);
+        bars(2);                                    /* (two: a slow chord pattern plays at least once) */
         CHECK(g.brk_on && part_on[SA_PART_DRUMS] == d0 && part_on[SA_L_BASS] == b0 && part_on[SA_L_CHORD] > c0,
               "BREAK: no drums, no bass, the chord on");
         sv_button(&ui, SV_B_ARP, false);

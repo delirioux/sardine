@@ -1267,9 +1267,10 @@ static void sv_panel_drums(sa_ui *u)
         bool off = e->pat == SA_PAT_OFF && !e->own;
         cv_free_text(10, y + 1, &AF_S, sv_layer_name(u, l), mute || gone || off ? T_DIM : sel ? T_TEXT : T_MID, bg, 64);
         uint16_t bits = gone || off ? 0 : sv_code_bits(u, l, e);
+        bool out = mute || ((g->build_out >> l) & 1u);   /* (muted, or a LIVE build's not in yet) */
         sv_strip(80, y + 2, 152, 8, bits, now, pend ? T_ACCENT : sel ? T_THEME : ux_mix(T_SURF, T_THEME, 70),
-                 mute || gone);
-        if (mute) cv_rect(80, y + 5, 152, 2, T_ACCENT);
+                 (out && !pend) || gone);              /* (a new pattern waiting shows lit: SEQ brings it in) */
+        if (mute && !pend) cv_rect(80, y + 5, 152, 2, T_ACCENT);
     }
 }
 

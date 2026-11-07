@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.10. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.11. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -189,8 +189,9 @@ header says the whole name as it turns. The PERC row's are the engine's own perc
 
 Each row shows its drum and its bar (the second colour: waiting for SEQ); a row OFF is dimmed. The home page: **DRUM**
 (KNOB 1, the row), **INSTR** (its drum, at once), **VOLUME** and **ACCENT** (how hard the accented steps hit against
-the rest; 50: as written). ALGORITHM turns the row's pattern, OFF first: a pattern turns the row on, OFF turns it off;
-SEQ drops it in. Without REC every key plays the row's drum; with REC the 16 lowest keys are its steps, the keys above
+the rest; 50: as written). ALGORITHM turns the row's pattern, OFF first (its name in the header): a pattern turns
+the row on, OFF turns it off; SEQ drops it in. A row that is muted, or not in yet in a LIVE build, shows its new
+pattern lit all the same, and SEQ brings it in with it, unmuted (a synth layer too). Without REC every key plays the row's drum; with REC the 16 lowest keys are its steps, the keys above
 play it.
 
 FX: **MIX** (VOLUME, KIT, INSTR, MUTE), **KIT** (KIT, TUNE, TONE, DECAY: the whole kit, every drum plays on it) and

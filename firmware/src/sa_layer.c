@@ -1487,8 +1487,12 @@ static void drop_now(sa_groove *g)
         if (!memcmp(o, n, sizeof *o)) continue;
         if (o->type == SA_T_SYNTH && (n->type != SA_T_SYNTH || n->sound != o->sound || n->part != o->part))
             part_off(g, o->part);                  /* (its sound changes or it goes: let go of its notes) */
-        if (n->type != o->type)
+        bool newpat = n->type != SA_T_NONE && (n->pat != o->pat || n->own != o->own || n->type != o->type) &&
+                      (n->pat != SA_PAT_OFF || n->own);
+        if (n->type != o->type || newpat) {        /* a new pattern (or a layer back): in with it, muted or not yet in */
             g->s.live[l].mute = 0;
+            g->build_out &= (uint16_t)~(1u << l);
+        }
         g->arp_i[l] = 0;
     }
     memcpy(g->s.code, g->ed, sizeof g->ed);
