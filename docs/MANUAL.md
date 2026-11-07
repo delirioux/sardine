@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.5. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.6. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -183,6 +183,14 @@ FX: **MIX** (VOLUME, KIT, INSTR, MUTE), **KIT** (KIT, TUNE, TONE, DECAY: the who
 **MOD** (three modifiers, and **CHANCE**: how likely each hit plays, 100 % always; lower and hits drop out at random,
 so the pattern changes as it plays). The kits, all synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY,
 CLASSIC, ROOM, VINTAGE, MINIMAL, VOLT (electro), GARAGE, DISCO, BREAKS, DUB, LOFI, IRON (industrial), ACID.
+
+## MIDI OUT
+
+**HOME** held opens the MENU; **FX** there turns to **MIDI OUT**: the channel each layer sends its notes on over USB,
+LEAD, CHORD, BASS and DRUMS on the four knobs (1 to 16, or OFF: that layer sends nothing). Out of the box LEAD 1,
+CHORD 2, BASS 3, DRUMS 10; they are kept. Under them what went out, the newest on top: the layer, its channel, the
+note (a drum by its name) and its velocity. The drums go out as General MIDI notes (PERC's as the nearest: TAMB 54,
+BONGO 60, WOOD 76, COWBELL 56, CABASA 69, ZAP 80).
 
 ## MOVES
 

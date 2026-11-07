@@ -359,6 +359,19 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         }
         return;
     case SV_PG_MENU:
+        if (u->menu2) {                            /* MIDI: each layer's channel */
+            static const char *const N[4] = {"LEAD", "CHORD", "BASS", "DRUMS"};
+            for (int i = 0; i < 4; ++i) {
+                if (u->midi_ch[i]) {
+                    char t[8] = "CH ";
+                    sv_fmt_int(t + 3, u->midi_ch[i]);
+                    sv_card_txt(&c[i], N[i], t, (u->midi_ch[i] - 1) * 1000 / 15, false);
+                } else {
+                    sv_card_txt(&c[i], N[i], "OFF", 0, true);
+                }
+            }
+            return;
+        }
         sv_card_txt(&c[0], "COLOR", UI_PALETTES[s->palette % NPALETTES].name, -1, false);
         sv_card_txt(&c[1], "LOOK", s->look ? "LINE" : "FLAT", -1, false);
         sv_card_off(&c[2]);
@@ -580,7 +593,7 @@ static void sv_head_title(const sa_ui *u, char *t, unsigned n)
         sv_cpy(t, SV_VIEW_NAME[u->view], n);
         sv_cat(t, u->rec ? "  EDIT  REC" : "  EDIT", n);
         break;
-    case SV_PG_MENU: sv_cpy(t, "MENU", n); break;
+    case SV_PG_MENU: sv_cpy(t, u->menu2 ? "MIDI OUT" : "MENU", n); break;
     default:
         sv_cpy(t, SV_VIEW_NAME[u->view], n);
         sv_cat(t, "  ", n);
@@ -925,8 +938,49 @@ static void sv_panel_sets(sa_ui *u)
         cv_text_fit(128, y0 + 20 + n * 16, &AF_S, sas_of(si->snd[n])->name, T_TEXT, T_SURF, 104);
 }
 
+/* MIDI OUT: what went out, the newest on top (the layer, its channel, the note or the drum, the velocity) */
+static void sv_panel_midi(sa_ui *u)
+{
+    static const char *const N[4] = {"LEAD", "CHORD", "BASS", "DRUMS"}, *const NN[12] = {"C", "C#", "D", "D#", "E", "F",
+                                                                                         "F#", "G", "G#", "A", "A#", "B"};
+    uint32_t n = u->ml_n;
+    if (!n) {
+        sv_label(10, 40, "NOTHING SENT YET", T_DIM);
+        sv_label(10, 56, "USB MIDI: THE LAYERS' NOTES", T_DIM);
+        return;
+    }
+    for (uint32_t k = 0; k < 6 && k < n; ++k) {
+        uint32_t i = (n - 1u - k) % SV_MLOG;
+        int32_t y = 4 + (int32_t)k * 19;
+        int l = u->ml_layer[i] % 4, note = u->ml_note[i], vel = u->ml_vel[i];
+        uint16_t c = k == 0 ? T_TEXT : k < 3 ? T_MID : T_DIM;
+        char t[20], a[8];
+        cv_text_on(10, y, &AF_S, N[l], k == 0 ? T_THEME : c, T_SURF);
+        sv_cpy(t, "CH ", sizeof t);
+        sv_fmt_int(a, u->ml_ch[i]);
+        sv_cat(t, a, sizeof t);
+        cv_text_on(64, y, &AF_S, t, c, T_SURF);
+        if (l == 3) {                              /* a drum: its name */
+            const char *nm = "DRUM";
+            for (int v = 0; v < SA_DVS; ++v)
+                if (sa_dv_gm(v) == note || (v == SA_DV_TAMB && note == 54) || (v == SA_DV_BONGO && note == 60) ||
+                    (v == SA_DV_WOOD && note == 76) || (v == SA_DV_COWBELL && note == 56) ||
+                    (v == SA_DV_CABASA && note == 69) || (v == SA_DV_ZAP && note == 80)) { nm = sa_dv_name(v); break; }
+            sv_cpy(t, nm, sizeof t);
+        } else {
+            sv_cpy(t, NN[note % 12], sizeof t);
+            sv_fmt_int(a, note / 12 - 1);
+            sv_cat(t, a, sizeof t);
+        }
+        cv_free_text(112, y, &AF_S, t, c, T_SURF, 80);
+        sv_fmt_int(a, vel);
+        cv_text_r(232, y, &AF_S, a, c, T_SURF);
+    }
+}
+
 static void sv_panel_menu(sa_ui *u)
 {
+    if (u->menu2) { sv_panel_midi(u); return; }
     cv_text_on(30, 16, &AF_M, "SARDINE " SA_VERSION, T_TEXT, T_SURF);
     cv_text_on(30, 42, &AF_S, "LIVE CLUB MIXING FOR THE FM-1", T_MID, T_SURF);
     cv_text_on(30, 60, &AF_S, "ON FELUCCA, AFTER TUNA", T_MID, T_SURF);
@@ -1463,6 +1517,7 @@ void sv_init(sa_ui *u, sa_groove *g)
     u->pv_layer = -1;
     u->req_act = -1;
     u->song_step = -1;
+    u->midi_ch[0] = 1, u->midi_ch[1] = 2, u->midi_ch[2] = 3, u->midi_ch[3] = 10;
     sv_song_default(&u->song);
     for (int k = 0; k < 27; ++k)
         u->key_sent[k] = -1;
@@ -1703,6 +1758,11 @@ void sv_knob(sa_ui *u, int k, int d)
         }
         return;
     case SV_PG_MENU:
+        if (u->menu2) {
+            u->midi_ch[i] = (uint8_t)sv_clampi(u->midi_ch[i] + d, 0, 16);
+            u->changed = true;
+            return;
+        }
         if (i == 0) s->palette = (uint8_t)sv_wrap(s->palette + d, (int)NPALETTES);
         else if (i == 1) s->look = (uint8_t)!s->look;
         u->changed = true;
@@ -1932,6 +1992,11 @@ void sv_button(sa_ui *u, int b, bool down)
             break;
         }
         if (u->page == SV_PG_MIXER) break;         /* (GLO turns its pages) */
+        if (u->page == SV_PG_MENU) {               /* MENU: its second page, MIDI */
+            u->menu2 = !u->menu2;
+            u->force = true;
+            break;
+        }
         if (u->page == SV_PG_LAYER) {
             int p[8], n = sv_pages(u, p);
             u->fx = (u->fx + 1) % n;
@@ -2125,6 +2190,7 @@ void sv_tick(sa_ui *u, int ms)
         u->home_ms += ms;
         if (u->home_ms >= SV_MENU_HOLD_MS && u->page != SV_PG_MENU) {
             sv_goto(u, SV_PG_MENU);
+            u->menu2 = false;
             u->rec = false;
             u->home_down = false;
         }

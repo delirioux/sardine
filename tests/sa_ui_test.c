@@ -677,6 +677,21 @@ int main(int argc, char **argv)
     ui.cpu = 42;
     ui.cpu_peak = 67;
     shot("20_menu");
+    press(SV_B_FX);
+    CHECK(ui.menu2 && ui.midi_ch[0] == 1 && ui.midi_ch[3] == 10, "MENU, FX: MIDI OUT, LEAD on 1, DRUMS on 10");
+    sv_knob(&ui, SV_K2, -2);
+    sv_knob(&ui, SV_K3, -3);
+    CHECK(ui.midi_ch[1] == 0 && ui.midi_ch[2] == 0, "CHORD and BASS OFF");
+    sv_knob(&ui, SV_K2, 5);
+    CHECK(ui.midi_ch[1] == 5, "CHORD on 5");
+    {   /* (the glue's log, as it writes it) */
+        static const uint8_t L[6] = {3, 0, 3, 1, 2, 3}, C[6] = {10, 1, 10, 5, 3, 10}, N[6] = {36, 72, 42, 64, 36, 54};
+        for (int k = 0; k < 6; ++k) {
+            ui.ml_layer[k] = L[k], ui.ml_ch[k] = C[k], ui.ml_note[k] = N[k], ui.ml_vel[k] = (uint8_t)(90 + k * 5);
+        }
+        ui.ml_n = 6;
+    }
+    shot("20b_midi");
     press(SV_B_HOME);
     press(SV_B_PLAY);
     CHECK(!g.playing, "PLAY stops");

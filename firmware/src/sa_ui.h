@@ -94,6 +94,13 @@ typedef struct {
     int back;                             /* the page KEY goes back to */
     int mback;                            /* the page the MIXER goes back to */
     bool home2;                           /* HOME's second page (FX): RESO, WIDTH */
+    bool menu2;                           /* MENU's second page (FX): MIDI */
+    uint8_t midi_ch[4];                   /* MIDI: the channel each layer sends on (LEAD CHORD BASS DRUMS): 0 OFF, 1..16
+                                           * (the glue keeps them with the preferences) */
+    /* MIDI: what went out, the last SV_MLOG (the glue writes them, from the audio) */
+#define SV_MLOG 8
+    volatile uint8_t ml_layer[SV_MLOG], ml_ch[SV_MLOG], ml_note[SV_MLOG], ml_vel[SV_MLOG];
+    volatile uint32_t ml_n;
     int mixmute;                          /* GLO's page: 0 VOLUME, 1 MUTE, 2 SOLO, 3 STYLE, 4 SONG (GLO turns them over) */
     sv_song song;                         /* SONG (the glue keeps it) */
     int song_pick;                        /* SONG: the step KNOB 1 picked */

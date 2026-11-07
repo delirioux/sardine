@@ -76,9 +76,24 @@ static void sa_sound(void *ctx, const sa_event *e)
         trk_note_on(&trk[p], e->note, e->vel);
     else
         trk_note_off(&trk[p], e->note);
-    /* MIDI out: the synth parts on channels 1..3, the kit on 10 (its notes are General MIDI's) */
-    uint32_t ch = p == SA_PART_DRUMS ? 9u : p, st = (e->on ? 0x90u : 0x80u) | ch, cin = st >> 4;
-    midi_out_event(cin | st << 8 | (uint32_t)e->note << 16 | (uint32_t)(e->on ? e->vel : 0u) << 24);
+    /* MIDI out: each layer on its channel (MENU, MIDI: LEAD 1, CHORD 2, BASS 3, DRUMS 10 out of the box; OFF: nothing),
+     * the kit's notes General MIDI's (PERC's own 82..87 as their GM ones) */
+    uint32_t l = p == SA_PART_DRUMS ? 3u : p % 3u, ch = sa_u.midi_ch[l], note = e->note;
+    if (!ch) return;
+    if (l == 3u && note >= 82u && note <= 87u) {
+        static const uint8_t GM[6] = {54, 60, 76, 56, 69, 80};   /* TAMB BONGO WOOD COWBELL CABASA ZAP */
+        note = GM[note - 82u];
+    }
+    uint32_t st = (e->on ? 0x90u : 0x80u) | (ch - 1u), cin = st >> 4;
+    midi_out_event(cin | st << 8 | note << 16 | (uint32_t)(e->on ? e->vel : 0u) << 24);
+    if (e->on && e->vel) {                                   /* the MIDI OUT page's log */
+        uint32_t i = sa_u.ml_n % SV_MLOG;
+        sa_u.ml_layer[i] = (uint8_t)l;
+        sa_u.ml_ch[i] = (uint8_t)ch;
+        sa_u.ml_note[i] = (uint8_t)note;
+        sa_u.ml_vel[i] = e->vel;
+        sa_u.ml_n++;
+    }
 }
 
 static void sa_audio_pre(uint32_t n)
@@ -101,7 +116,7 @@ static void sa_audio_post(int32_t *out, uint32_t n)
 #define SA_PREF_MAGIC 0x31504153u                            /* "SAP1" */
 #define SA_SET_MAGIC 0x31534153u                             /* "SAS1" */
 #define SA_REC_MAGIC 0x32524153u                             /* "SAR2": 0.2..0.5's groove, moved into set 1 once */
-typedef struct { uint32_t magic, boots; uint8_t look, pad[3]; sv_song song; } sa_prefs;   /* (song: appended) */
+typedef struct { uint32_t magic, boots; uint8_t look, pad[3]; sv_song song; uint8_t midi_ch[4], midi_ok, pad2[3]; } sa_prefs;   /* (song, then MIDI: appended) */
 #define SA_PREFS_OLD 12u                                     /* (0.7's: no song) */
 typedef struct { uint32_t magic; uint16_t size, ver; sa_settings s; } sa_record;
 #define SA_SET_PER 3u                                        /* sets to an object */
@@ -239,6 +254,8 @@ static void sa_prefs_save(void)
     sa_pref.magic = SA_PREF_MAGIC;
     sa_pref.look = sa_g.s.look;
     sa_pref.song = sa_u.song;
+    memcpy(sa_pref.midi_ch, sa_u.midi_ch, sizeof sa_pref.midi_ch);
+    sa_pref.midi_ok = 1;
     if (flash_ok && st_save(OBJ_PROJECT0, &sa_pref, sizeof sa_pref) == 0)
         sa_pref_look = sa_pref.look;
 #endif
@@ -542,6 +559,8 @@ static void sa_fw_init(void)
             sa_u.song.on = 0;                                /* (SONG starts OFF: a start plays its own groove) */
         }
     }
+    if (sa_pref.midi_ok)                                     /* MIDI's channels as kept (else 1 2 3 10, sv_init's) */
+        for (int k = 0; k < 4; ++k) sa_u.midi_ch[k] = sa_pref.midi_ch[k] <= 16 ? sa_pref.midi_ch[k] : 0;
     sa_sets_scan();
     sa_apply();
 }
@@ -789,7 +808,8 @@ static void sa_frame(void)
     if (was_playing && !sa_g.playing) sa_save_ms = now;     /* (stopped: the tails ring out before the flash) */
     was_playing = sa_g.playing;
     if (sa_dirty && !sa_g.playing && now - sa_save_ms > SA_LAST_MS) {   /* the look; LAST, when the groove changed */
-        if (sa_g.s.look != sa_pref_look || memcmp(&sa_u.song, &sa_pref.song, sizeof sa_u.song)) sa_prefs_save();
+        if (sa_g.s.look != sa_pref_look || memcmp(&sa_u.song, &sa_pref.song, sizeof sa_u.song) ||
+            memcmp(sa_u.midi_ch, sa_pref.midi_ch, sizeof sa_u.midi_ch)) sa_prefs_save();
         uint32_t sig = sv_hashb(2166136261u, &sa_g.s, sizeof sa_g.s) | 1u;
         if (sig != sa_last_sig && sa_set_write(SV_LAST, &sa_g.s)) {
             sa_last_sig = sig;
