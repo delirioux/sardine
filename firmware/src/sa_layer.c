@@ -1758,7 +1758,16 @@ static void mix_kept(sa_settings *a, sa_settings *b, uint16_t keep, bool swap)
     }
 #undef MXF
 }
-/* on the bar line: OUT over, the next groove in, the kept layers the old ones, in the old key and tempo (no copy of a
+/* the key a mix goes into (0.8.26): the next door one on the circle of fifths, so the two share six of their seven
+ * notes: minor to major its relative major (a minor third up), major to minor its relative minor (a minor third down),
+ * minor to minor or major to major a fifth up (the lift DJs mix into). DORIAN and PHRYGIAN count as minor */
+int sa_mix_key(int key, int scale_from, int scale_to)
+{
+    bool maj0 = scale_from == SA_SC_MAJOR, maj1 = scale_to == SA_SC_MAJOR;
+    int d = maj0 == maj1 ? 7 : maj1 ? 3 : 9;
+    return (key + d) % 12;
+}
+/* on the bar line: OUT over, the next groove in, the kept layers the old ones, in a key next door, the old tempo (no copy of a
  * whole groove: the kept slots swapped, then the two grooves, so mx_next holds the new kept ones for the end); IN
  * over, the kept ones the new ones; the tempo on the way, a step a bar */
 static void mix_bar(sa_groove *g)
@@ -1767,7 +1776,8 @@ static void mix_bar(sa_groove *g)
     int b = g->bar - g->mx_bar0;
     sa_settings *n = g->mx_next;
     if (g->mx_state == 1 && b >= g->mx_out) {
-        uint8_t pal = g->s.palette, look = g->s.look, key = g->s.harm.key, bpm = g->s.bpm;
+        uint8_t pal = g->s.palette, look = g->s.look, bpm = g->s.bpm;
+        uint8_t key = (uint8_t)sa_mix_key(g->s.harm.key, g->s.harm.scale, n->harm.scale);
         for (int p = 0; p < SA_SYNTHS; ++p)
             if (!((g->mx_keep >> p) & 1u)) part_off(g, p);
         g->mx_bpm0 = bpm;
@@ -1776,7 +1786,8 @@ static void mix_bar(sa_groove *g)
         mix_swap_b(&g->s, n, sizeof g->s);
         g->s.palette = pal;
         g->s.look = look;
-        g->s.harm.key = key;                       /* (in the old key: the kept bass and the new layers agree) */
+        g->s.harm.key = key;                       /* (a key next door to the old one: the kept bass and the new layers
+                                                    * agree, the change heard as a lift) */
         g->s.bpm = bpm;
         sa_settings_fix(&g->s);
         memset(g->arp_i, 0, sizeof g->arp_i);

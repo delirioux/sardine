@@ -809,8 +809,12 @@ int main(int argc, char **argv)
         shot("18j2_stylemix_out");
         bars(2);
         CHECK(g.mx_state == 2 && !memcmp(&g.s.code[SA_L_BASS], &old.code[SA_L_BASS], sizeof old.code[0]) &&
-              g.s.code[SA_L_LEAD].sound == nx0.code[SA_L_LEAD].sound && g.s.harm.key == old.harm.key && g.s.bpm == 120,
-              "IN: the new style around the old BASS, in the old key and tempo");
+              g.s.code[SA_L_LEAD].sound == nx0.code[SA_L_LEAD].sound &&
+              g.s.harm.key == sa_mix_key(old.harm.key, old.harm.scale, nx0.harm.scale) && g.s.bpm == 120,
+              "IN: the new style around the old BASS, in a key next door, the old tempo");
+        CHECK(sa_mix_key(9, SA_SC_MINOR, SA_SC_MAJOR) == 0 && sa_mix_key(0, SA_SC_MAJOR, SA_SC_MINOR) == 9 &&
+              sa_mix_key(9, SA_SC_MINOR, SA_SC_DORIAN) == 4 && sa_mix_key(7, SA_SC_MAJOR, SA_SC_MAJOR) == 2,
+              "the mix's key: A minor to C major, C major to A minor, A minor to E dorian, G major to D major");
         CHECK(g.mx_gain[SA_L_LEAD] < 0.05f && g.mx_gain[SA_L_DRUM0] < 0.5f, "IN: the LEAD silent, the drums coming");
         int d0 = part_on[SA_PART_DRUMS];
         bars(2);

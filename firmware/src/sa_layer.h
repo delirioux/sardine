@@ -305,7 +305,8 @@ void sa_set_arm(sa_groove *g, const sa_settings *s);
  * per slot), out over out_bars from the next 1, in over in_bars; stopped: at once. Anything else armed ends it */
 void sa_mix(sa_groove *g, sa_settings *next, uint16_t keep, int out_bars, int in_bars);
 void sa_mix_end(sa_groove *g);                      /* over now: every layer at its level */
-float sa_mix_pos(const sa_groove *g);               /* 0..1 through the phase playing (mx_state) */
+float sa_mix_pos(const sa_groove *g);
+int sa_mix_key(int key, int scale_from, int scale_to);   /* the key a mix goes into: next door on the circle of fifths */               /* 0..1 through the phase playing (mx_state) */
 /* a fresh groove from a seed: a kick, hats, a clap or snare and maybe more, a bass, stabs or a pad, now and then a
  * lead, a key, scale, progression, kit, tempo and swing that suit a club. The sounds come from the glue's lists */
 typedef struct { const uint8_t *bass, *keys, *pad, *lead; uint8_t nbass, nkeys, npad, nlead; } sa_pool;
