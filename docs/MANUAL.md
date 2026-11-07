@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.15. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.16. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -327,7 +327,8 @@ of the box: sets 1 to 4, 16 bars each. The steps are kept (with the look); SONG 
 
 **SCL** opens KEY: **KEY**, **SCALE** (MINOR, DORIAN, PHRYGIAN, MAJOR), **CHORDS** (ten progressions, from ONE
 CHORD to four chords) and **BARS** (each chord 1, 2 or 4 bars). The synth layers follow the chord of the bar; the
-drums do not. A key change waits for SEQ. SCL again goes back.
+drums do not. The progressions are named as in the minor key; where a scale makes one of their chords diminished
+(DORIAN's VI, MAJOR's VII, MINOR's ii, PHRYGIAN's v) the chord a third below plays instead, so nothing sounds off. A key change waits for SEQ. SCL again goes back.
 
 ## The keys
 

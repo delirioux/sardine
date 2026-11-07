@@ -560,6 +560,10 @@ static void chord_of_bar(sa_groove *g, int bar)
     int bars = h->bars >= 4 ? 4 : h->bars >= 2 ? 2 : 1;
     int i = (bar < 0 ? 0 : bar / bars) % PROG[p].n;
     int d = PROG[p].deg[i], sc = clampi(h->scale, 0, SA_SCALES - 1);
+    if ((SCALE[sc][(d + 4) % 7] - SCALE[sc][d] + 12) % 12 == 6)
+        d = (d + 5) % 7;                           /* (a diminished chord in this scale: the chord a third below it,
+                                                    * two of its notes the same: dorian's VI the IV, major's VII the
+                                                    * V, minor's ii the VII; the bass never on the dim root) */
     for (int t = 0; t < 4; ++t)
         g->chord_pc[t] = (uint8_t)((h->key + SCALE[sc][(d + 2 * t) % 7]) % 12);
     g->chord_deg = (uint8_t)d;

@@ -349,6 +349,24 @@ int main(void)
     }
     CHECK(g.nheld <= SA_HELD, "held in range");
 
+    {   /* no diminished chord in any scale or progression (dorian's VI, major's VII, minor's ii: the chord a third down) */
+        static sa_groove h;
+        int dim = 0;
+        char where[48] = "";
+        for (int sc = 0; sc < SA_SCALES; ++sc)
+            for (int pr = 0; pr < SA_PROGS; ++pr) {
+                sa_init(&h, SR);
+                sa_set_sound(&h, snd, 0);
+                h.ed_harm.key = 7, h.ed_harm.scale = (uint8_t)sc, h.ed_harm.prog = (uint8_t)pr, h.ed_harm.bars = 1;
+                sa_drop(&h);
+                sa_play(&h, true);
+                for (int b = 0; b < 4; ++b) {
+                    run_bars(&h, 1);
+                    if (strstr(h.chord_name, "dim")) { dim++; snprintf(where, sizeof where, "%d/%d %s", sc, pr, h.chord_name); }
+                }
+            }
+        CHECK(dim == 0, "no diminished chords (%d, %s)", dim, where);
+    }
     {   /* no ride, no crash: PERC lists its own percussion; a stored ride or crash is the tambourine */
         uint8_t v[16];
         int n = sa_row_voices(SA_DR_PERC, v), cym = 0;
