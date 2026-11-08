@@ -469,11 +469,8 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
             sv_card_txt(&c[2], "NOTE", "-", -1, false);
         }
         sv_card_off(&c[3]);
-        if (u->page == SV_PG_EDIT) {               /* EDIT: STEP FILL LENGTH NOTE */
-            c[3] = c[2];
-            c[2] = c[1];
-            sv_card_txt(&c[1], "FILL", sv_fill_name(u, u->fill), u->fill * 1000 / (sv_fills(u) - 1), u->fill > 0);
-        }
+        if (u->page == SV_PG_EDIT)                 /* (0.8.48) EDIT: STEP LENGTH NOTE FILL */
+            sv_card_txt(&c[3], "FILL", sv_fill_name(u, u->fill), u->fill * 1000 / (sv_fills(u) - 1), u->fill > 0);
         return;
     }
     switch (sv_page_now(u)) {
@@ -829,7 +826,7 @@ static void sv_panel_steps(sa_ui *u)
         if (chord) for (int r = 0; r < 3; ++r) cv_rrect(x + 1, y0 + h / 2 - 12 + r * 9, w, 6, 2, c, T_SURF);
         else if (note) cv_rrect(x + 1, y0 + h - 8 - (o.sn[k] - lo) * (h - 10) / (hi - lo), w, 6, 2, c, T_SURF);
     }
-    cv_text_on(10, 104, &AF_S, "KNOB 1: STEP. KEY OR KNOB 4: NOTE", T_DIM, T_SURF);
+    cv_text_on(10, 104, &AF_S, "KNOB 1: STEP. KEY OR KNOB 3: NOTE", T_DIM, T_SURF);
 }
 
 static void sv_panel_gate(sa_ui *u)
@@ -2157,7 +2154,8 @@ void sv_knob(sa_ui *u, int k, int d)
     sa_code *e = &g->ed[l];
     u->changed = true;
 #define SV_ADJ(f, step, lo, hi) (f) = (uint8_t)sv_clampi((f) + d * (step), (lo), (hi))
-    if (u->page == SV_PG_EDIT && i == 1) {         /* EDIT: FILL (CURR, the ready fills) */
+    if (u->page == SV_PG_EDIT && i == (u->view == SV_V_DRUMS ? 1 : 3)) {   /* EDIT: FILL (CURR, the ready fills; a synth
+                                                    * layer's on KNOB 4, 0.8.48) */
         u->fill = sv_clampi(u->fill + d, 0, sv_fills(u) - 1);
         sv_fill_apply(u);
         return;
@@ -2175,10 +2173,10 @@ void sv_knob(sa_ui *u, int k, int d)
         }
         return;
     }
-    if (sv_steps_on(u)) {                          /* REC: KNOB 1 the step, KNOB 2 its length (EDIT: KNOB 3) */
+    if (sv_steps_on(u)) {                          /* (0.8.48) KNOB 1 the step, KNOB 2 its length, KNOB 3 its note */
         if (i == 0) u->scur = sv_wrap(u->scur + d, 16);
-        else if (i == (u->page == SV_PG_EDIT ? 2 : 1)) sa_step_len(g, l, sv_clampi(u->scur, 0, 15), d);
-        else if (i == (u->page == SV_PG_EDIT ? 3 : 2)) sa_step_turn(g, l, sv_clampi(u->scur, 0, 15), d);   /* NOTE */
+        else if (i == 1) sa_step_len(g, l, sv_clampi(u->scur, 0, 15), d);
+        else if (i == 2) sa_step_turn(g, l, sv_clampi(u->scur, 0, 15), d);   /* NOTE */
         u->changed = true;
         return;
     }

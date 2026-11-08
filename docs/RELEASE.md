@@ -1,4 +1,4 @@
-Sardine 0.8.47: live club mixing for the FM-1.
+Sardine 0.8.48: live club mixing for the FM-1.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
   through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, MANUAL, ARP, PAN, PAN 3D, PUMP, GATE, MOD; DRUMS: MIX, MANUAL, KIT, MOD), HOME back to them all
@@ -11,7 +11,7 @@ Sardine 0.8.47: live club mixing for the FM-1.
   WOB, a raw wobbling lead for DUB; DUB SKANK made over
 - MELODIES (0.8.43): sixteen lead lines over 2 or 4 bars, a call and its answer, in scale steps from each chord,
   two for every style; a fresh groove's LEAD mostly a sound that holds its notes
-- EDIT: a pattern editor, KNOB 1 the step, KNOB 2 ready fills (drum fills, lines in the key, chord rhythms), REC:
+- EDIT: a pattern editor, KNOB 1 the step, KNOB 2 its length, KNOB 3 its note, KNOB 4 ready fills (0.8.48; a drum: KNOB 2 fills, drum fills; lines in the key, chord rhythms), REC:
   the keys write the steps
 - STYLE MIX (GLO held): from one style into another, the layers you don't keep fading out over 1 to 4 bars, the new
   style fading in around the kept bass or kick over 2 to 16 bars in a key next door (circle of fifths), the tempo

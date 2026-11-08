@@ -520,15 +520,19 @@ int main(int argc, char **argv)
         sa_own_make(&g, c);
         c->sn[9] = SA_NO_NOTE;
         c->chord &= (uint16_t)~(1u << 9);
-        sv_knob(&ui, SV_K4, 1);
+        sv_knob(&ui, SV_K3, 1);                    /* (0.8.48: NOTE on KNOB 3, LENGTH on KNOB 2, FILL on KNOB 4) */
         int n0 = c->sn[9];
-        sv_knob(&ui, SV_K4, 2);
+        sv_knob(&ui, SV_K3, 2);
         int n1 = c->sn[9];
         CHECK(n0 != SA_NO_NOTE && n1 > n0 && sa_snap(&g.ed_harm, g.ed_harm.key + n1) == g.ed_harm.key + n1,
               "NOTE: a rest gets a note (%d), turned two up the scale (%d)", n0, n1);
         shot("18c_edit_note");
-        sv_knob(&ui, SV_K3, -20);
+        sv_knob(&ui, SV_K2, -20);
         CHECK(c->sn[9] == SA_NO_NOTE, "LENGTH below 1: the note goes");
+        sv_knob(&ui, SV_K2, 1);
+        CHECK(c->sn[9] != SA_NO_NOTE && c->sl[9] == 1, "LENGTH on a rest: a note there, a sixteenth");
+        sv_knob(&ui, SV_K2, 3);
+        CHECK(c->sl[9] == 4, "LENGTH: 4 sixteenths (%d)", c->sl[9]);
     }
     {   /* EDIT, no REC: a key writes its note at the step too, and sounds */
         sv_knob(&ui, SV_K1, 11 - ui.scur);
@@ -543,7 +547,7 @@ int main(int argc, char **argv)
     sv_key(&ui, 60, true);
     sv_key(&ui, 60, false);
     CHECK(g.ed[SA_L_BASS].own && g.ed[SA_L_BASS].sn[5] != SA_NO_NOTE && ui.scur == 6, "EDIT: a key, a note on step 6");
-    sv_knob(&ui, SV_K2, 2);
+    sv_knob(&ui, SV_K4, 2);
     CHECK(!strcmp(sv_fill_name(&ui, ui.fill), "ARP UP") && g.ed[SA_L_BASS].sn[0] != SA_NO_NOTE &&
           g.ed[SA_L_BASS].sn[2] > g.ed[SA_L_BASS].sn[0], "FILL: ARP UP, a line up the scale");
     shot("18f_edit_fill");

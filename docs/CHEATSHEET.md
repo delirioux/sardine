@@ -13,7 +13,7 @@ the next bar.
 | --- | --- | --- |
 | 1 | Keys | On a layer, the keys play it live (on HOME: LEAD; on DRUMS: the drum you picked). They play the notes as you press them; MENU's **SNAP** (HOME held, KNOB 3) snaps them to the scale |
 | 2 | Pattern | **ALGORITHM** on a layer: one of 54 synth patterns (16 of them lead melodies over 2 or 4 bars) or 24 drum patterns; **SEQ** drops it in on the next bar |
-| 3 | EDIT | **EDIT** or **REC** on a layer: KNOB 1 the step, a key or KNOB 4 the note, KNOB 3 its length, KNOB 2 a ready fill. On a drum, KNOB 4 solos it while you edit |
+| 3 | EDIT | **EDIT** or **REC** on a layer: KNOB 1 the step, KNOB 2 its length, a key or KNOB 3 the note, KNOB 4 a ready fill. On a drum: KNOB 2 a fill, KNOB 3 the hit, KNOB 4 solos it while you edit |
 | 4 | ARP | FX to **ARP**: MODE (10), RATE, RANGE, GATE |
 | 5 | MOD | FX to **MOD**: 10 modifiers that bend a pattern (FAST, SLOW, REV, EVERY, THIN, EUCLID, SHIFT, LEN, OCT, PLY) |
 | 6 | Harmony | **SCL**: KEY, SCALE (4), CHORDS (10 progressions), BARS per chord |

@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.47. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.48. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -184,19 +184,23 @@ layer's own (MY STEPS); like a pattern, the steps wait for SEQ, and the modifier
 <img src="screens/edit_drum.png" alt="EDIT, a drum" width="200">
 </p>
 
-**EDIT** on a layer opens its pattern editor: its 16 steps, the step **KNOB 1** is on framed. **KNOB 2** is **FILL**:
+**EDIT** on a layer opens its pattern editor: its 16 steps, the step **KNOB 1** is on framed. On LEAD, CHORD and BASS
+the knobs are STEP, **LENGTH**, **NOTE**, **FILL** (0.8.48); on DRUMS STEP, FILL, HIT, SOLO. **FILL** (KNOB 4; on
+DRUMS KNOB 2):
 CURR (the pattern as it was when you opened EDIT) and ready fills that rewrite the steps; turn back to CURR and the
 pattern is as it was. On DRUMS: ROLL (the last beat in sixteenths), BUILD, SNARE, BREAK (the first half only), STUTTER,
 GALLOP, FLAM and DOUBLE, over the drum's own hits or in place of them. On LEAD and BASS ready lines in the key: ROOT
 8THS, ARP UP, ARP DOWN, OCTAVES, WALK, RIFF, CALL, PULSE 16. On CHORD the chord's rhythm: STABS, OFFBEATS, PUSH,
-PULSE, 8THS, 16THS, DOTTED, HOLD. **KNOB 3** is the step's LENGTH (on DRUMS its HIT, on or off); turned below 1, the
-note goes. **KNOB 4** is its **NOTE**: on an empty step it puts a note there (the note before it, else the root), turned
-on it moves it up or down the scale (on CHORD: right the chord on, left off). On DRUMS **KNOB 4** is **SOLO**: right,
+PULSE, 8THS, 16THS, DOTTED, HOLD. **KNOB 2** is the step's **LENGTH** in sixteenths: on an empty step, turned right, it
+puts a note there first (the note before it, else the root; on CHORD the chord), a sixteenth long, and lengthens it
+from there; turned below 1, the note goes. **KNOB 3** is its **NOTE**: on an empty step it puts a note there, turned on
+it moves it up or down the scale (on CHORD: right the chord on, left off). On DRUMS **KNOB 3** is the step's **HIT** (on
+or off) and **KNOB 4** is **SOLO**: right,
 the drum you edit plays alone (the rest of the mix out, so you hear what you set); left, all back. It is for editing
 only: leaving EDIT turns it off, and picking another drum takes the solo along.
 
 Setting a note, step by step: **EDIT**, KNOB 1 to the step, then a key (heard as you press it; the step moves on) or
-KNOB 4 to the note, KNOB 3 for how long.
+KNOB 3 to the note, KNOB 2 for how long.
 
 In EDIT, LEAD, BASS and CHORD: a key writes at the framed step (the note as pressed, or snapped to the scale with SNAP ON; the same note
 again takes it off; on CHORD the chord) and the frame moves on. DRUMS: the 16 lowest keys are the steps, glowing dim,

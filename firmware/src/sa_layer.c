@@ -934,6 +934,12 @@ void sa_step_len(sa_groove *g, int l, int st, int d)
     if (l < 0 || l >= SA_LAYERS || st < 0 || st > 15) return;
     sa_code *c = &g->ed[l];
     if (c->type != SA_T_SYNTH) return;
+    if (d > 0 && !(sa_own_make(g, c), c->sn[st] != SA_NO_NOTE || ((c->chord >> st) & 1u))) {
+        sa_step_turn(g, l, st, 1);                 /* (0.8.48) a rest: a note there first (the one before it; CHORD: the
+                                                    * chord), a sixteenth long */
+        c->sl[st] = 1;
+        return;
+    }
     sa_own_make(g, c);
     if (c->sl[st] + d < 1 && (c->sn[st] != SA_NO_NOTE || ((c->chord >> st) & 1u))) {   /* below 1: the note goes */
         c->sn[st] = SA_NO_NOTE;
