@@ -35,7 +35,7 @@ the next bar.
 
 | | What | How |
 | --- | --- | --- |
-| 20 | Synth sound | On a layer, FX to **MIX**: TYPE, then INSTR. 104 sounds: 17 bass, 21 keys, 21 pads, 39 leads, 6 FX |
+| 20 | Synth sound | On a layer, FX to **MIX**: TYPE, then INSTR. 144 sounds: 37 bass, 37 keys, 25 pads, 39 leads, 6 FX |
 | 21 | Drum instrument | DRUMS: KNOB 1 the row, KNOB 2 the instrument. 17 drum instruments with 8 variations each |
 | 22 | Kit | DRUMS, FX to **KIT**, KNOB 1. 24 kits |
 

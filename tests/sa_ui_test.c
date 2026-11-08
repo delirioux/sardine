@@ -719,6 +719,12 @@ int main(int argc, char **argv)
         CHECK(sas_pat(SA_T_DRUM, y->kick) >= 0 && sas_pat(SA_T_DRUM, y->hats) >= 0 && (!y->xpat || sas_pat(SA_T_DRUM, y->xpat) >= 0),
               "style %s: its drum patterns", y->name);
         CHECK(y->bpm_lo <= y->bpm_hi && y->bpm_hi <= 200, "style %s: its tempo", y->name);
+        for (int i = 0; i < 2; ++i) {                 /* (0.8.41) its basses and chords: of their kinds */
+            int bs = sas_find(y->bass[i]), cs = sas_find(y->chord[i]);
+            CHECK(bs >= 0 && sas_of(bs)->role == SAS_R_BASS, "style %s: a BASS sound %d", y->name, i);
+            CHECK(cs >= 0 && (sas_of(cs)->role == SAS_R_KEYS || sas_of(cs)->role == SAS_R_PAD), "style %s: a CHORD sound %d",
+                  y->name, i);
+        }
         for (int i = 0; i < 2; ++i) {                 /* (0.8.23) every style its own leads and lead lines */
             int ls = y->lead[i] ? sas_find(y->lead[i]) : -1, lp = y->lpat[i] ? sas_pat(SA_T_SYNTH, y->lpat[i]) : -1;
             CHECK(ls >= 0 && sas_of(ls)->role == SAS_R_LEAD, "style %s: a LEAD sound %d", y->name, i);

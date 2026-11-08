@@ -117,6 +117,60 @@ static const sas_motion SAM_ZAPPER = {63, 0, 0, 0, 0, 0, 0};        /* down an o
 static const sas_motion SAM_WOBBLER = {0, 0, 6, 1, 45, 0, 0};       /* the filter by the 1/8 */
 static const sas_motion SAM_TORNADO = {0, 0, 1, 1, 28, 0, 0};       /* the filter over 4 bars */
 static const sas_motion SAM_STROBE = {0, 0, 10, 3, 0, 0, 127};      /* a 1/32 gate */
+/* (0.8.41) the STYLES' own: a bass and a chord sound made for each style. ANALOG's E: WAVE DTN MIX NOIS CUT RES DRV
+ * KTR (WAVE 0 SAW 1 SQR 2 TRI 3 SIN 4 PWM 5 SYNC 6 SUB); VOICE's: VOWL VOWL2 TALK SHIFT BUZZ BRTH Q RAND */
+static const preset_t SAS_VELVETSUB = {"VELVET SUB", {3, 0, 0, 0, 90, 0, 15, 0}, {3, 70, 115, 40}, 0, 1, FX(0, 0, 0, 10)};
+static const preset_t SAS_DISCOBASS = {"DISCO BASS", {0, 8, 40, 0, 42, 48, 22, 64}, {0, 55, 40, 20}, 45, 1, FX(0, 0, 0, 5)};
+static const preset_t SAS_WARMBASS = {"WARM BASS", {2, 4, 40, 0, 62, 8, 12, 48}, {1, 70, 100, 30}, 10, 1, FX(0, 0, 0, 5)};
+static const preset_t SAS_TECHPLUCK = {"TECH PLUCK", {1, 0, 0, 0, 40, 60, 25, 64}, {0, 45, 20, 15}, 50, 1, FX(0, 0, 0, 5)};
+static const preset_t SAS_CLICKBASS = {"CLICK BASS", {3, 0, 0, 14, 80, 0, 10, 64}, {0, 42, 40, 15}, 20, 1, FX(0, 0, 0, 5)};
+static const preset_t SAS_DARKROLL = {"DARK ROLL", {6, 6, 50, 0, 40, 40, 45, 64}, {0, 60, 70, 20}, 25, 1, FX(5, 0, 0, 5)};
+static const preset_t SAS_HARDBASS = {"HARD BASS", {0, 14, 64, 0, 70, 30, 95, 64}, {0, 60, 100, 20}, 15, 1, FX(45, 0, 0, 5)};
+static const preset_t SAS_BUZZBASS = {"BUZZ BASS", {4, 10, 64, 0, 80, 20, 90, 64}, {0, 50, 90, 15}, 10, 1, FX(60, 0, 0, 5)};
+static const preset_t SAS_ACIDSQ = {"ACID SQUARE", {1, 0, 0, 0, 40, 105, 35, 64}, {0, 50, 30, 20}, 52, 1, FX(20, 0, 20, 5)};
+static const preset_t SAS_ROLLING = {"ROLLING", {0, 10, 64, 0, 60, 30, 20, 64}, {0, 48, 25, 15}, 30, 1, FX(0, 0, 0, 5)};
+static const preset_t SAS_PROGBASS = {"PROG BASS", {0, 6, 64, 0, 45, 35, 15, 64}, {2, 70, 80, 30}, 20, 1, FX(0, 0, 0, 8)};
+static const preset_t SAS_FUNKBASS = {"FUNK BASS", {1, 0, 0, 0, 35, 55, 12, 64}, {0, 50, 50, 20}, 55, 1, FX(0, 0, 0, 5)};
+static const preset_t SAS_LOGDRUM = {"LOG DRUM", {3, 0, 0, 0, 110, 0, 25, 64}, {0, 48, 0, 35}, 0, 1, FX(0, 0, 0, 15)};
+static const preset_t SAS_WARPBASS = {"WARP BASS", {6, 8, 64, 0, 52, 50, 30, 64}, {0, 64, 110, 20}, 10, 1, FX(10, 0, 0, 5)};
+static const preset_t SAS_NEURO = {"NEURO", {0, 24, 64, 0, 55, 35, 60, 64}, {0, 70, 110, 20}, 10, 1, FX(25, 0, 0, 5)};
+static const preset_t SAS_DUBSUB = {"DUB SUB", {3, 0, 0, 0, 80, 0, 8, 0}, {2, 75, 110, 45}, 0, 1, FX(0, 0, 0, 20)};
+static const preset_t SAS_BOWEDBASS = {"BOWED BASS", {2, 6, 64, 0, 55, 10, 5, 32}, {40, 80, 110, 60}, 5, 1, FX(0, 20, 0, 40)};
+static const preset_t SAS_ZAPBASS = {"ZAP BASS", {1, 0, 0, 0, 70, 40, 30, 64}, {0, 70, 0, 30}, 20, 1, FX(10, 0, 0, 5)};
+static const preset_t SAS_DONK = {"DONK", {3, 0, 0, 0, 100, 20, 30, 64}, {0, 38, 0, 20}, 10, 1, FX(10, 0, 0, 10)};
+static const preset_t SAS_LOFIBASS = {"LOFI BASS", {2, 0, 0, 6, 48, 5, 30, 48}, {1, 65, 95, 25}, 5, 1, FX(15, 0, 0, 10)};
+static const preset_t SAS_MISTPAD = {"MIST PAD", {4, 10, 64, 6, 45, 20, 0, 32}, {100, 90, 115, 110}, 6, 0, FX(0, 90, 20, 95)};
+static const preset_t SAS_FILTERSTAB = {"FILTER STAB", {0, 10, 64, 0, 45, 55, 20, 64}, {0, 55, 30, 30}, 45, 0, FX(5, 40, 30, 40)};
+static const preset_t SAS_DEEPCHORD = {"DEEP CHORD", {1, 8, 64, 0, 52, 25, 5, 48}, {0, 60, 30, 40}, 25, 0, FX(0, 40, 50, 70)};
+static const preset_t SAS_HOUSESTAB = {"HOUSE STAB", {1, 4, 40, 0, 70, 15, 10, 64}, {0, 45, 10, 25}, 20, 0, FX(0, 20, 40, 40)};
+static const preset_t SAS_BLIPCHORD = {"BLIP CHORD", {3, 0, 0, 0, 110, 0, 0, 64}, {0, 35, 0, 25}, 0, 0, FX(0, 0, 80, 50)};
+static const preset_t SAS_HYPNOSTAB = {"HYPNO STAB", {0, 12, 64, 0, 42, 60, 30, 48}, {0, 60, 20, 35}, 35, 0, FX(5, 20, 70, 60)};
+static const preset_t SAS_HARDSTAB = {"HARD STAB", {0, 16, 64, 0, 80, 30, 85, 64}, {0, 45, 10, 20}, 20, 0, FX(40, 0, 20, 30)};
+static const preset_t SAS_ALARM = {"ALARM", {1, 18, 64, 0, 95, 20, 60, 64}, {0, 55, 0, 20}, 10, 0, FX(30, 20, 20, 30)};
+static const preset_t SAS_ACIDCHORD = {"ACID CHORD", {0, 8, 64, 0, 40, 90, 30, 64}, {0, 48, 20, 20}, 55, 0, FX(15, 0, 50, 30)};
+static const preset_t SAS_GATEDSUPER = {"GATED SUPER", {0, 24, 64, 0, 90, 15, 10, 48}, {0, 64, 115, 30}, 5, 0, FX(0, 90, 40, 60)};
+static const preset_t SAS_PROGPAD = {"PROG PAD", {0, 14, 64, 0, 50, 25, 0, 48}, {60, 85, 110, 80}, 20, 0, FX(0, 80, 40, 80)};
+static const preset_t SAS_DISCOSTR = {"DISCO STRINGS", {0, 12, 64, 0, 85, 8, 0, 48}, {20, 80, 112, 45}, 5, 0, FX(0, 110, 10, 50)};
+static const preset_t SAS_SOFTKEYS = {"SOFT KEYS", {2, 4, 40, 0, 80, 5, 5, 64}, {0, 70, 40, 45}, 10, 0, FX(0, 30, 30, 50)};
+static const preset_t SAS_STABORGAN = {"STAB ORGAN", {1, 6, 64, 0, 90, 5, 15, 64}, {0, 40, 60, 20}, 0, 0, FX(0, 40, 20, 35)};
+static const preset_t SAS_BREAKSTAB = {"BREAK STAB", {0, 20, 64, 0, 85, 25, 40, 64}, {0, 50, 15, 25}, 25, 0, FX(15, 40, 40, 50)};
+static const preset_t SAS_DUBSKANK = {"DUB SKANK", {1, 6, 64, 0, 58, 30, 10, 48}, {0, 35, 0, 30}, 30, 0, FX(0, 20, 120, 70)};
+static const preset_t SAS_AURORA = {"AURORA", {4, 12, 64, 10, 55, 20, 0, 32}, {120, 100, 120, 120}, 8, 0, FX(0, 100, 40, 120)};
+static const preset_t SAS_ROBOTCHOIR = {"ROBOT CHOIR", {40, 90, 60, 0, 100, 10, 90, 10}, {10, 70, 100, 40}, 0, 0, FX(0, 40, 30, 40)};
+static const preset_t SAS_HAPPYSTAB = {"HAPPY STAB", {4, 14, 64, 0, 95, 15, 25, 64}, {0, 55, 40, 25}, 15, 0, FX(10, 40, 30, 40)};
+static const preset_t SAS_DUSTYKEYS = {"DUSTY KEYS", {2, 6, 40, 8, 55, 5, 15, 48}, {0, 70, 40, 40}, 10, 0, FX(10, 30, 20, 60)};
+/*                                     epit eshp lsync lwave lflt lshp lamp */
+static const sas_motion SAM_LOGDRUM = {30, 0, 0, 0, 0, 0, 0};       /* the log drum's fall */
+static const sas_motion SAM_WARP = {0, 0, 6, 1, 35, 0, 0};          /* the filter by the 1/8 */
+static const sas_motion SAM_NEURO = {0, 0, 5, 0, 30, 0, 0};         /* the filter by the 1/4 */
+static const sas_motion SAM_ZAPBASS = {24, 0, 0, 0, 0, 0, 0};
+static const sas_motion SAM_DONK = {40, 0, 0, 0, 0, 0, 0};
+static const sas_motion SAM_HYPNO = {0, 0, 1, 1, 20, 0, 0};         /* the filter drifting over 4 bars */
+static const sas_motion SAM_ALARM = {6, 0, 0, 0, 0, 0, 0};
+static const sas_motion SAM_GATED = {0, 0, 8, 3, 0, 0, 110};        /* the trance gate, 1/16 */
+static const sas_motion SAM_PROGPAD = {0, 0, 2, 1, 18, 0, 0};       /* the filter over 2 bars */
+static const sas_motion SAM_SOFTKEYS = {0, 0, 5, 0, 0, 0, 30};      /* a tremolo by the 1/4 */
+static const sas_motion SAM_AURORA = {0, 0, 1, 1, 22, 0, 0};
 
 #include "sa_fm6.inc"
 
@@ -135,6 +189,11 @@ static const sas_motion SAM_STROBE = {0, 0, 10, 3, 0, 0, 127};      /* a 1/32 ga
 /* (0.8.24) a RAVE lead: as SL, and its movement (0: none) */
 #define SR(n, e, own, gl, b, rs, tr, w, rv, dl, mo) {(n), SAS_R_LEAD, (uint8_t)(e), 0, SAS_KEEP, (int8_t)(gl), SAS_LEGATO, \
                                                      &(own), 0, (int8_t)(b), (int8_t)(rs), (int8_t)(tr), (w), (rv), (dl), 0, (mo)}
+/* (0.8.41) a style's own bass or chord: its role and voice, glide, CUTOFF and RESO's E, trim, spread, reverb, delay,
+ * vibrato and movement */
+#define SX(n, r, e, own, gl, v, b, rs, tr, w, rv, dl, vb, mo) {(n), (r), (uint8_t)(e), 0, SAS_KEEP, (int8_t)(gl), \
+                                                              (int8_t)(v), &(own), 0, (int8_t)(b), (int8_t)(rs), \
+                                                              (int8_t)(tr), (w), (rv), (dl), (vb), (mo)}
 #define SF(n, r, patch, gl, v, tr) {(n), (r), (uint8_t)SAS_FM6, 0, SAS_KEEP, (int8_t)(gl), (int8_t)(v), 0, (patch), 2, -1, \
                                     (int8_t)(tr)}
 #define B SAS_R_BASS
@@ -256,6 +315,47 @@ static const sas_sound SAS_SOUND[] = {
     SR("HYPERSAW", SAS_TRIO, SAS_HYPERSAW, 4, 5, 6, -1, 110, 0, 0, 0),
     SR("TORNADO", SAS_ANALOG, SAS_TORNADO, 6, 4, 5, 10, 60, 0, 0, &SAM_TORNADO),
     SR("STROBE", SAS_ANALOG, SAS_STROBE, SAS_KEEP, 4, 5, 6, 60, 0, 0, &SAM_STROBE),
+    /* the STYLES' own (0.8.41) */
+    SX("VELVET SUB", B, SAS_ANALOG, SAS_VELVETSUB, SAS_KEEP, SAS_MONO, 4, 5, -15, 0, 0, 0, 0, 0),
+    SX("DISCO BASS", B, SAS_ANALOG, SAS_DISCOBASS, SAS_KEEP, SAS_MONO, 4, 5, -4, 0, 0, 0, 0, 0),
+    SX("WARM BASS", B, SAS_ANALOG, SAS_WARMBASS, SAS_KEEP, SAS_MONO, 4, 5, -8, 0, 0, 0, 0, 0),
+    SX("TECH PLUCK", B, SAS_ANALOG, SAS_TECHPLUCK, SAS_KEEP, SAS_MONO, 4, 5, 1, 0, 0, 0, 0, 0),
+    SX("CLICK BASS", B, SAS_ANALOG, SAS_CLICKBASS, SAS_KEEP, SAS_MONO, 4, 5, -5, 0, 0, 0, 0, 0),
+    SX("DARK ROLL", B, SAS_ANALOG, SAS_DARKROLL, SAS_KEEP, SAS_MONO, 4, 5, -4, 0, 0, 0, 0, 0),
+    SX("HARD BASS", B, SAS_ANALOG, SAS_HARDBASS, SAS_KEEP, SAS_MONO, 4, 5, -10, 0, 0, 0, 0, 0),
+    SX("BUZZ BASS", B, SAS_ANALOG, SAS_BUZZBASS, SAS_KEEP, SAS_MONO, 4, 5, -8, 0, 0, 0, 0, 0),
+    SX("ACID SQUARE", B, SAS_ANALOG, SAS_ACIDSQ, 18, SAS_LEGATO, 4, 5, -1, 0, 0, 0, 0, 0),
+    SX("ROLLING", B, SAS_ANALOG, SAS_ROLLING, SAS_KEEP, SAS_MONO, 4, 5, 0, 0, 0, 0, 0, 0),
+    SX("PROG BASS", B, SAS_ANALOG, SAS_PROGBASS, SAS_KEEP, SAS_MONO, 4, 5, -6, 0, 0, 0, 0, 0),
+    SX("FUNK BASS", B, SAS_ANALOG, SAS_FUNKBASS, SAS_KEEP, SAS_MONO, 4, 5, -3, 0, 0, 0, 0, 0),
+    SX("LOG DRUM", B, SAS_ANALOG, SAS_LOGDRUM, SAS_KEEP, SAS_MONO, 4, 5, -2, 0, 0, 0, 0, &SAM_LOGDRUM),
+    SX("WARP BASS", B, SAS_ANALOG, SAS_WARPBASS, SAS_KEEP, SAS_MONO, 4, 5, -5, 0, 0, 0, 0, &SAM_WARP),
+    SX("NEURO", B, SAS_ANALOG, SAS_NEURO, SAS_KEEP, SAS_MONO, 4, 5, -8, 0, 0, 0, 0, &SAM_NEURO),
+    SX("DUB SUB", B, SAS_ANALOG, SAS_DUBSUB, 10, SAS_LEGATO, 4, 5, -14, 0, 0, 0, 0, 0),
+    SX("BOWED BASS", B, SAS_ANALOG, SAS_BOWEDBASS, SAS_KEEP, SAS_MONO, 4, 5, -10, 0, 0, 0, 0, 0),
+    SX("ZAP BASS", B, SAS_ANALOG, SAS_ZAPBASS, SAS_KEEP, SAS_MONO, 4, 5, -2, 0, 0, 0, 0, &SAM_ZAPBASS),
+    SX("DONK", B, SAS_ANALOG, SAS_DONK, SAS_KEEP, SAS_MONO, 4, 5, 8, 0, 0, 0, 0, &SAM_DONK),
+    SX("LOFI BASS", B, SAS_ANALOG, SAS_LOFIBASS, SAS_KEEP, SAS_MONO, 4, 5, -7, 0, 0, 0, 0, 0),
+    SX("MIST PAD", P, SAS_ANALOG, SAS_MISTPAD, SAS_KEEP, SAS_POLY, 4, 5, 0, 110, 95, 10, 0, 0),
+    SX("FILTER STAB", K, SAS_ANALOG, SAS_FILTERSTAB, SAS_KEEP, SAS_POLY, 4, 5, 13, 60, 0, 30, 0, 0),
+    SX("DEEP CHORD", K, SAS_ANALOG, SAS_DEEPCHORD, SAS_KEEP, SAS_POLY, 4, 5, 7, 70, 80, 50, 0, 0),
+    SX("HOUSE STAB", K, SAS_ANALOG, SAS_HOUSESTAB, SAS_KEEP, SAS_POLY, 4, 5, 11, 50, 0, 40, 0, 0),
+    SX("BLIP CHORD", K, SAS_ANALOG, SAS_BLIPCHORD, SAS_KEEP, SAS_POLY, 4, 5, 8, 60, 0, 90, 0, 0),
+    SX("HYPNO STAB", K, SAS_ANALOG, SAS_HYPNOSTAB, SAS_KEEP, SAS_POLY, 4, 5, 17, 70, 70, 80, 0, &SAM_HYPNO),
+    SX("HARD STAB", K, SAS_ANALOG, SAS_HARDSTAB, SAS_KEEP, SAS_POLY, 4, 5, 10, 40, 0, 0, 0, 0),
+    SX("ALARM", K, SAS_ANALOG, SAS_ALARM, SAS_KEEP, SAS_POLY, 4, 5, 11, 50, 0, 0, 0, &SAM_ALARM),
+    SX("ACID CHORD", K, SAS_ANALOG, SAS_ACIDCHORD, SAS_KEEP, SAS_POLY, 4, 5, 14, 40, 0, 50, 0, 0),
+    SX("GATED SUPER", K, SAS_ANALOG, SAS_GATEDSUPER, SAS_KEEP, SAS_POLY, 4, 5, -5, 100, 70, 40, 0, &SAM_GATED),
+    SX("PROG PAD", P, SAS_ANALOG, SAS_PROGPAD, SAS_KEEP, SAS_POLY, 4, 5, -11, 100, 90, 30, 0, &SAM_PROGPAD),
+    SX("DISCO STRINGS", P, SAS_ANALOG, SAS_DISCOSTR, SAS_KEEP, SAS_POLY, 4, 5, -14, 100, 60, 0, 0, 0),
+    SX("SOFT KEYS", K, SAS_ANALOG, SAS_SOFTKEYS, SAS_KEEP, SAS_POLY, 4, 5, 0, 50, 60, 30, 0, &SAM_SOFTKEYS),
+    SX("STAB ORGAN", K, SAS_ANALOG, SAS_STABORGAN, SAS_KEEP, SAS_POLY, 4, 5, 2, 40, 0, 0, 0, 0),
+    SX("BREAK STAB", K, SAS_ANALOG, SAS_BREAKSTAB, SAS_KEEP, SAS_POLY, 4, 5, 11, 70, 0, 40, 0, 0),
+    SX("DUB SKANK", K, SAS_ANALOG, SAS_DUBSKANK, SAS_KEEP, SAS_POLY, 4, 5, 9, 60, 80, 120, 0, 0),
+    SX("AURORA", P, SAS_ANALOG, SAS_AURORA, SAS_KEEP, SAS_POLY, 4, 5, 8, 120, 120, 40, 0, &SAM_AURORA),
+    SX("ROBOT CHOIR", K, SAS_VOICE, SAS_ROBOTCHOIR, SAS_KEEP, SAS_POLY, -1, -1, -12, 60, 0, 30, 0, 0),
+    SX("HAPPY STAB", K, SAS_ANALOG, SAS_HAPPYSTAB, SAS_KEEP, SAS_POLY, 4, 5, 9, 70, 0, 30, 0, 0),
+    SX("DUSTY KEYS", K, SAS_ANALOG, SAS_DUSTYKEYS, SAS_KEEP, SAS_POLY, 4, 5, 7, 50, 70, 0, 1, 0),
 };
 #undef S
 #undef SG
@@ -264,6 +364,7 @@ static const sas_sound SAS_SOUND[] = {
 #undef SA
 #undef SL
 #undef SR
+#undef SX
 #undef B
 #undef K
 #undef P
@@ -386,64 +487,64 @@ typedef struct {
 } sas_style;
 static const sas_style SAS_STYLE[] = {
     {"NIGHT", "SLOW, DARK, FILTERED", 98, 104, {SA_KIT_HYPNO, SA_KIT_SOFT}, SA_SC_MINOR, 12, 20, 90, 62, 30,
-     {"DEEP SUB", "SUB"}, {"SUB HOLD", "HALF"}, {"DARK PAD", "NIGHT"}, {"WASH", "TWO HALVES"}, {"AIR LEAD", "DUB LEAD"},
+     {"VELVET SUB", "DEEP SUB"}, {"SUB HOLD", "HALF"}, {"MIST PAD", "DARK PAD"}, {"WASH", "TWO HALVES"}, {"AIR LEAD", "DUB LEAD"},
      {"HOLD NOTE", "ECHOES"}, 35, "HALF", "SPARSE", "HAT", "C", "RIM", "SYNCO"},
     {"FILTER", "FRENCH TOUCH, FILTERED DISCO", 122, 126, {SA_KIT_DISCO, SA_KIT_HOUSE}, SA_SC_DORIAN, 18, 50, 60, 55, 45,
-     {"FAT BASS", "OCTAVE"}, {"OCTAVE", "ROOT 8THS"}, {"E-PIANO", "ORGAN"}, {"HOUSE", "CHARLESTON"}, {"FILTER LEAD", "VOX CHOP"},
+     {"DISCO BASS", "FAT BASS"}, {"OCTAVE", "ROOT 8THS"}, {"FILTER STAB", "E-PIANO"}, {"HOUSE", "CHARLESTON"}, {"FILTER LEAD", "VOX CHOP"},
      {"HOOK", "UPBEATS"}, 50, "4 FLOOR", "OFFBEAT", "OPEN", "C", "HATS", 0},
     {"DEEP", "WARM, SOFT, DEEP HOUSE", 120, 122, {SA_KIT_SOFT, SA_KIT_HYPNO}, SA_SC_MINOR, 22, 30, 80, 85, 0,
-     {"SINE BASS", "SUB"}, {"ROLLER", "SYNCO"}, {"E-PIANO", "SOFT PAD"}, {"STAB 2", "WASH"}, {"SOFT LEAD", "PAN FLUTE"},
+     {"WARM BASS", "SINE BASS"}, {"ROLLER", "SYNCO"}, {"DEEP CHORD", "E-PIANO"}, {"STAB 2", "WASH"}, {"SOFT LEAD", "PAN FLUTE"},
      {"ECHOES", "CALL"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
     {"TECH", "TECH HOUSE, ROLLING", 124, 127, {SA_KIT_PUNCH, SA_KIT_TECH}, SA_SC_MINOR, 16, 40, 60, 100, 0,
-     {"TECH BASS", "REESE"}, {"ROLLER", "SYNCO"}, {"DUB CHORD", "TECH STAB"}, {"STAB 1", "STAB 2"}, {"BLIP", "VOX CHOP"},
+     {"TECH PLUCK", "TECH BASS"}, {"ROLLER", "SYNCO"}, {"HOUSE STAB", "DUB CHORD"}, {"STAB 1", "STAB 2"}, {"BLIP", "VOX CHOP"},
      {"UPBEATS", "BLIPS"}, 50, "4 FLOOR", "OFFBEAT", "HAT", "C", "RIM", "SYNCO"},
     {"MINIMAL", "SPARSE, CLICKY", 124, 126, {SA_KIT_MINIMAL, SA_KIT_PUNCH}, SA_SC_PHRYGIAN, 10, 30, 50, 90, 20,
-     {"SUB", "SQUARE"}, {"SYNCO", "2-STEP"}, {"PLUCK", "FM PLUCK"}, {"STAB 1", "PUSH"}, {"BLIP", "PLUCK LEAD"},
+     {"CLICK BASS", "SUB"}, {"SYNCO", "2-STEP"}, {"BLIP CHORD", "PLUCK"}, {"STAB 1", "PUSH"}, {"BLIP", "PLUCK LEAD"},
      {"BLIPS", "ECHOES"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "CLAVE"},
     {"TECHNO", "DARK, DRIVING", 128, 132, {SA_KIT_RUMBLE, SA_KIT_HYPNO}, SA_SC_MINOR, 0, 45, 70, 100, 30,
-     {"REESE", "TECH BASS"}, {"PUMP 16", "ROLLER"}, {"DUB STAB", "SPACE STAB"}, {"STAB 2", "OFFBEATS"}, {"DARK SAW", "ACID LEAD"},
+     {"DARK ROLL", "REESE"}, {"PUMP 16", "ROLLER"}, {"HYPNO STAB", "DUB STAB"}, {"STAB 2", "OFFBEATS"}, {"DARK SAW", "ACID LEAD"},
      {"TWO NOTES", "RIFF"}, 50, "4 FLOOR", "16THS", "HAT", "C", "RIM", "SYNCO"},
     {"HARD", "HARD TECHNO, PUNISHING", 140, 148, {SA_KIT_RUMBLE, SA_KIT_HARD}, SA_SC_PHRYGIAN, 0, 55, 50, 100, 40,
-     {"GROWL", "REESE"}, {"ROLLER", "PUMP 16"}, {"TECH STAB", "ORCH HIT"}, {"OFFBEATS", "STAB 1"}, {"SCREECH", "HOOVER"},
+     {"HARD BASS", "GROWL"}, {"ROLLER", "PUMP 16"}, {"HARD STAB", "TECH STAB"}, {"OFFBEATS", "STAB 1"}, {"SCREECH", "HOOVER"},
      {"RIFF", "TONES UP"}, 40, "4 FLOOR", "16THS", "HAT", "C", "RIM", "SYNCO"},
     {"GABBER", "HARDCORE, DISTORTED", 170, 180, {SA_KIT_IRON, SA_KIT_HARD}, SA_SC_MINOR, 0, 30, 40, 100, 20,
-     {"DEEP SUB", "GROWL"}, {"HALF", "OFFBEAT"}, {"RAVE", "ORCH HIT"}, {"STAB 1", "OFFBEATS"}, {"HOOVER", "SCREECH"},
+     {"BUZZ BASS", "DEEP SUB"}, {"HALF", "OFFBEAT"}, {"ALARM", "RAVE"}, {"STAB 1", "OFFBEATS"}, {"HOOVER", "SCREECH"},
      {"RIFF", "ANTHEM"}, 70, "4 FLOOR", "OFFBEAT", "HAT", "S", 0, 0},
     {"ACID", "A 303 LINE, SQUELCHING", 128, 134, {SA_KIT_ACID, SA_KIT_TECH}, SA_SC_MINOR, 14, 40, 60, 80, 70,
-     {"ACID", "ACID"}, {"ACID", "ACID"}, {"DUB STAB", "TECH STAB"}, {"STAB 1", "PUSH"}, {"ACID LEAD", "RUBBER"},
+     {"ACID SQUARE", "ACID"}, {"ACID", "ACID"}, {"ACID CHORD", "DUB STAB"}, {"STAB 1", "PUSH"}, {"ACID LEAD", "RUBBER"},
      {"SQUELCH", "RIFF"}, 50, "4 FLOOR", "16THS", "HAT", "C", "HATS", 0},
     {"TRANCE", "UPLIFTING, WIDE", 136, 140, {SA_KIT_PUNCH, SA_KIT_TIGHT}, SA_SC_MINOR, 0, 55, 90, 100, 0,
-     {"OCTAVE", "FAT BASS"}, {"OFFBEAT", "PUMP 16"}, {"SUPER", "TRANCE"}, {"OFFBEATS", "WASH"}, {"SUPER LEAD", "PLUCK LEAD"},
+     {"ROLLING", "OCTAVE"}, {"OFFBEAT", "PUMP 16"}, {"GATED SUPER", "SUPER"}, {"OFFBEATS", "WASH"}, {"SUPER LEAD", "PLUCK LEAD"},
      {"ANTHEM", "PLUCKS"}, 75, "4 FLOOR", "OFFBEAT", "OPEN", "C", "RIM", "SYNCO"},
     {"PROG", "PROGRESSIVE, BUILDING", 122, 124, {SA_KIT_HYPNO, SA_KIT_SOFT}, SA_SC_MINOR, 10, 40, 80, 90, 20,
-     {"TECH BASS", "SUB"}, {"ROLLER", "OFFBEAT"}, {"SWELL", "WIDE PAD"}, {"SWELL", "WASH"}, {"PLUCK LEAD", "SOFT LEAD"},
+     {"PROG BASS", "TECH BASS"}, {"ROLLER", "OFFBEAT"}, {"PROG PAD", "SWELL"}, {"SWELL", "WASH"}, {"PLUCK LEAD", "SOFT LEAD"},
      {"PLUCKS", "ECHOES"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
     {"DISCO", "BRIGHT, STRINGS AND BASS", 116, 120, {SA_KIT_DISCO, SA_KIT_CLASSIC}, SA_SC_MAJOR, 20, 25, 60, 100, 0,
-     {"FRETLESS", "SLAP"}, {"WALK", "OCTAVE"}, {"STRINGS", "HORNS"}, {"CHARLESTON", "PUSH"}, {"STRING LEAD", "BRASS"},
+     {"FUNK BASS", "FRETLESS"}, {"WALK", "OCTAVE"}, {"DISCO STRINGS", "STRINGS"}, {"CHARLESTON", "PUSH"}, {"STRING LEAD", "BRASS"},
      {"DISCO RUN", "HOOK"}, 50, "4 FLOOR", "OFFBEAT", "OPEN", "C", "TOMS", "TRESILLO"},
     {"AFRO", "AFRO HOUSE, PERCUSSIVE", 120, 124, {SA_KIT_AFRO, SA_KIT_DEEP}, SA_SC_DORIAN, 24, 30, 70, 95, 0,
-     {"SUB", "SINE BASS"}, {"SYNCO", "ROLLER"}, {"MARIMBA", "KALIMBA"}, {"DOTTED", "HOUSE"}, {"PAN FLUTE", "WHISTLE"},
+     {"LOG DRUM", "SUB"}, {"SYNCO", "ROLLER"}, {"SOFT KEYS", "MARIMBA"}, {"DOTTED", "HOUSE"}, {"PAN FLUTE", "WHISTLE"},
      {"CALL", "HOOK"}, 25, "4 FLOOR", "SHAKE", "SHAKER", "C", "TOMS", "TRESILLO"},
     {"GARAGE", "2-STEP, SWUNG", 130, 134, {SA_KIT_GARAGE, SA_KIT_TIGHT}, SA_SC_MINOR, 36, 35, 60, 100, 0,
-     {"WOW BASS", "FAT BASS"}, {"2-STEP", "SYNCO"}, {"ORGAN", "E-PIANO"}, {"STAB 2", "PUSH"}, {"VOX CHOP", "SOFT LEAD"},
+     {"WARP BASS", "WOW BASS"}, {"2-STEP", "SYNCO"}, {"STAB ORGAN", "ORGAN"}, {"STAB 2", "PUSH"}, {"VOX CHOP", "SOFT LEAD"},
      {"UPBEATS", "HOOK"}, 50, "2-STEP", "SHUFFLE", "HAT", "C", "RIM", "SYNCO"},
     {"BREAKS", "BROKEN BEATS, RAVE", 128, 132, {SA_KIT_BREAKS, SA_KIT_DUSTY}, SA_SC_MINOR, 14, 30, 60, 100, 20,
-     {"REESE", "FM BASS"}, {"SYNCO", "GROWL"}, {"RAVE", "TECH STAB"}, {"STAB 1", "PUSH"}, {"RAVE LEAD", "HYPERSAW"},
+     {"NEURO", "REESE"}, {"SYNCO", "GROWL"}, {"BREAK STAB", "RAVE"}, {"STAB 1", "PUSH"}, {"RAVE LEAD", "HYPERSAW"},
      {"RIFF", "RATTLE"}, 50, "BROKEN", "8THS", "HAT", "S", "RIM", "SYNCO"},
     {"DUB", "DUB TECHNO, ECHOES", 118, 122, {SA_KIT_SOFT, SA_KIT_RUMBLE}, SA_SC_MINOR, 12, 30, 100, 80, 20,
-     {"RUMBLE", "DEEP SUB"}, {"HALF", "SUB HOLD"}, {"DUB STAB", "ECHO CHORD"}, {"STAB 2", "OFFBEATS"}, {"DUB LEAD", "SOFT LEAD"},
+     {"DUB SUB", "RUMBLE"}, {"HALF", "SUB HOLD"}, {"DUB SKANK", "DUB STAB"}, {"STAB 2", "OFFBEATS"}, {"DUB LEAD", "SOFT LEAD"},
      {"ECHOES", "TWO NOTES"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
     {"AMBIENT", "SPACE, BARELY A BEAT", 88, 96, {SA_KIT_SOFT, SA_KIT_ROOM}, SA_SC_MAJOR, 10, 10, 100, 80, 10,
-     {"DEEP SUB", "SINE BASS"}, {"SUB HOLD", "HALF"}, {"GLASS", "SKY"}, {"WASH", "TWO HALVES"}, {"AIR LEAD", "PAN FLUTE"},
+     {"BOWED BASS", "DEEP SUB"}, {"SUB HOLD", "HALF"}, {"AURORA", "GLASS"}, {"WASH", "TWO HALVES"}, {"AIR LEAD", "PAN FLUTE"},
      {"HOLD NOTE", "TWO NOTES"}, 50, "ONE", "SPARSE", "SHAKER", 0, 0, 0},
     {"ELECTRO", "ROBOTIC, BROKEN", 126, 130, {SA_KIT_VOLT, SA_KIT_BOOM}, SA_SC_MINOR, 10, 30, 50, 100, 30,
-     {"FM BASS", "SQUARE"}, {"SYNCO", "OCTAVE"}, {"FM PLUCK", "PLUCK"}, {"STAB 1", "PUSH"}, {"VOX LEAD", "ROBOT"},
+     {"ZAP BASS", "FM BASS"}, {"SYNCO", "OCTAVE"}, {"ROBOT CHOIR", "FM PLUCK"}, {"STAB 1", "PUSH"}, {"VOX LEAD", "ROBOT"},
      {"RIFF", "UPBEATS"}, 50, "BROKEN", "16THS", "HAT", "S", "TOMS", "SYNCO"},
     {"HAPPY", "BRIGHT, EURO, HANDS UP", 138, 142, {SA_KIT_VINTAGE, SA_KIT_CLASSIC}, SA_SC_MAJOR, 0, 50, 70, 100, 0,
-     {"OCTAVE", "FAT BASS"}, {"OCTAVE", "OFFBEAT"}, {"PIANO", "RAVE"}, {"HOUSE", "OFFBEATS"}, {"RAVE LEAD", "STORM"},
+     {"DONK", "OCTAVE"}, {"OCTAVE", "OFFBEAT"}, {"HAPPY STAB", "PIANO"}, {"HOUSE", "OFFBEATS"}, {"RAVE LEAD", "STORM"},
      {"HOOK", "RATTLE"}, 70, "4 FLOOR", "OFFBEAT", "OPEN", "C", "RIM", "SYNCO"},
     {"LOFI", "LO-FI HOUSE, DUSTY", 116, 120, {SA_KIT_LOFI, SA_KIT_DUSTY}, SA_SC_DORIAN, 30, 25, 70, 70, 20,
-     {"FAT BASS", "SUB"}, {"ROOT 8THS", "SYNCO"}, {"TAPE PAD", "E-PIANO"}, {"WASH", "STAB 2"}, {"SOFT LEAD", "PAN FLUTE"},
+     {"LOFI BASS", "FAT BASS"}, {"ROOT 8THS", "SYNCO"}, {"TAPE PAD", "DUSTY KEYS"}, {"WASH", "STAB 2"}, {"SOFT LEAD", "PAN FLUTE"},
      {"CALL", "TWO NOTES"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
 };
 #define SAS_NSTYLES ((int)(sizeof SAS_STYLE / sizeof SAS_STYLE[0]))

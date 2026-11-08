@@ -21,7 +21,7 @@ All sounds are synthesised; no samples.
 
 ## Try it, install it
 
-Version 0.8.40:
+Version 0.8.41:
 
 - **[Try it in the browser](https://delirioux.github.io/sardine/try/)**: the whole firmware, the FM-1's screen and
   controls, sound and all, before you install anything.
@@ -46,7 +46,7 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
    STOP, WOBBLE.
 7. **Ten RAVE leads** that stab, gate, sweep and scream in time with the tempo.
 8. **PAN 3D** on headphones: a layer in front, behind, above you, or flying round your head.
-9. **Fully synthesised**: 24 drum kits (four whose kick follows the chords), 104 synth sounds, no samples, no cymbals.
+9. **Fully synthesised**: 24 drum kits (four whose kick follows the chords), 144 synth sounds, no samples, no cymbals.
 10. **MIDI OUT** over USB: each layer on its channel, the notes as they play, and its volume, cutoff and pan as CCs,
     straight into a DAW.
 
@@ -54,7 +54,7 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
 
 **The layers**
 
-- LEAD, CHORD and BASS: 104 synth sounds on Felucca's engines (bass, keys, pads, leads, FX, and an AMBIENT set of wide
+- LEAD, CHORD and BASS: 144 synth sounds on Felucca's engines (bass, keys, pads, leads, FX, and an AMBIENT set of wide
   pads, dub stabs and a rumbling bass in a big hall), each with CUTOFF, RESO, DRIVE and ENV on its home page
 - DRUMS: seven rows (KICK, SNARE, CLAP, HATS, TOMS, RIM, PERC) that never cut each other off, eight variations of each
   drum, 24 synthesised kits (four whose kick follows the chord progression); PERC is tambourine, bongo, wood block,

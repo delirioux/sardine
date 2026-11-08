@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.40. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.41. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -440,6 +440,26 @@ hits), WOBBLER (the filter wobbling by the eighth), POWER (three saws in fifths 
 detuned saws), TORNADO (a noisy square, the filter rising and falling over four bars) and STROBE (chopped in 32nds).
 The tempo moves them all. Their line is RATTLE: sixteenths hammering the root, up to the fifth and the octave at the
 end. HAPPY plays STORM, BREAKS HYPERSAW, both now and then with RATTLE.
+
+## The styles' own bass and chord sounds
+
+Each style also has a bass and a chord sound made for it, next to one it already used (a fresh groove picks one of the
+two):
+
+| Style | Bass | Chord | Style | Bass | Chord |
+| --- | --- | --- | --- | --- | --- |
+| NIGHT | VELVET SUB | MIST PAD | PROG | PROG BASS | PROG PAD (filter over 2 bars) |
+| FILTER | DISCO BASS | FILTER STAB | DISCO | FUNK BASS | DISCO STRINGS |
+| DEEP | WARM BASS | DEEP CHORD | AFRO | LOG DRUM (falls as it hits) | SOFT KEYS (tremolo) |
+| TECH | TECH PLUCK | HOUSE STAB | GARAGE | WARP BASS (filter on the 1/8) | STAB ORGAN |
+| MINIMAL | CLICK BASS | BLIP CHORD | BREAKS | NEURO (filter on the 1/4) | BREAK STAB |
+| TECHNO | DARK ROLL | HYPNO STAB (drifting) | DUB | DUB SUB | DUB SKANK (into the echo) |
+| HARD | HARD BASS | HARD STAB | AMBIENT | BOWED BASS | AURORA (drifting) |
+| GABBER | BUZZ BASS | ALARM | ELECTRO | ZAP BASS | ROBOT CHOIR |
+| ACID | ACID SQUARE | ACID CHORD | HAPPY | DONK | HAPPY STAB |
+| TRANCE | ROLLING | GATED SUPER (the trance gate) | LOFI | LOFI BASS | DUSTY KEYS |
+
+All of them are on any layer too, under their TYPE (BASS, KEYS, PADS) on MIX's INSTR.
 
 ## MENU
 

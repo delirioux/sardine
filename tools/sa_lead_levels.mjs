@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // The lead audition by numbers (no ears): every LEAD sound alone on the CHORD layer (the LEAD waits a pattern) with a lead pattern, playing, its
 // RMS and peak, and the trim that would bring it to the leads' median. Run after web/emu/sa_build.sh:
-//   node tools/sa_lead_levels.mjs [build/sa_emu/sardine.wasm] [PATTERN]
+//   node tools/sa_lead_levels.mjs [build/sa_emu/sardine.wasm] [PATTERN] [ROLE 0 BASS 1 KEYS 2 PAD 3 LEAD 4 FX] [SLOT]
 import fs from "fs";
 const bytes = fs.readFileSync(process.argv[2] || "build/sa_emu/sardine.wasm");
 const stub = new Proxy({}, { get: () => () => 0 });
@@ -20,14 +20,14 @@ const run = (sec, meas) => {
 };
 const press = (b) => { w.web_buttons(1 << b); run(0.03); w.web_buttons(0); run(0.03); };
 w._initialize(); w.web_nor_erase(); w.web_boot(); run(1.0);
-const patName = process.argv[3] || "RIFF";
+const patName = process.argv[3] || "RIFF", role = +(process.argv[4] ?? 3), slot = +(process.argv[5] ?? 1);
 let pat = -1;
 for (let i = 0; i < w.web_pat_count(); i++) if (str(w.web_pat_name(i)) === patName) pat = i;
 if (pat < 0) { console.log("no pattern " + patName); process.exit(1); }
 const res = [];
 for (let s = 0; s < w.web_sound_count(); s++) {
-  if (w.web_sound_role(s) !== 3) continue;
-  w.web_test_solo(1, s, pat); run(0.2);
+  if (w.web_sound_role(s) !== role) continue;
+  w.web_test_solo(slot, s, pat); run(0.2);
   press(PLAY); peak = 0; sq = 0; n = 0; bad = false;
   run(1.0, false); run(4.0, true);
   press(PLAY); run(1.5);

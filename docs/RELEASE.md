@@ -1,4 +1,4 @@
-Sardine 0.8.40: live club mixing for the FM-1.
+Sardine 0.8.41: live club mixing for the FM-1.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
   through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, ARP, PAN, PAN 3D, PUMP, GATE, MOD; DRUMS: MIX, KIT, MOD), HOME back to them all
@@ -30,7 +30,8 @@ Sardine 0.8.40: live club mixing for the FM-1.
 - An arpeggiator on every synth layer, off until you turn it on; GATE, PAN and four modifiers on every layer
 - Every start a fresh groove; SETS keeps eight grooves (LOAD on the one, STORE, NEW, CLEAR) and LAST, the last groove,
   by itself
-- 104 synth sounds, among them an AMBIENT set in a big hall and thirteen leads made for the styles (every style two
+- 144 synth sounds, among them an AMBIENT set in a big hall, a bass and a chord sound made for each style, thirteen
+  leads made for the styles (every style two
   leads and two lead lines of its own, the singing ones with a vibrato) and ten wild RAVE leads that stab, gate,
   sweep and scream in time; 24 synthesised drum kits (HYPNO, RUMBLE, PUNCH, SOFT: the kick on each chord's root, taken by the
   styles that suit it); 24 drum and 38 synth patterns
