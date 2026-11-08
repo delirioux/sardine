@@ -17,7 +17,7 @@ the next bar.
 | 4 | ARP | FX to **ARP**: MODE (10), RATE, RANGE, GATE |
 | 5 | MOD | FX to **MOD**: 10 modifiers that bend a pattern (FAST, SLOW, REV, EVERY, THIN, EUCLID, SHIFT, LEN, OCT, PLY) |
 | 6 | Harmony | **SCL**: KEY, SCALE (4), CHORDS (10 progressions), BARS per chord |
-| 7 | Tempo | **SELECT**, from any page |
+| 7 | Tempo | **SELECT**, from any page; or MIDI clock in (HOME held, KNOB 4: CLOCK EXT) |
 | 8 | FEEL (swing) | HOME, KNOB 2 |
 | 9 | PHRASE | HOME, FX twice (PARTS), KNOB 1: ON or OFF |
 | 10 | PART A/B | **ALGORITHM** on HOME cues a part; HOME PARTS, KNOB 2: **A/B** by itself every 8 or 16 bars |
@@ -28,7 +28,7 @@ the next bar.
 | 15 | New groove / STYLE | **SEQ** held (away from HOME): a whole new groove. **GLO** to STYLE: pick one of 20, **SEQ** |
 | 16 | INTRO / ARC | STYLE page, KNOB 2 and KNOB 3; ARC: groove, break, build (WOBBLE at its end), WASH and a roll into the drop; the page draws it and counts the bars to the drop |
 | 17 | LIVE | **GLO** to LIVE: STYLE, START, BUILD; **SEQ** brings in one layer at a time |
-| 18 | STYLE MIX | Hold **GLO**: TO, KEEP, OUT, IN; **SEQ** blends into the next style |
+| 18 | STYLE MIX | Hold **GLO**: TO, KEEP, OUT, IN; **SEQ** blends into the next style (stopped: starts it, fading in) |
 | 19 | SONG | **GLO** to SONG: steps of saved sets and their bars; SONG ON |
 | 20 | MANUAL | On a layer, FX to **MANUAL**, KNOB 1 ON: played by hand, Sardine changes nothing on it by itself (no PHRASE, B line, EVOLVE, NEW, INTRO, ARC or LIVE) |
 

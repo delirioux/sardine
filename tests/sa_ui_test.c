@@ -1028,14 +1028,13 @@ int main(int argc, char **argv)
     ui.cpu_peak = 67;
     ui.shed = 0;
     shot("20_menu");
-    {   /* (0.8.34) KNOB 4 over MENU's empty card: nothing, not even a redraw */
-        sv_draw(&ui);
-        ui.hot_ms = 0;
-        int d0 = (int)sv_draws_total();
+    {   /* (1.0.2) MENU's KNOB 4: CLOCK, INT (Sardine's, sent out) or EXT (MIDI in's) */
+        CHECK(!ui.clock_ext, "CLOCK: INT out of the box");
+        sv_knob(&ui, SV_K4, 1);
+        CHECK(ui.clock_ext && strstr(ui.msg, "FOLLOWS"), "CLOCK EXT: follows MIDI in");
+        shot("20c_menu_clock_ext");
         sv_knob(&ui, SV_K4, -1);
-        sv_draw(&ui);
-        CHECK(ui.hot_ms == 0 && (int)sv_draws_total() == d0, "MENU, KNOB 4 (an empty card): nothing drawn again (%d)",
-              (int)sv_draws_total() - d0);
+        CHECK(!ui.clock_ext, "CLOCK INT again");
     }
     /* (0.8.37) SNAP, MENU's KNOB 3: the keys to the scale, OFF by default (an off note is the player's to play) */
     CHECK(!g.snap, "SNAP: OFF by default");

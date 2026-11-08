@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 1.0.1. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 1.0.2. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -95,6 +95,9 @@ edited patterns, layers waiting for SEQ and layers that are OFF. With A/B every 
 the same. **SEQ held a second on HOME** does it all at once, by hand: the part resting (B while A plays, A while B
 plays) gets new lines on every layer it can, and new chords (the header: NEW B). If no change is coming it says CUE IT:
 ALGORITHM on HOME cues it, or A/B brings it. SEQ held on any other page is still a whole new groove.
+
+PHRASE, A/B and EVOLVE (like INTRO, ARC and which layers are MANUAL) stay as you set them through every new groove,
+style, LIVE start and STYLE MIX (1.0.2): set once, on till you turn them off. A loaded set brings its own.
 
 When PART is about to change (cued, or A/B by itself), a badge at the top of every page says which way, **A>B** or
 **B>A**: two bars before, it blinks on the beats; in the last bar, on the eighths. The next 1 is the change.
@@ -391,8 +394,9 @@ style takes to fade in (2, 4, 8 or 16 bars). **SEQ** starts it on the next 1:
 3. On the 1 after IN, what you kept becomes the new style's own too (the bass swap): the mix is over, MIXED.
 
 Every fade goes from and to the volumes you set (each layer's VOLUME and mute, the MIXER's DRUMS), never past them:
-the new style's layers come in at your levels, not at its own. The page shows each layer's level as it moves (the kept ones in the accent) and how far the mix is. Stopped, SEQ puts the
-new style in at once. Loading a set, a new groove or another style ends a mix; PLAY stopping it mid-way finishes it.
+the new style's layers come in at your levels, not at its own. The page shows each layer's level as it moves (the kept ones in the accent) and how far the mix is. Stopped, SEQ
+starts the new style playing and fades it in over IN as a mix comes in: the drums first, then BASS, CHORD and LEAD
+(1.0.2). Loading a set, a new groove or another style ends a mix; PLAY stopping it mid-way finishes it.
 GLO goes back.
 
 ## SONG
@@ -535,7 +539,16 @@ HOME held: the colour (SHOAL by default, and [Felucca](https://github.com/hugelt
 default: the keys play the notes as pressed; ON: each key snapped to the nearest note of the scale, so nothing
 clashes). Kept over power-off. Below them the **CPU**: the audio's load
 now (its average over a tenth of a second; above 85 % it turns the second colour), its PEAK since the start, and how
-many voices the load guard had to let go (SHED), if any. HOME: MIDI OUT.
+many voices the load guard had to let go (SHED), if any. HOME: MIDI OUT. Stopped it still reads some 15 %: the
+audio runs all the time, the room (SPACE's reverb and the echo, whose tails ring on) and the master among it, ready
+for the first note.
+
+**CLOCK** (KNOB 4, 1.0.2): **INT**, Sardine's own tempo, sent out over USB as MIDI clock: START as it starts, 24
+clocks a beat, STOP as it stops, so a DAW or a drum machine follows it. **EXT**: Sardine follows the MIDI clock coming
+in (USB or the TRS jack): START plays it from the 1 on the next clock, CONTINUE the same (it keeps no song position),
+STOP stops it, the tempo is the clock's (the header and SELECT show it; under the MENU: CLOCK IN and its BPM). PLAY on
+EXT waits for the clock; a second without one while playing stops it. On EXT nothing goes out (a DAW passing it
+back would be its own clock). Kept over power-off.
 
 ## MIDI OUT
 

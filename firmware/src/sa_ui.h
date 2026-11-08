@@ -107,6 +107,8 @@ typedef struct {
     int home2;                            /* HOME's page (FX turns them): 0 FILTER FEEL PUMP SPACE, 1 SPACE (RESO, WIDTH),
                                            * 2 PARTS (PHRASE, A/B, EVOLVE), 3 VIEW (HOME again: the scopes, what comes) */
     bool menu2;                           /* MENU's second page (FX): MIDI */
+    uint8_t clock_ext;                    /* (1.0.2) MENU's CLOCK: 0 INT (Sardine's, sent out), 1 EXT (follows MIDI in) */
+    uint8_t clock_in;                     /* (the glue: EXT, a clock coming in this last second) */
     uint8_t midi_ch[4];                   /* MIDI: the channel each layer sends on (LEAD CHORD BASS DRUMS): 0 OFF, 1..16
                                            * (the glue keeps them with the preferences) */
     /* MIDI: what went out, the last SV_MLOG (the glue writes them, from the audio) */

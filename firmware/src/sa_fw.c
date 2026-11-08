@@ -194,10 +194,61 @@ static void sa_midi_cc(void)
     }
 }
 
+/* (1.0.2) MIDI clock. CLOCK INT: Sardine's own, sent out over USB (START as it starts, a clock each tick, 24 to a
+ * beat, STOP as it stops). CLOCK EXT: it follows the clock coming in (USB or TRS; seq.c events_block hands over the
+ * realtime bytes): START plays from the 1 on the next clock, CONTINUE as START (Sardine keeps no song position),
+ * STOP stops; each clock a tick; the tempo from the last 24 (a beat), on the screen too; a second without a clock
+ * while playing stops it (a cable pulled). Nothing goes out on EXT: a DAW's thru would come back as its own clock */
+static uint32_t sa_clk_ms[25], sa_clk_n, sa_clk_last;   /* (25: the last 24 pulses' spans, a beat) */
+static void sa_midi_rt(uint32_t status, uint32_t ms)
+{
+    if (!sa_u.clock_ext) return;
+    if (status == 0xF8u) {
+        sa_clk_ms[sa_clk_n % 25u] = ms;
+        if (++sa_clk_n > 25u) {
+            uint32_t dt = ms - sa_clk_ms[sa_clk_n % 25u];       /* (24 pulses ago: a beat) */
+            if (dt >= 240u && dt <= 1200u) {                    /* (250 .. 50 BPM; a gap or a burst left out) */
+                sa_g.ext_tf = sa_g.sr * (float)dt / 24000.0f;
+                sa_g.s.bpm = (uint8_t)sv_clampi((int)((60000u + dt / 2u) / dt), 60, 200);
+            }
+        }
+        sa_clk_last = ms ? ms : 1u;
+        if (sa_g.playing && sa_g.ext_credit < 1000) sa_g.ext_credit++;
+    } else if (status == 0xFAu || status == 0xFBu) {           /* START, CONTINUE: from the 1 */
+        if (sa_g.playing) sa_play(&sa_g, false);
+        sa_play(&sa_g, true);
+    } else if (status == 0xFCu) {
+        sa_play(&sa_g, false);
+    }
+}
+static void sa_clock_out(uint32_t st) { midi_out_event(0x0Fu | st << 8); }
 static void sa_audio_pre(uint32_t n)
 {
+    static bool was;
+    static uint32_t sent;
+    bool ext = sa_u.clock_ext != 0;
+    if (sa_g.ext != ext) {                                   /* (CLOCK changed: from the next pulse, or its own) */
+        sa_g.ext = ext;
+        sa_g.ext_credit = 0;
+        sa_clk_n = 0;
+        sa_clk_last = 0;
+    }
+    if (ext && sa_g.playing && sa_clk_last && fm1_ms - sa_clk_last > 1000u) {
+        sa_play(&sa_g, false);                               /* (the clock gone: stopped) */
+        sa_clk_n = 0;
+        sa_clk_last = 0;
+    }
+    sa_u.clock_in = ext && sa_clk_last && fm1_ms - sa_clk_last < 1000u;
+    if (!ext && sa_g.playing && !was) {                      /* INT: START, then the clocks as it ticks */
+        sa_clock_out(0xFAu);
+        sent = sa_g.tick_n;
+    }
     sa_process(&sa_g, (int)n);
     sas_block(&sa_g);                                        /* the pump */
+    if (!ext && sa_g.playing)
+        for (; sent != sa_g.tick_n; ++sent) sa_clock_out(0xF8u);
+    if (!ext && !sa_g.playing && was) sa_clock_out(0xFCu);
+    was = sa_g.playing;
 }
 
 /* (0.8.38) FADE: the whole mix by the fade's gain, eased across the block */
@@ -227,7 +278,7 @@ static void sa_audio_post(int32_t *out, uint32_t n)
 #define SA_PREF_MAGIC 0x31504153u                            /* "SAP1" */
 #define SA_SET_MAGIC 0x31534153u                             /* "SAS1" */
 #define SA_REC_MAGIC 0x32524153u                             /* "SAR2": 0.2..0.5's groove, moved into set 1 once */
-typedef struct { uint32_t magic, boots; uint8_t look, pad[3]; sv_song song; uint8_t midi_ch[4], midi_ok, snap, pad2[2]; } sa_prefs;   /* (song, then MIDI: appended) */
+typedef struct { uint32_t magic, boots; uint8_t look, pad[3]; sv_song song; uint8_t midi_ch[4], midi_ok, snap, clock, pad2; } sa_prefs;   /* (song, then MIDI: appended) */
 #define SA_PREFS_OLD 12u                                     /* (0.7's: no song) */
 typedef struct { uint32_t magic; uint16_t size, ver; sa_settings s; } sa_record;
 #define SA_SET_PER 3u                                        /* sets to an object */
@@ -369,6 +420,7 @@ static void sa_prefs_save(void)
         sa_pref.song = sa_u.song;
         memcpy(sa_pref.midi_ch, sa_u.midi_ch, sizeof sa_pref.midi_ch);
         sa_pref.snap = sa_g.snap;                            /* (0.8.37: was a pad byte, 0: OFF) */
+        sa_pref.clock = sa_u.clock_ext;                      /* (1.0.2: was a pad byte, 0: INT) */
         sa_pref.midi_ok = 2;                                 /* (2: 0.8.6 .. 0.8.20 kept 1 with every channel OFF,
                                                               * saved at boot before the screen was up: not read) */
     }
@@ -401,10 +453,16 @@ static void sa_prefs_load(void)
 
 /* SETS' action (REC there), in the main loop */
 /* (0.8.42) a fresh groove keeps which layers are MANUAL (their lines are the new groove's, but nothing automatic on
- * them); a loaded set has its own */
+ * them); (1.0.2) and how it plays by itself: A/B, EVOLVE, PHRASE, INTRO and ARC, set once, kept till turned off. A
+ * loaded set has its own */
 static void sa_keep_hand(sa_settings *n)
 {
     for (int l = 0; l < SA_LAYERS; ++l) n->live[l].hand = sa_g.s.live[l].hand;
+    n->abauto = sa_g.s.abauto;
+    n->evolve = sa_g.s.evolve;
+    n->phrase = sa_g.s.phrase;
+    n->intro = sa_g.s.intro;
+    n->arc = sa_g.s.arc;
 }
 static void sa_set_do(int act, int k)
 {
@@ -476,6 +534,7 @@ static void sa_set_do(int act, int k)
             sas_fix(&sa_next);
         }
         sa_keep_hand(&sa_next);
+        sa_next.intro = 0;                                   /* (LIVE: no INTRO, whatever was kept) */
         fm1_irq_off();
         sa_g.build_cue = (uint8_t)st;
         sa_set_arm(&sa_g, &sa_next);
@@ -780,6 +839,7 @@ static void sa_fw_init(void)
     sa_set_sound(&sa_g, sa_sound, 0);
     sv_init(&sa_u, &sa_g);
     sa_g.snap = sa_pref.snap == 1;                           /* SNAP as kept, OFF by default */
+    sa_u.clock_ext = sa_pref.clock == 1;                     /* CLOCK as kept, INT by default */
     {   /* SONG as kept (none kept, or all END: sets 1..4, sv_init's) */
         bool any = false;
         for (int k = 0; k < SV_STEPS; ++k) any |= sa_pref.song.set[k] != 0;
@@ -1058,7 +1118,8 @@ static void sa_frame(void)
     was_playing = sa_g.playing;
     if (sa_dirty && !sa_g.playing && now - sa_save_ms > SA_LAST_MS) {   /* the look; LAST, when the groove changed */
         if (sa_g.s.look != sa_pref_look || memcmp(&sa_u.song, &sa_pref.song, sizeof sa_u.song) ||
-            memcmp(sa_u.midi_ch, sa_pref.midi_ch, sizeof sa_u.midi_ch) || sa_g.snap != (sa_pref.snap == 1))
+            memcmp(sa_u.midi_ch, sa_pref.midi_ch, sizeof sa_u.midi_ch) || sa_g.snap != (sa_pref.snap == 1) ||
+            sa_u.clock_ext != (sa_pref.clock == 1))
             sa_prefs_save();
         uint32_t sig = sv_hashb(2166136261u, &sa_g.s, sizeof sa_g.s) | 1u;
         if (sig != sa_last_sig && sa_set_write(SV_LAST, &sa_g.s)) {

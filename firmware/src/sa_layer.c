@@ -1678,6 +1678,7 @@ static void part_off(sa_groove *g, int part)
 
 static float tick_frames(const sa_groove *g)
 {
+    if (g->ext && g->ext_tf > 1.0f) return g->ext_tf;   /* (MIDI clock in: as it comes) */
     return g->sr * 60.0f / (float)clampi(g->s.bpm, 60, 200) / 24.0f;
 }
 
@@ -1864,10 +1865,23 @@ void sa_mix_end(sa_groove *g)
     for (int l = 0; l < SA_LAYERS; ++l) g->mx_gain[l] = 1.0f;
     for (int p = 0; p < SA_SYNTHS; ++p) g->mx_off[p] = 0;
 }
+static void mix_block(sa_groove *g);
 void sa_mix(sa_groove *g, sa_settings *next, uint16_t keep, int out_bars, int in_bars)
 {
-    if (!g->playing) {                             /* stopped: in at once */
+    if (!g->playing) {                             /* (1.0.2) stopped: in, and playing, faded in over IN as a mix comes in
+                                                    * (the drums first, then BASS, CHORD, LEAD) */
         sa_set_arm(g, next);
+        sa_play(g, true);
+        g->mx_next = next;
+        g->mx_keep = 0;
+        g->mx_out = 1;
+        g->mx_in = (uint8_t)clampi(in_bars, 1, 32);
+        g->mx_bar0 = 0;
+        g->mx_from = g->s.style;
+        g->mx_bpm0 = g->mx_bpm1 = g->s.bpm;
+        g->mx_state = 2;
+        mix_block(g);                              /* (silent till its first 1) */
+        msg(g, "MIX: IN");
         return;
     }
     g->set_next = 0;
@@ -2133,6 +2147,7 @@ void sa_play(sa_groove *g, bool on)
     g->playing = on;
     g->clock = 0;
     g->wait = 0.0f;
+    g->ext_credit = 0;                             /* (MIDI clock in: the first pulse after this, the 1) */
     g->tick = SA_TPB - 1;                          /* the first tick wraps into bar 0 (its bar line) */
     g->bar = -1;
     g->arr_out = 0;
@@ -2484,10 +2499,21 @@ void sa_process(sa_groove *g, int frames)
     }
     float tf = tick_frames(g);
     int left = frames;
+    if (g->ext && g->ext_credit > 12) g->ext_credit = 1;   /* (MIDI clock in: half a beat behind, caught up at once) */
     while (left > 0) {
         if (g->wait <= 0.0f) {
-            do_tick(g);
-            g->wait += tf;
+            if (!g->ext) {
+                do_tick(g);
+                g->tick_n++;
+                g->wait += tf;
+            } else if (g->ext_credit > 0) {        /* MIDI clock in: a tick as each pulse comes, none before it */
+                do_tick(g);
+                g->tick_n++;
+                g->ext_credit--;
+                g->wait = g->ext_credit > 0 ? 0.0f : 32.0f;
+            } else {
+                g->wait = 32.0f;                   /* (waiting for the next: looked again in 32 frames) */
+            }
         }
         int chunk = (int)g->wait + 1;
         if (chunk > left) chunk = left;

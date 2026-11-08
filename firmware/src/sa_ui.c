@@ -419,7 +419,7 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         sv_card_txt(&c[0], "COLOR", UI_PALETTES[s->palette % NPALETTES].name, -1, false);
         sv_card_txt(&c[1], "LOOK", s->look ? "LINE" : "FLAT", -1, false);
         sv_card_txt(&c[2], "SNAP", u->g->snap ? "ON" : "OFF", u->g->snap ? 1000 : 0, false);   /* (0.8.37) */
-        sv_card_off(&c[3]);
+        sv_card_txt(&c[3], "CLOCK", u->clock_ext ? "EXT" : "INT", -1, false);   /* (1.0.2) */
         return;
     default: break;
     }
@@ -1052,7 +1052,16 @@ static void sv_panel_menu(sa_ui *u)
     cv_text_on(30, 10, &AF_M, "SARDINE " SA_VERSION, T_TEXT, T_SURF);
     cv_text_on(30, 34, &AF_S, "LIVE CLUB MIXING FOR THE FM-1", T_MID, T_SURF);
     cv_text_on(30, 50, &AF_S, "ON FELUCCA, AFTER TUNA", T_MID, T_SURF);
-    cv_text_on(30, 66, &AF_S, "GPL-3.0, HOME: MIDI OUT", T_DIM, T_SURF);
+    if (u->clock_ext) {                            /* (1.0.2) CLOCK EXT: the clock coming in, or none */
+        char t[32], a[8];
+        bool in = u->clock_in != 0;
+        sv_cpy(t, "CLOCK IN: ", sizeof t);
+        if (in) { sv_fmt_int(a, u->g->s.bpm); sv_cat(t, a, sizeof t); sv_cat(t, " BPM", sizeof t); }
+        else sv_cat(t, "NONE YET", sizeof t);
+        cv_text_on(30, 66, &AF_S, t, in ? T_THEME : T_DIM, T_SURF);
+    } else {
+        cv_text_on(30, 66, &AF_S, "GPL-3.0, HOME: MIDI OUT", T_DIM, T_SURF);
+    }
     {   /* the CPU: the audio's load, its average over a tenth of a second, and its worst since the start (0.8.33: the
          * peak on a line of its own, under CPU: beside it, it ran into the percentage) */
         char t[24], a[8];
@@ -1603,7 +1612,7 @@ static void sv_panel_smix(sa_ui *u)
         int done = (int)((g->mx_state == 1 ? x * 0.5f : 0.5f + x * 0.5f) * 220.0f);
         cv_rect(10, 108, done > 0 ? done : 1, 4, T_ACCENT);
     } else {
-        sv_label(10, 92, g->playing ? "SEQ: MIX INTO IT, FROM THE 1" : "SEQ: IN AT ONCE (STOPPED)", T_DIM);
+        sv_label(10, 92, g->playing ? "SEQ: MIX INTO IT, FROM THE 1" : "SEQ: IT PLAYS, FADING IN", T_DIM);   /* (1.0.2) */
         sv_label(10, 106, "THE KEPT ONES PLAY ON THROUGH", T_DIM);
     }
 }
@@ -2134,6 +2143,11 @@ void sv_knob(sa_ui *u, int k, int d)
         else if (i == 2) {                         /* SNAP: the keys to the scale, or as pressed */
             u->g->snap = d > 0;
             sv_msg(u, u->g->snap ? "KEYS SNAP TO THE SCALE" : "KEYS AS PRESSED");
+            u->changed = true;
+            return;
+        } else if (i == 3) {                       /* (1.0.2) CLOCK: Sardine's own (sent out), or MIDI in's */
+            u->clock_ext = d > 0;
+            sv_msg(u, u->clock_ext ? "CLOCK: FOLLOWS MIDI IN" : "CLOCK: SARDINE'S, SENT OUT");
             u->changed = true;
             return;
         }

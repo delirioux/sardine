@@ -21,7 +21,7 @@ All sounds are synthesised; no samples.
 
 ## Try it, install it
 
-Version 1.0.1:
+Version 1.0.2:
 
 - **[Try it in the browser](https://delirioux.github.io/sardine/try/)**: the whole firmware, the FM-1's screen and
   controls, sound and all, before you install anything.
@@ -85,6 +85,8 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
 - A MIXER on GLO: every layer's volume, mute and solo on the knobs
 - MIDI OUT over USB, a channel for each layer (or OFF): the notes as they play, with each layer's volume, cutoff and pan
   as CCs (7, 74, 10), and a page that shows what goes out
+- MIDI clock: sent out (CLOCK INT, the DAW follows Sardine) or followed (CLOCK EXT: START, STOP and the tempo from a
+  DAW or a drum machine, over USB or TRS)
 - The synth layers pump under the kick (PUMP), with REVERB, DELAY and WIDTH for the space they sit in
 - GATE cuts a held pad to a rhythm; PAN sweeps; PAN 3D puts a layer in front, behind, above or flying around you (on
   headphones)
@@ -173,7 +175,8 @@ it plays; SONG ON plays them in turn, each one in on its bar line. Turn knobs, d
 
 **Into the DAW.** HOME held, then HOME again: **MIDI OUT**. LEAD on 1, CHORD on 2, BASS on 3, DRUMS on 10 (General MIDI
 drum notes). Record the four channels: every note with its velocity and length, and each layer's volume, cutoff and
-pan as CC 7, 74 and 10 as you ride them.
+pan as CC 7, 74 and 10 as you ride them. Sardine's MIDI clock goes with them (MENU's CLOCK INT): the DAW in sync.
+Or the other way round: CLOCK EXT, and the DAW's transport and tempo drive Sardine.
 
 ## More
 

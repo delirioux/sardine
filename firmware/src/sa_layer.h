@@ -233,6 +233,13 @@ typedef struct {
     uint16_t arr_out;                               /* INTRO: the layers not in yet (a bit per slot) */
     bool arr_brk, arr_fill;                         /* ARC: its break (drums and bass out), its fill (the last half bar) */
     bool arr_wob, arr_wash;                         /* (0.8.49) ARC: WOBBLE in the build's second half, WASH on its last bar */
+    /* (1.0.2) MIDI clock: ext, the ticks follow the clock coming in (24 to a beat, one tick each): a tick as a pulse
+     * has come (ext_credit: the pulses not yet ticked), none without one; ext_tf the frames a pulse lasts, as
+     * measured (the swing, the lengths, the pump by it). tick_n counts every tick (the clock going out) */
+    bool ext;
+    int16_t ext_credit;
+    float ext_tf;
+    uint32_t tick_n;
     uint8_t az_now[SA_SYNTHS];                      /* 3D: each synth part's angle and height now (moving: ORBIT RANDOM FLY) */
     int8_t el_now[SA_SYNTHS];
     uint8_t pan_side[SA_LAYERS];                    /* PING-PONG: the side the next note goes to */

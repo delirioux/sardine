@@ -1,6 +1,9 @@
-Sardine 1.0.1: live club mixing for the FM-1. Everything planned is in; from here on it is listening and tuning.
+Sardine 1.0.2: live club mixing for the FM-1. Everything planned is in; from here on it is listening and tuning.
 
 1.0.1: the PUMP you hear: its dip in dB (down to -18 dB), held 30 ms on the kick, back like a sidechain's release.
+
+1.0.2: MIDI clock in and out (MENU's CLOCK: INT sends it, EXT follows it); STYLE MIX from stopped plays the new
+style, fading it in; PHRASE, A/B and EVOLVE stay on through new grooves and styles.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
   through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, MANUAL, ARP, PAN, PAN 3D, PUMP, GATE, MOD; DRUMS: MIX, MANUAL, KIT, MOD), HOME back to them all

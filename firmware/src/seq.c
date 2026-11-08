@@ -1369,6 +1369,9 @@ static int32_t click_beat_now(void)
     return clk_pos == CLK_START ? 0 : (int32_t)(clk_step >> 2);
 }
 
+#if FELUCCA_SARDINE
+static void sa_midi_rt(uint32_t status, uint32_t ms);   /* (sa_fw.c) */
+#endif
 /* everything that happens between two rendered blocks */
 static void events_block(uint32_t n)
 {
@@ -1455,6 +1458,10 @@ static void events_block(uint32_t n)
         uint32_t source = midi_in_source[at] ? midi_in_source[at] : 1u, ms = midi_in_ms[at];
         mi_r++;
         if (status >= 0xF8u) {
+#if FELUCCA_SARDINE
+            sa_midi_rt(status, ms);                 /* (Sardine's MIDI clock: CLOCK EXT follows it) */
+            continue;
+#endif
             if (clock_mode == source) {
                 if (status == 0xF8u)
                     midi_clock_pulse(ms);

@@ -337,6 +337,29 @@ int main(void)
     CHECK(LG.on[3][36] == 4, "ARC: the drop, the kick back");
     sa_play(&g, false);
 
+    {   /* (1.0.2) MIDI clock in: a tick for each pulse, none without; the tempo by the pulses */
+        static sa_groove m;
+        sa_init(&m, SR);
+        sa_set_sound(&m, snd, 0);
+        m.ext = true;
+        m.ext_tf = SR * 0.5f / 24.0f;               /* (120 BPM) */
+        sa_play(&m, true);
+        uint32_t t0 = m.tick_n;
+        sa_process(&m, SR / 10);
+        CHECK(m.tick_n == t0, "clock in: no pulse, no tick (%u)", (unsigned)(m.tick_n - t0));
+        m.ext_credit = 24;                          /* (a beat of pulses come at once: caught up a few, the rest dropped) */
+        sa_process(&m, 512);
+        CHECK(m.tick_n - t0 >= 1 && m.ext_credit == 0, "clock in: the pulses ticked (%u)", (unsigned)(m.tick_n - t0));
+        int32_t b0 = m.bar;
+        for (int k = 0; k < 96; ++k) { m.ext_credit++; sa_process(&m, 256); }   /* (a bar of pulses, one by one) */
+        CHECK(m.bar == b0 + 1, "clock in: 96 pulses, a bar (%d)", (int)(m.bar - b0));
+        m.ext = false;
+        m.s.bpm = 120;
+        uint32_t t1 = m.tick_n;
+        sa_process(&m, (int)(SR * 0.5f));
+        CHECK(m.tick_n - t1 >= 23 && m.tick_n - t1 <= 25, "clock INT: its own 24 to a beat (%u)", (unsigned)(m.tick_n - t1));
+    }
+
     /* every pattern with every modifier, two bars: no crash, notes within the bar */
     sa_init(&g, SR);
     sa_set_sound(&g, snd, 0);
@@ -471,6 +494,21 @@ int main(void)
             CHECK(h.part_b && h.s.patb[l] == 0 && h.s.code[l].own && h.hits_last[l] == want,
                   "PART B, the hats edited by hand: B plays the edit (%04x, wanted %04x)", h.hits_last[l], want);
             h.part_b = h.part_cue = false;
+        }
+        {   /* (1.0.2) STYLE MIX from stopped: in, playing, faded in over IN (the drums first), then all there */
+            static sa_groove m;
+            static sa_settings nx;
+            sa_init(&m, SR);
+            sa_set_sound(&m, snd, 0);
+            sa_random(&nx, 11, &(sa_pool){0});
+            sa_mix(&m, &nx, 0, 2, 4);
+            CHECK(m.playing && m.mx_state == 2 && m.s.bpm == nx.bpm && m.mx_gain[SA_L_LEAD] < 0.01f,
+                  "STYLE MIX stopped: playing, coming in from silence");
+            run_bars(&m, 2);
+            CHECK(m.mx_state == 2 && m.mx_gain[SA_L_DRUM0] > m.mx_gain[SA_L_LEAD], "...the drums before the LEAD (%.2f %.2f)",
+                  (double)m.mx_gain[SA_L_DRUM0], (double)m.mx_gain[SA_L_LEAD]);
+            run_bars(&m, 4);
+            CHECK(m.mx_state == 0 && m.mx_gain[SA_L_LEAD] > 0.99f && m.playing, "...then all in, the mix over");
         }
         {   /* (0.8.43) a MELODY: its bars differ (a call, its answer), every note in the key, a phrase of its own */
             static sa_groove m;

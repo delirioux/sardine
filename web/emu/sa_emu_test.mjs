@@ -184,6 +184,33 @@ const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice
     }
     check(`the keys: one note each (${twice} of 27 not)`, twice === 0);
   }
+  // (1.0.2) MIDI clock: INT sends START, 24 clocks a beat, STOP; EXT follows START, the clocks (its tempo), STOP
+  {
+    w.web_usb_host(1);
+    if (w.web_playing()) press(B.PLAY);
+    run(0.3); while (w.web_midi_out_next()) {}
+    const o = { F8: 0, FA: 0, FC: 0 };
+    const take = () => { for (let p; (p = w.web_midi_out_next()); ) { const st = (p >> 8) & 0xff; if (st === 0xf8) o.F8++; else if (st === 0xfa) o.FA++; else if (st === 0xfc) o.FC++; } };
+    const rt = () => { take(); const r = { ...o }; o.F8 = o.FA = o.FC = 0; return r; };
+    press(B.PLAY); take();
+    for (let i = 0; i < 40; i++) { run(0.05); take(); }
+    const bar = w.web_da_bar(), a = rt();
+    press(B.PLAY); run(0.2);
+    const b = rt();                                          // (bar n playing: 96 clocks a bar, n of them whole)
+    check(`CLOCK INT: START, ${a.F8} clocks over bar ${bar}, STOP`, a.FA === 1 && a.F8 > bar * 96 && a.F8 <= (bar + 1) * 96 + 2 && b.FC === 1);
+    w.web_clock_ext(1); run(0.1);
+    w.web_midi(0xfa, 0, 0); run(0.02);
+    // a clock every two renders of 512 frames (23.2 ms): 107.7 BPM
+    for (let i = 0; i < 24 * 8; i++) { w.web_midi(0xf8, 0, 0); w.web_render(512); w.web_render(512); take(); }
+    const c2 = rt();
+    check(`CLOCK EXT: START and the clocks play it, at their tempo (${w.web_da_bpm()} BPM, bar ${w.web_da_bar()}), nothing sent out`,
+          w.web_playing() && Math.abs(w.web_da_bpm() - 108) <= 2 && w.web_da_bar() === 1 && c2.F8 === 0 && c2.FA === 0);
+    w.web_midi(0xfc, 0, 0); run(0.1);
+    check("CLOCK EXT: STOP stops it", !w.web_playing());
+    w.web_midi(0xfa, 0, 0); run(1.5);
+    check("CLOCK EXT: START with no clock after it: waits, then (a second without) stopped", !w.web_playing() || w.web_da_bar() <= 0);
+    w.web_clock_ext(0); run(0.1);
+  }
   // (0.8.29) MIDI OUT's controllers: a host connects, each layer's volume, cutoff and pan on its channel
   while (w.web_midi_out_next()) {}
   w.web_usb_host(1); run(0.3);

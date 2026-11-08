@@ -404,6 +404,8 @@ EXPORT void web_master(uint32_t v) { web_master_adc = v > 1023u ? 1023u : v; }
 /* a channel message from Web MIDI, as a USB-MIDI packet arrives (usb.c midi_enqueue): 0 = the ring was full */
 EXPORT uint32_t web_midi(uint32_t status, uint32_t d1, uint32_t d2)
 {
+    if (status >= 0xF8u)                           /* (1.0.2) the realtime bytes: MIDI clock, START, CONTINUE, STOP */
+        return (uint32_t)midi_enqueue(0x0Fu | status << 8, 1);
     if (status < 0x80u || status >= 0xF0u)
         return 1;
     return (uint32_t)midi_enqueue((status >> 4) | status << 8 | (d1 & 127u) << 16 | (d2 & 127u) << 24, 1);
@@ -464,6 +466,7 @@ EXPORT uint16_t *web_screen(void) { return web_fb; }
 EXPORT uint32_t web_screen_draws(void) { return web_draws; }
 EXPORT uint32_t web_now_ms(void) { return fm1_ms; }
 EXPORT uint32_t web_playing(void) { return sa_g.playing; }
+EXPORT void web_clock_ext(uint32_t v) { sa_u.clock_ext = (uint8_t)(v != 0); }   /* (1.0.2) MENU's CLOCK */
 EXPORT uint32_t web_midi_ch(uint32_t k) { return k < 4u ? sa_u.midi_ch[k] : 0u; }   /* MIDI OUT's channel of a layer */
 /* Sardine's own, for the page and the test: the bar playing, the page shown, the layers in use, the version */
 EXPORT uint32_t web_da_bar(void) { return (uint32_t)sa_g.bar; }
