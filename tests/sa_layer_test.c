@@ -454,6 +454,20 @@ int main(void)
             CHECK(n >= 3 && d2 == n && prog && !memcmp(&h.s.code[SA_L_DRUM0], &before.code[SA_L_DRUM0], sizeof h.s.code[0]),
                   "NEW: the resting part, %d layers and its chords, the kick left", n);
         }
+        {   /* (0.8.40) steps edited by hand play in PART B too: the row's own B line goes */
+            int l = SA_L_DRUM0 + SA_DR_HATS;
+            h.s.abauto = h.s.evolve = 0;
+            h.s.patb[l] = h.ed_patb[l] = (uint8_t)((h.s.code[l].pat + 3) % 20 + 1);   /* (another line in B) */
+            h.part_b = h.part_cue = true;
+            sa_step_drum(&h, l, 1);
+            sa_step_drum(&h, l, 9);
+            uint16_t want = h.ed[l].hits;
+            sa_drop(&h);
+            run_bars(&h, 2);
+            CHECK(h.part_b && h.s.patb[l] == 0 && h.s.code[l].own && h.hits_last[l] == want,
+                  "PART B, the hats edited by hand: B plays the edit (%04x, wanted %04x)", h.hits_last[l], want);
+            h.part_b = h.part_cue = false;
+        }
         sa_settings z;
         sa_random(&z, 7, &(sa_pool){0});
         CHECK(z.progb != 0 && z.patb[BS] != 0 && z.patb[BS] != z.code[BS].pat + 1, "a fresh groove has a B");

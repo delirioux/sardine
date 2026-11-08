@@ -1625,6 +1625,11 @@ static void drop_now(sa_groove *g)
             g->build_out &= (uint16_t)~(1u << l);
         }
         g->arp_i[l] = 0;
+        bool steps = n->own && (!o->own || n->hits != o->hits || n->acc != o->acc || n->chord != o->chord ||
+                                memcmp(n->sn, o->sn, sizeof n->sn) || memcmp(n->sl, o->sl, sizeof n->sl));
+        if (steps && g->ed_patb[l] == g->s.patb[l])
+            g->ed_patb[l] = 0;                     /* (0.8.40) steps edited by hand: they play in PART B too (its own B
+                                                    * line gone), unless a B line was picked for it in the same drop */
     }
     memcpy(g->s.code, g->ed, sizeof g->ed);
     memcpy(g->s.gate, g->ed_gate, sizeof g->ed_gate);

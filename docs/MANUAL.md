@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.39. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.40. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -74,7 +74,9 @@ on HOME turns PART to A (left) or B (right): playing, it comes in on the next ph
 stopped, at once. **A/B** (HOME, FX) OFF, 8 or 16 bars: the parts take turns by themselves. While B is picked,
 ALGORITHM on a layer page picks that layer's B line (the top shows it) and KEY's third knob is **B CHORDS**; both wait for
 SEQ like any pattern. An edited (own) pattern is A's; B plays its line, or A's when B is "as A". An older set
-gets a B made from its A when it loads. PART goes back to A when a set comes in.
+gets a B made from its A when it loads. PART goes back to A when a set comes in. Steps you edit by hand (EDIT) play in
+both parts: the layer's own B line goes when they drop, so what you made is always what you hear (pick a B line for it
+afterwards and B has its own again).
 
 **Keeping it moving.** **EVOLVE** (HOME PARTS) OFF, LIGHT or MORE: each time a part goes to rest it is reworked while
 it is silent, so it comes back other: LIGHT one layer a new line of its kind (LEAD, CHORD, BASS, the hats, or the toms,
