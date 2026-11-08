@@ -21,7 +21,7 @@ All sounds are synthesised; no samples.
 
 ## Try it, install it
 
-Version 0.8.43:
+Version 0.8.44:
 
 - **[Try it in the browser](https://delirioux.github.io/sardine/try/)**: the whole firmware, the FM-1's screen and
   controls, sound and all, before you install anything.
@@ -73,7 +73,7 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
 - MANUAL on any layer: Sardine changes nothing on it by itself (no phrases, B line, EVOLVE, INTRO or ARC); you play it
 - LIVE: a mix built by hand, from the kick alone or a soft pad, a layer at a time on SEQ (or every 8 or 16 bars)
 - STYLE MIX (GLO held): blend into another style like a DJ: keep the bass or kick, fade the rest out, the new style in
-- Twenty styles, from NIGHT (slow and dark) to GABBER, a groove in one press; INTRO builds it up, ARC drops and lifts it
+- Twenty styles, from NIGHT (slow and dark) to GABBER, a groove in one press; INTRO builds it up, ARC drops and lifts it (drawn on the STYLE page, the bars to the drop counting down)
 - SONG: up to eight saved sets as sections, each for 4 to 64 bars, played in turn
 
 **Live moves**

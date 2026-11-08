@@ -1383,7 +1383,61 @@ static void sv_panel_layer(sa_ui *u)
     }
 }
 
-/* the MIXER: a fader each (LEAD CHORD BASS DRUMS), a dot lit as it plays; muted ones dark */
+/* (0.8.44) ARC on the STYLE page: the INTRO (if on) and one cycle drawn as its energy, the groove full, the break low,
+ * the build rising to the drop; where the groove is now (playing) a line through it, and the part and the bars to the
+ * drop under it */
+static float sv_arc_energy(int n, int len, float b)   /* 0..1 at bar b (from PLAY) */
+{
+    if (b < (float)n) return 0.2f + 0.8f * b / (float)n;
+    float p = b - (float)n, q = (float)len / 4.0f;
+    p -= (float)len * (float)(int)(p / (float)len);
+    return p < 2.0f * q ? 1.0f : p < 3.0f * q ? 0.3f : 0.3f + 0.7f * (p - 3.0f * q) / q;
+}
+static void sv_arc_graph(sa_ui *u)
+{
+    const sa_groove *g = u->g;
+    int n = sa_intro_bars(g->s.intro), len = sa_arc_bars(g->s.arc), total = n + len;
+    int32_t x0 = 10, w = 220, y0 = 58, h = 34;
+    float now = -1.0f;
+    if (g->playing && g->bar >= 0) {
+        now = (float)g->bar + (float)g->tick / (float)SA_TPB;
+        if (now >= (float)n) now = (float)n + (now - (float)n) - (float)len * (float)(int)((now - (float)n) / (float)len);
+    }
+    int32_t nx = now < 0.0f ? -1 : (int32_t)(now * (float)w / (float)total);
+    for (int32_t x = 0; x < w; ++x) {
+        float b = ((float)x + 0.5f) * (float)total / (float)w, p = b - (float)n;
+        float q = (float)len / 4.0f;
+        uint16_t col = b < (float)n ? T_MID : p < 2.0f * q ? T_THEME : p < 3.0f * q ? T_DIM : T_ACCENT;
+        int32_t e = (int32_t)(sv_arc_energy(n, len, b) * (float)h + 0.5f);
+        if (e < 2) e = 2;
+        bool past = nx >= 0 && x <= nx;
+        cv_rect(x0 + x, y0 + h - e, 1, e, ux_mix(T_SURF, col, past ? 55 : 28));
+        cv_rect(x0 + x, y0 + h - e, 1, 2, col);
+    }
+    cv_rect(x0 + w - 2, y0 - 4, 2, h + 4, T_ACCENT);   /* the drop */
+    if (n) cv_rect(x0 + n * w / total, y0, 1, h, T_RULE);   /* INTRO's end */
+    if (nx >= 0) cv_rect(x0 + (nx < w - 1 ? nx : w - 1), y0 - 4, 1, h + 8, T_TEXT);
+    char t[40], a[8];
+    if (now < 0.0f) {                              /* stopped: what a cycle is */
+        sv_cpy(t, "ARC ", sizeof t);
+        sv_fmt_int(a, len);
+        sv_cat(t, a, sizeof t);
+        sv_cat(t, ": GROOVE, BREAK, BUILD, DROP", sizeof t);
+    } else if (now < (float)n) {
+        sv_cpy(t, "INTRO, THE ARC IN ", sizeof t);
+        sv_fmt_int(a, n - (int)now);
+        sv_cat(t, a, sizeof t);
+    } else {
+        int p = (int)(now - (float)n), q = len / 4;
+        sv_cpy(t, p < 2 * q ? "GROOVE" : p < 3 * q ? "BREAK" : "BUILD", sizeof t);
+        sv_cat(t, ", THE DROP IN ", sizeof t);
+        sv_fmt_int(a, len - p);
+        sv_cat(t, a, sizeof t);
+    }
+    sv_label(10, 100, t, T_MID);
+}
+
+/* the STYLE page: the style KNOB 1 picks, its tempo; INTRO and ARC */
 static void sv_panel_style(sa_ui *u)
 {
     const sa_settings *s = &u->g->s;
@@ -1397,9 +1451,10 @@ static void sv_panel_style(sa_ui *u)
     sv_cat(t, a, sizeof t);
     sv_cat(t, " BPM", sizeof t);
     sv_label(10, 46, t, T_MID);
+    if (s->arc) { sv_arc_graph(u); return; }
     sv_label(10, 66, "SEQ: A FRESH GROOVE IN IT, ON THE 1", T_DIM);
     sv_label(10, 86, s->intro ? "INTRO: THE LAYERS COME IN FROM PLAY" : "INTRO OFF: ALL IN FROM PLAY", T_DIM);
-    sv_label(10, 102, s->arc ? "ARC: GROOVE, BREAK, BUILD, DROP" : "ARC OFF: THE GROOVE AS IT IS", T_DIM);
+    sv_label(10, 102, "ARC OFF: THE GROOVE AS IT IS", T_DIM);
 }
 
 void sv_song_default(sv_song *s)                   /* sets 1..4, 16 bars each */

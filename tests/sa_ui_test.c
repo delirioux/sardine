@@ -808,6 +808,17 @@ int main(int argc, char **argv)
     CHECK(g.s.intro == 2 && g.s.arc == 1, "INTRO 8 BARS, ARC 16 BARS");
     shot("18h_style");
     all_palettes("style");
+    {   /* (0.8.44) the ARC drawn: playing, in its break (INTRO 8, then bar 10 of 16) */
+        int32_t b0 = g.bar;
+        bool pl = g.playing;
+        g.playing = true;
+        g.bar = 8 + 10;
+        shot("18h2_style_arc_break");
+        g.bar = 8 + 14;
+        shot("18h3_style_arc_build");
+        g.playing = pl;
+        g.bar = b0;
+    }
     press(SV_B_SEQ);
     CHECK(ui.req_act == SV_SA_STYLE && ui.req_slot == ui.style_pick, "SEQ: a groove in the style asked");
     ui.req_act = -1;

@@ -26,7 +26,7 @@ the next bar.
 | 13 | BREAK | Hold **ARP**; let go on the 1 for the drop |
 | 14 | MUTE / SOLO | **GLO** to the MUTE or SOLO page |
 | 15 | New groove / STYLE | **SEQ** held (away from HOME): a whole new groove. **GLO** to STYLE: pick one of 20, **SEQ** |
-| 16 | INTRO / ARC | STYLE page, KNOB 2 and KNOB 3 |
+| 16 | INTRO / ARC | STYLE page, KNOB 2 and KNOB 3; with ARC on, the page draws it and counts the bars to the drop |
 | 17 | LIVE | **GLO** to LIVE: STYLE, START, BUILD; **SEQ** brings in one layer at a time |
 | 18 | STYLE MIX | Hold **GLO**: TO, KEEP, OUT, IN; **SEQ** blends into the next style |
 | 19 | SONG | **GLO** to SONG: steps of saved sets and their bars; SONG ON |
