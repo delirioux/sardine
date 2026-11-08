@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 1.0.2. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 1.0.3. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -97,7 +97,9 @@ plays) gets new lines on every layer it can, and new chords (the header: NEW B).
 ALGORITHM on HOME cues it, or A/B brings it. SEQ held on any other page is still a whole new groove.
 
 PHRASE, A/B and EVOLVE (like INTRO, ARC and which layers are MANUAL) stay as you set them through every new groove,
-style, LIVE start and STYLE MIX (1.0.2): set once, on till you turn them off. A loaded set brings its own.
+style, LIVE start and STYLE MIX (1.0.2): set once, on till you turn them off. They are taken as the new groove comes
+in on its 1, not when you asked for it (1.0.3): turned on while it waits, they stay on. A loaded set (and SONG's) brings
+its own; a power-on's fresh groove starts with them off.
 
 When PART is about to change (cued, or A/B by itself), a badge at the top of every page says which way, **A>B** or
 **B>A**: two bars before, it blinks on the beats; in the last bar, on the eighths. The next 1 is the change.

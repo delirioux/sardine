@@ -237,6 +237,8 @@ typedef struct {
      * has come (ext_credit: the pulses not yet ticked), none without one; ext_tf the frames a pulse lasts, as
      * measured (the swing, the lengths, the pump by it). tick_n counts every tick (the clock going out) */
     bool ext;
+    bool set_keep;                                  /* (1.0.3) the groove armed is a fresh one (not a set): as it comes in,
+                                                     * it keeps PHRASE, A/B, EVOLVE, ARC and MANUAL as they are then */
     int16_t ext_credit;
     float ext_tf;
     uint32_t tick_n;

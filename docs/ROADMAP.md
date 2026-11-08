@@ -1,6 +1,6 @@
 # After 1.0
 
-Sardine 1.0.2 has everything planned. What is left is listening on the FM-1 and tuning what it shows; tweaks come as
+Sardine 1.0.3 has everything planned. What is left is listening on the FM-1 and tuning what it shows; tweaks come as
 1.0.x.
 
 ## To check on the FM-1

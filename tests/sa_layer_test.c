@@ -495,6 +495,28 @@ int main(void)
                   "PART B, the hats edited by hand: B plays the edit (%04x, wanted %04x)", h.hits_last[l], want);
             h.part_b = h.part_cue = false;
         }
+        {   /* (1.0.3) a fresh groove keeps A/B, EVOLVE, PHRASE, ARC and MANUAL as they are when it comes in (turned on
+             * while it waits: on too); a set brings its own */
+            static sa_groove m;
+            static sa_settings nx, st;
+            sa_init(&m, SR);
+            sa_set_sound(&m, snd, 0);
+            sa_play(&m, true);
+            run_bars(&m, 1);
+            sa_random(&nx, 12, &(sa_pool){0});
+            nx.abauto = 0, nx.evolve = 0, nx.phrase = 0;
+            m.set_keep = true;
+            sa_set_arm(&m, &nx);
+            m.s.abauto = 1, m.s.evolve = 2, m.s.phrase = 1;   /* (turned on while it waits) */
+            run_bars(&m, 1);
+            CHECK(m.s.bpm == nx.bpm && m.s.abauto == 1 && m.s.evolve == 2 && m.s.phrase == 1,
+                  "a fresh groove in: A/B, EVOLVE, PHRASE as they were (%d %d %d)", m.s.abauto, m.s.evolve, m.s.phrase);
+            sa_random(&st, 13, &(sa_pool){0});
+            st.abauto = 0, st.evolve = 0;
+            sa_set_arm(&m, &st);                    /* (a set: set_keep off) */
+            run_bars(&m, 1);
+            CHECK(m.s.bpm == st.bpm && m.s.abauto == 0 && m.s.evolve == 0, "a set in: its own A/B and EVOLVE");
+        }
         {   /* (1.0.2) STYLE MIX from stopped: in, playing, faded in over IN (the drums first), then all there */
             static sa_groove m;
             static sa_settings nx;

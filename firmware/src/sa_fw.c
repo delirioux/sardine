@@ -500,6 +500,7 @@ static void sa_set_do(int act, int k)
         sa_next.intro = sa_g.s.intro;
         sa_next.arc = sa_g.s.arc;
         fm1_irq_off();
+        sa_g.set_keep = true;                                /* (1.0.3: kept as it comes in, not as asked) */
         sa_set_arm(&sa_g, &sa_next);
         fm1_irq_on();
         sv_cpy(m, SAS_STYLE[k % SAS_NSTYLES].name, sizeof m);
@@ -537,6 +538,7 @@ static void sa_set_do(int act, int k)
         sa_next.intro = 0;                                   /* (LIVE: no INTRO, whatever was kept) */
         fm1_irq_off();
         sa_g.build_cue = (uint8_t)st;
+        sa_g.set_keep = true;
         sa_set_arm(&sa_g, &sa_next);
         fm1_irq_on();
         sv_cpy(m, "LIVE: ", sizeof m);
@@ -559,6 +561,7 @@ static void sa_set_do(int act, int k)
             return;
         }
         fm1_irq_off();
+        sa_g.set_keep = act == SV_SA_NEW;                    /* (a new groove: kept as it comes in; a set: its own) */
         sa_set_arm(&sa_g, &sa_next);
         fm1_irq_on();
         sv_cat(m, sa_g.playing ? ": ON THE 1" : " IN", sizeof m);
@@ -882,6 +885,7 @@ static bool sa_song_arm(int k)
         return false;
     }
     fm1_irq_off();
+    sa_g.set_keep = false;                                   /* (SONG: each set its own) */
     sa_set_arm(&sa_g, &sa_song_set);
     fm1_irq_on();
     return true;

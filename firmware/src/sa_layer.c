@@ -1826,15 +1826,35 @@ void sa_build_next(sa_groove *g)
     msg(g, "IN ON THE 1");
 }
 
+/* (1.0.3) how a groove plays by itself, carried from the groove playing into a fresh one as it comes in (not on
+ * request: turned on while the fresh one waits for its 1, it stays on too) */
+static void keep_play(sa_settings *to, const sa_settings *from)
+{
+    to->phrase = from->phrase;
+    to->abauto = from->abauto;
+    to->evolve = from->evolve;
+    to->arc = from->arc;
+    for (int l = 0; l < SA_LAYERS; ++l) to->live[l].hand = from->live[l].hand;
+}
 static void set_now(sa_groove *g)
 {
     const sa_settings *n = g->set_next;
     uint8_t pal = g->s.palette, look = g->s.look;
+    uint8_t ph = g->s.phrase, ab = g->s.abauto, ev = g->s.evolve, arc = g->s.arc, hand[SA_LAYERS];
+    for (int l = 0; l < SA_LAYERS; ++l) hand[l] = g->s.live[l].hand;
     g->set_next = 0;
     sa_all_off(g);
     g->s = *n;
     g->s.palette = pal;
     g->s.look = look;
+    if (g->set_keep) {                             /* (a fresh groove: how it plays by itself, as it was) */
+        g->s.phrase = ph;
+        g->s.abauto = ab;
+        g->s.evolve = ev;
+        g->s.arc = arc;
+        for (int l = 0; l < SA_LAYERS; ++l) g->s.live[l].hand = hand[l];
+    }
+    g->set_keep = false;
     sa_settings_fix(&g->s);
     memset(g->arp_i, 0, sizeof g->arp_i);
     g->part_b = g->part_cue = false;               /* (a groove in: its A) */
@@ -1870,6 +1890,7 @@ void sa_mix(sa_groove *g, sa_settings *next, uint16_t keep, int out_bars, int in
 {
     if (!g->playing) {                             /* (1.0.2) stopped: in, and playing, faded in over IN as a mix comes in
                                                     * (the drums first, then BASS, CHORD, LEAD) */
+        g->set_keep = true;
         sa_set_arm(g, next);
         sa_play(g, true);
         g->mx_next = next;
@@ -1982,6 +2003,7 @@ static void mix_bar(sa_groove *g)
         g->mx_bpm1 = n->bpm;
         mix_kept(&g->s, n, g->mx_keep, true);
         mix_swap_b(&g->s, n, sizeof g->s);
+        keep_play(&g->s, n);                       /* (1.0.3: n now the old groove: how it played by itself, kept) */
         mix_levels(&g->s, n, (uint16_t)~g->mx_keep);   /* (the new layers at the levels set, the old ones'; now in n) */
         g->s.palette = pal;
         g->s.look = look;
@@ -2135,6 +2157,7 @@ void sa_play(sa_groove *g, bool on)
     if (g->mx_state == 1 && g->mx_next && g->bar >= g->mx_bar0) {   /* (a mix stopped on its way out: the next
                                                                     * groove in, all of it; on its way in: done) */
         g->set_next = g->mx_next;
+        g->set_keep = true;
     } else if (g->mx_state == 2 && g->mx_next) {
         mix_levels(g->mx_next, &g->s, 0xFFFFu);
         mix_kept(&g->s, g->mx_next, g->mx_keep, false);
