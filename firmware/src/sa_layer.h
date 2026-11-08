@@ -92,7 +92,9 @@ typedef struct {
     uint8_t cut, reso, drive, env;                  /* synth: 0..100 (CUT 100: the sound as it is) */
     uint8_t level;                                  /* 0..100 (80: as it is; MIX's LEVEL, a drum's LEVEL) */
     uint8_t nopump;                                 /* synth: 1 = this layer does not duck under the kick (0.4) */
-    uint8_t pad;
+    uint8_t hand;                                   /* (0.8.42) MANUAL: 1 = played by hand, nothing automatic on it (no
+                                                     * PHRASE, no B pattern, no EVOLVE or NEW, not held out by INTRO,
+                                                     * ARC or LIVE): what it has plays as it is */
 } sa_live;
 
 /* a drum layer's ACCENT and CHANCE (0.7) live in its sa_live's env (0..100, 50: the pattern's own accents) and cut

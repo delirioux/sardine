@@ -640,7 +640,7 @@ static const sa_code *code_now(const sa_groove *g, int l)
     static sa_code tmp;
     const sa_code *c = &g->s.code[l];
     uint8_t b = g->s.patb[l];
-    if (!g->part_b || b == 0) return c;
+    if (!g->part_b || b == 0 || g->s.live[l].hand) return c;   /* (MANUAL: A's, always) */
     tmp = *c;
     tmp.own = 0;
     tmp.pat = b == SA_PATB_OFF ? SA_PAT_OFF : (uint8_t)(b - 1);
@@ -652,7 +652,7 @@ static const sa_code *code_now(const sa_groove *g, int l)
  * held, nothing after it; BASS and CHORD quiet over the last beat (the fill's room), BASS's last note on the root */
 static int phrase_bar(sa_groove *g, int l, qev *e, int n, int32_t b0, int bar)
 {
-    int ph = g->s.phrase == 0 && bar >= 0 ? bar % 4 : 0;
+    int ph = g->s.phrase == 0 && bar >= 0 && !g->s.live[l].hand ? bar % 4 : 0;
     if (ph < 2 || l >= SA_L_DRUM0) return n;
     int half = SA_TPB / 2, last = 3 * SA_TPB / 4, m = 0, f = -1;
     for (int i = 0; i < n; ++i) {
@@ -1245,6 +1245,7 @@ void sa_settings_fix(sa_settings *s)
         v->env = (uint8_t)clampi(v->env, 0, 100);
         v->level = (uint8_t)clampi(v->level, 0, 100);
         v->nopump = (uint8_t)(v->nopump ? 1 : 0);
+        v->hand = (uint8_t)(v->hand ? 1 : 0);
         sa_gate *gt = &s->gate[l];
         gt->pat %= SA_GATES;
         gt->own = (uint8_t)(gt->own ? 1 : 0);
@@ -1370,7 +1371,7 @@ static bool renew_layer(sa_groove *g, int l, bool b, uint32_t *r)
     static const char *const EXTRA[] = {"SYNCO", "CLAVE", "TRESILLO", "UPBEATS", "SPARSE", "GALLOP"};
     sa_settings *s = &g->s;
     sa_code *c = &s->code[l];
-    if (c->type == SA_T_NONE || c->own || sa_layer_pending(g, l)) return false;
+    if (c->type == SA_T_NONE || c->own || s->live[l].hand || sa_layer_pending(g, l)) return false;
     int cur = b && s->patb[l] && s->patb[l] != SA_PATB_OFF ? s->patb[l] - 1 : c->pat;
     if (cur == SA_PAT_OFF || (b && s->patb[l] == SA_PATB_OFF)) return false;   /* (OFF stays OFF: it is the mix's) */
     int n = -1;
@@ -1684,7 +1685,8 @@ static void build_setup(sa_groove *g)
     const uint8_t *o = st == SA_START_PAD ? PAD : KICK;
     for (int i = 0; i < 10; ++i) {                 /* (the four layers' ten slots: the synths and the drum rows) */
         const sa_code *c = &g->s.code[o[i]];
-        if (c->type == SA_T_NONE || (c->pat == SA_PAT_OFF && !c->own)) continue;
+        if (c->type == SA_T_NONE || (c->pat == SA_PAT_OFF && !c->own) || g->s.live[o[i]].hand) continue;   /* (MANUAL:
+                                                    * in from the start, yours) */
         g->build_order[g->build_n++] = o[i];
         g->build_out |= (uint16_t)(1u << o[i]);
     }
@@ -2281,8 +2283,9 @@ static void do_tick(sa_groove *g)
         const sa_code *c = &g->s.code[b->layer];
         if (c->type == SA_T_NONE || g->s.live[b->layer].mute) continue;
         if (c->type == SA_T_DRUM && g->fill_on) continue;   /* (the fill plays in place of the drums) */
-        if ((g->brk_on || g->arr_brk) && (c->type == SA_T_DRUM || b->layer == SA_L_BASS)) continue;   /* BREAK: out */
-        if (((g->arr_out | g->build_out) >> b->layer) & 1u) continue;   /* INTRO, LIVE: not in yet */
+        bool hand = g->s.live[b->layer].hand;      /* (MANUAL: not ARC's break, not held out by INTRO or LIVE) */
+        if ((g->brk_on || (g->arr_brk && !hand)) && (c->type == SA_T_DRUM || b->layer == SA_L_BASS)) continue;   /* BREAK: out */
+        if (!hand && (((g->arr_out | g->build_out) >> b->layer) & 1u)) continue;   /* INTRO, LIVE: not in yet */
         if (g->back_on && c->type == SA_T_DRUM && b->layer >= SA_L_DRUM0 &&
             g->back_bar * 4 + t / 24 < BACK_BEAT[(b->layer - SA_L_DRUM0) % SA_DROWS]) continue;   /* back one by one */
         if (g->solo && !((g->solo >> (c->type == SA_T_DRUM ? 3 : b->layer)) & 1u)) continue;   /* SOLO: the others out */

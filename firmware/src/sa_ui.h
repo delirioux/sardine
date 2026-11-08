@@ -50,7 +50,7 @@ enum {
 };
 enum { SV_PG_MAIN, SV_PG_LAYER, SV_PG_KEY, SV_PG_MENU, SV_PG_SETS, SV_PG_MIXER, SV_PG_EDIT, SV_PAGES };
 enum { SV_V_HOME, SV_V_LEAD, SV_V_CHORD, SV_V_BASS, SV_V_DRUMS, SV_VIEWS };       /* what PRESETS turns through */
-enum { SVP_HOME, SVP_SOUND, SVP_ARP, SVP_PAN, SVP_GATE, SVP_MOD, SVP_MIX, SVP_KIT, SVP_3D, SVP_PUMP };  /* a layer's pages (FX) */
+enum { SVP_HOME, SVP_SOUND, SVP_ARP, SVP_PAN, SVP_GATE, SVP_MOD, SVP_MIX, SVP_KIT, SVP_3D, SVP_PUMP, SVP_HAND };  /* a layer's pages (FX) */
 #define SV_KEY_LO 53                      /* F3: the FM-1's lowest key */
 #define SV_KEY_HI 79                      /* G5 */
 

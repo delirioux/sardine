@@ -226,6 +226,7 @@ static int sv_pages(const sa_ui *u, int *p)
     int n = 0;
     p[n++] = SVP_HOME;
     p[n++] = SVP_MIX;                              /* (first: VOLUME, TYPE, INSTR, MUTE) */
+    p[n++] = SVP_HAND;                             /* (0.8.42) MANUAL: played by hand, nothing automatic */
     if (u->view == SV_V_DRUMS) {
         p[n++] = SVP_KIT;
         p[n++] = SVP_MOD;
@@ -241,13 +242,13 @@ static int sv_pages(const sa_ui *u, int *p)
 }
 static int sv_page_now(const sa_ui *u)
 {
-    int p[8], n = sv_pages(u, p);
+    int p[10], n = sv_pages(u, p);
     return p[sv_clampi(u->fx, 0, n - 1)];
 }
 static const char *sv_page_name(int pg)
 {
-    static const char *const N[] = {"HOME", "SOUND", "ARP", "PAN", "GATE", "MOD", "MIX", "KIT", "PAN 3D", "PUMP"};
-    return N[sv_clampi(pg, 0, 9)];
+    static const char *const N[] = {"HOME", "SOUND", "ARP", "PAN", "GATE", "MOD", "MIX", "KIT", "PAN 3D", "PUMP", "MANUAL"};
+    return N[sv_clampi(pg, 0, 10)];
 }
 /* REC on a synth layer, off GATE: the steps take the cards and the panel */
 static bool sv_steps_on(const sa_ui *u)
@@ -608,6 +609,10 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
             c[2].name = true;                      /* (its name; the full one on the panel and in the header) */
         }
         sv_card_txt(&c[3], "MUTE", v->mute ? "ON" : "OFF", -1, false);
+        break;
+    case SVP_HAND:                                 /* MANUAL; the rest off */
+        sv_card_txt(&c[0], "MANUAL", v->hand ? "ON" : "OFF", -1, false);
+        for (int i = 1; i < 4; ++i) sv_card_off(&c[i]);
         break;
     case SVP_KIT:
         sv_card_txt(&c[0], "KIT", sa_kit_name(s->kit), s->kit * 1000 / (SA_KITS - 1), false);
@@ -1167,7 +1172,7 @@ static void sv_layer_top(sa_ui *u, int l)
     sa_groove *g = u->g;
     static sa_code tb[2];
     const sa_code *e = &g->ed[l], *lv = &g->s.code[l];
-    if (g->part_cue) {                             /* PART B: B's patterns */
+    if (g->part_cue && !g->s.live[l].hand) {       /* PART B: B's patterns (MANUAL: A's, always) */
         e = sv_with_b(&tb[0], e, g->ed_patb[l]);
         lv = sv_with_b(&tb[1], lv, g->s.patb[l]);
     }
@@ -1292,6 +1297,14 @@ static void sv_panel_pump(sa_ui *u)
     sv_label(10, 100, q->src == SA_PS_BEAT ? "ON EVERY BEAT" : "UNDER THE KICK LAYER'S HITS", T_DIM);
 }
 
+static void sv_panel_hand(sa_ui *u)          /* (0.8.42) MANUAL: what it means */
+{
+    bool on = u->g->s.live[sv_clampi(u->layer, 0, SA_LAYERS - 1)].hand;
+    cv_free_text(10, 40, &AF_M, on ? "BY HAND" : "SARDINE PLAYS ALONG", on ? T_THEME : T_DIM, T_SURF, 220);
+    sv_label(10, 72, on ? "PLAYS AS IT IS: NO PHRASE, NO B," : "IT MAY CHANGE: PHRASE, A/B, EVOLVE,", T_MID);
+    sv_label(10, 88, on ? "NO EVOLVE, INTRO, ARC, LIVE" : "INTRO, ARC AND LIVE", T_DIM);
+}
+
 static void sv_panel_mix(sa_ui *u)
 {
     const sa_live *v = &u->g->s.live[sv_clampi(u->layer, 0, SA_LAYERS - 1)];
@@ -1326,7 +1339,8 @@ static void sv_panel_drums(sa_ui *u)
         int l = rows[i];
         static sa_code tb;
         const sa_code *e = &g->ed[l];
-        if (g->part_cue) e = sv_with_b(&tb, e, g->ed_patb[l]);   /* (PART B: the rows' B patterns) */
+        if (g->part_cue && !g->s.live[l].hand) e = sv_with_b(&tb, e, g->ed_patb[l]);   /* (PART B: the rows' B
+                                                    * patterns; MANUAL: A's) */
         bool pend = sa_layer_pending(g, l), mute = g->s.live[l].mute, gone = e->type == SA_T_NONE;
         bool off = e->pat == SA_PAT_OFF && !e->own;
         cv_free_text(10, y + 1, &AF_S, sv_layer_name(u, l), mute || gone || off ? T_DIM : sel ? T_TEXT : T_MID, bg, 64);
@@ -1360,6 +1374,7 @@ static void sv_panel_layer(sa_ui *u)
     case SVP_GATE: sv_panel_gate(u); break;
     case SVP_MOD: sv_panel_mod(u); break;
     case SVP_MIX: sv_panel_mix(u); break;
+    case SVP_HAND: sv_panel_hand(u); break;
     default:                                       /* KIT */
         cv_free_text(10, 42, &AF_M, sa_kit_name(u->g->s.kit), T_THEME, T_SURF, 220);
         sv_label(10, 72, "TUNE TONE DECAY: THE WHOLE KIT", T_MID);
@@ -1816,7 +1831,8 @@ static void sv_algo(sa_ui *u, int d)
     sa_code *e = sv_ed(u);
     uint8_t list[64];
     int n = sv_pat_list(u, list), at = -1;
-    if (g->part_cue && e->type != SA_T_NONE) {      /* PART B: the layer's B pattern (SEQ drops it) */
+    if (g->part_cue && e->type != SA_T_NONE && !g->s.live[u->layer].hand) {   /* PART B: the layer's B pattern
+                                                    * (SEQ drops it; MANUAL: its one pattern) */
         uint8_t *b = &g->ed_patb[u->layer];
         int cur = *b == 0 ? (e->own ? -1 : e->pat) : *b == SA_PATB_OFF ? SA_PAT_OFF : *b - 1;
         at = 0;
@@ -2134,6 +2150,9 @@ void sv_knob(sa_ui *u, int k, int d)
         else if (i == 1) s->kit = (uint8_t)sv_clampi(s->kit + d, 0, SA_KITS - 1);
         else sv_instr_turn(u, d);
         break;
+    case SVP_HAND:
+        if (i == 0) v->hand = (uint8_t)(d > 0);
+        break;
     case SVP_KIT:
         if (i == 0) s->kit = (uint8_t)sv_clampi(s->kit + d, 0, SA_KITS - 1);
         else if (i == 1) SV_ADJ(s->ktune, 2, 0, 100);
@@ -2314,7 +2333,7 @@ void sv_button(sa_ui *u, int b, bool down)
         }
         if (u->page == SV_PG_MIXER) break;         /* (GLO turns its pages) */
         if (u->page == SV_PG_LAYER) {
-            int p[8], n = sv_pages(u, p);
+            int p[10], n = sv_pages(u, p);
             u->fx = (u->fx + 1) % n;
             u->force = true;
         }

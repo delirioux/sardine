@@ -1,7 +1,9 @@
-Sardine 0.8.41: live club mixing for the FM-1.
+Sardine 0.8.42: live club mixing for the FM-1.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
-  through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, ARP, PAN, PAN 3D, PUMP, GATE, MOD; DRUMS: MIX, KIT, MOD), HOME back to them all
+  through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, MANUAL, ARP, PAN, PAN 3D, PUMP, GATE, MOD; DRUMS: MIX, MANUAL, KIT, MOD), HOME back to them all
+- MANUAL (0.8.42, a page on every layer): the layer played by hand, nothing automatic on it (no PHRASE, no B line, no
+  EVOLVE or NEW, not held out by INTRO, ARC or LIVE); nothing cleared, it plays on as it is
 - EDIT: a pattern editor, KNOB 1 the step, KNOB 2 ready fills (drum fills, lines in the key, chord rhythms), REC:
   the keys write the steps
 - STYLE MIX (GLO held): from one style into another, the layers you don't keep fading out over 1 to 4 bars, the new

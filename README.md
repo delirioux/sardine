@@ -21,7 +21,7 @@ All sounds are synthesised; no samples.
 
 ## Try it, install it
 
-Version 0.8.41:
+Version 0.8.42:
 
 - **[Try it in the browser](https://delirioux.github.io/sardine/try/)**: the whole firmware, the FM-1's screen and
   controls, sound and all, before you install anything.
@@ -69,6 +69,7 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
 - The synth layers phrase over four bars (A A A' B): bar 3 lifts, bar 4 answers on the root and leaves room for the fill
 - Every groove has a PART B, its own lines and chords: ALGORITHM on HOME, or by itself every 8 or 16 bars; a badge
   blinks before it turns; EVOLVE reworks each part while it rests; SEQ held on HOME renews the resting part at once
+- MANUAL on any layer: Sardine changes nothing on it by itself (no phrases, B line, EVOLVE, INTRO or ARC); you play it
 - LIVE: a mix built by hand, from the kick alone or a soft pad, a layer at a time on SEQ (or every 8 or 16 bars)
 - STYLE MIX (GLO held): blend into another style like a DJ: keep the bass or kick, fade the rest out, the new style in
 - Twenty styles, from NIGHT (slow and dark) to GABBER, a groove in one press; INTRO builds it up, ARC drops and lifts it
@@ -110,7 +111,7 @@ ones you want, LAST the last one.
 | --- | --- |
 | HOME | HOME, from anywhere; held: MENU (HOME again: MIDI OUT) |
 | PRESETS | HOME, LEAD, CHORD, BASS, DRUMS |
-| FX | the layer's next page; on HOME: SPACE, then PARTS |
+| FX | the layer's next page (MIX, MANUAL, …); on HOME: SPACE, then PARTS |
 | SELECT | the tempo |
 | ALGORITHM | the layer's pattern (waits for SEQ); on HOME: PART A or B |
 | SEQ | drops what waits, on the next bar line; in a LIVE build, the next layer; held: a whole new groove (on HOME: the part resting new) |
@@ -158,6 +159,11 @@ and bass out. Hold it four bars or more, then let go on the 1: the drums come ba
 **INSTR**: a new sound on the same line, straight away. Turn **ARP** on for a CHORD or LEAD, **GATE** a pad to a rhythm,
 or put the LEAD on **PAN 3D** ORBIT and listen on headphones. Hold **REC** for WOBBLE on the eighths, **OCT+** to throw
 the last notes into the delay.
+
+**Take a layer by hand.** On a layer, FX to **MANUAL** and turn it ON. From then on Sardine leaves that layer alone:
+no phrase changes, no PART B line, no EVOLVE or NEW, no INTRO, ARC or LIVE holding it out. It plays exactly what it
+has; change it yourself with ALGORITHM, EDIT or the keys, or set its pattern OFF and play it on the keys alone. Sardine
+keeps the rest of the groove moving around you. A new groove or style keeps which layers are MANUAL.
 
 **End it.** Hold **PLAY**: it blinks, and the whole mix fades out over one bar and stops. A tap still stops at once.
 

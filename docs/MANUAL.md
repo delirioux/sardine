@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.41. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.42. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -100,6 +100,7 @@ LEAD lead lines and the bass lines). FX turns through its pages:
 | Page | KNOB 1 | KNOB 2 | KNOB 3 | KNOB 4 | |
 | --- | --- | --- | --- | --- | --- |
 | MIX (the first) | VOLUME (fades it in and out) | TYPE (BASS KEYS PADS LEADS FX) | INSTR (the sound, by name; the header says it whole) | MUTE | at once |
+| MANUAL | MANUAL (OFF, ON) | | | | at once |
 | ARP | MODE (OFF, UP, DOWN, UP-DOWN, DOWN-UP, CONVERGE, DIVERGE, RANDOM, THUMB, PINKY, STRUM) | RATE | RANGE | GATE | waits for SEQ |
 | PAN | MODE (FIXED, SWEEP, PING-PONG, RANDOM; from FIXED: SWEEP from C, WIDTH 100, a bar) | PAN | WIDTH | RATE (SWEEP) | at once |
 | PAN 3D | MODE (OFF FIXED ORBIT RANDOM FLY; on: ORBIT, 2 bars, level, DIST 10) | ANGLE (FIXED) or RATE (ORBIT, FLY) | HEIGHT | DIST | at once |
@@ -142,6 +143,14 @@ do nothing, and its page says why and what to do: PAN 3D OFF first to use PAN; P
 type sets its DEPTH when you pick it: PADS 100 %, KEYS 80 %, BASS 50 %, LEADS 10 %, FX 0. RELEASE is how fast it comes
 back (50: over most of a beat), SOURCE whether it follows the kick layer's hits (KICK: mute the kick and it stops) or
 every beat (BEAT). The drums never duck.
+
+**MANUAL** (every layer, the drum rows too, after MIX) is the layer played by hand. ON, Sardine changes nothing on it
+by itself: no PHRASE (bar 3's lift, bar 4's answer), no B line in PART B (it plays its one pattern in both parts), no
+EVOLVE or NEW, and INTRO, ARC's break and a LIVE build don't hold it out. Nothing is cleared: what it has plays on as
+it is. You change it: ALGORITHM and SEQ, EDIT, the keys; set its pattern OFF to play it on the keys alone. What you do
+by hand still acts on it: MUTE, SOLO, BREAK (ARP held), a fill, STYLE MIX, the moves. A new groove or style keeps which
+layers are MANUAL (with the new groove's lines); a loaded set has its own. While it is ON, ALGORITHM in PART B turns
+its one pattern, not a B line.
 
 Every synth layer has an arpeggiator: OFF until you turn MODE. Turned on from OFF it starts as PINKY at 1/8, one octave,
 gate 70; turn on from there (left for UP and the rest). It plays the chord of the bar over the notes the pattern holds,

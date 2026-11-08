@@ -372,6 +372,12 @@ static void sa_prefs_load(void)
 }
 
 /* SETS' action (REC there), in the main loop */
+/* (0.8.42) a fresh groove keeps which layers are MANUAL (their lines are the new groove's, but nothing automatic on
+ * them); a loaded set has its own */
+static void sa_keep_hand(sa_settings *n)
+{
+    for (int l = 0; l < SA_LAYERS; ++l) n->live[l].hand = sa_g.s.live[l].hand;
+}
 static void sa_set_do(int act, int k)
 {
     char m[32];
@@ -404,6 +410,7 @@ static void sa_set_do(int act, int k)
     case SV_SA_STYLE: {                                      /* a fresh groove in a STYLE, INTRO and ARC kept */
         int k = sa_u.req_slot;
         sas_style_apply(&sa_next, k, sa_pref.boots * 7919u + fm1_ms * 31u + sa_u.frame, &sa_pl);
+        sa_keep_hand(&sa_next);
         sa_next.intro = sa_g.s.intro;
         sa_next.arc = sa_g.s.arc;
         fm1_irq_off();
@@ -416,6 +423,7 @@ static void sa_set_do(int act, int k)
     case SV_SA_MIX: {                                        /* STYLE MIX: a fresh groove in a STYLE, mixed into */
         int k = sa_u.req_slot;
         sas_style_apply(&sa_next, k, sa_pref.boots * 7919u + fm1_ms * 31u + sa_u.frame, &sa_pl);
+        sa_keep_hand(&sa_next);
         sa_next.intro = 0;
         sa_next.arc = sa_g.s.arc;
         fm1_irq_off();
@@ -439,6 +447,7 @@ static void sa_set_do(int act, int k)
             sa_next.live[SA_L_CHORD].cut = 45;
             sas_fix(&sa_next);
         }
+        sa_keep_hand(&sa_next);
         fm1_irq_off();
         sa_g.build_cue = (uint8_t)st;
         sa_set_arm(&sa_g, &sa_next);
@@ -454,6 +463,7 @@ static void sa_set_do(int act, int k)
             sa_random(&sa_next, sa_pref.boots * 7919u + fm1_ms * 31u + sa_u.frame, &sa_pl);
             sas_fix(&sa_next);
             sv_cpy(m, "A NEW GROOVE", sizeof m);
+            sa_keep_hand(&sa_next);
         } else if (k == sa_wait_slot) {
             if (sa_wait_clear) { sv_msg(&sa_u, "THAT SET IS EMPTY"); return; }
             sa_next = sa_wait.s;

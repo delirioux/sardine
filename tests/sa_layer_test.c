@@ -468,6 +468,31 @@ int main(void)
                   "PART B, the hats edited by hand: B plays the edit (%04x, wanted %04x)", h.hits_last[l], want);
             h.part_b = h.part_cue = false;
         }
+        {   /* (0.8.42) MANUAL: the bass plays as it is: no PHRASE, not B's line, not held out by INTRO, no NEW */
+            static sa_groove m;
+            sa_init(&m, SR);
+            sa_set_sound(&m, snd, 0);
+            only(&m, BS);
+            m.s.code[BS].pat = 4;                   /* PUMP 16 */
+            m.s.patb[BS] = 1;                       /* (B: OFFBEAT) */
+            m.s.intro = 2;                          /* (8 bars: the bass in at 4) */
+            m.s.live[BS].hand = 1;
+            sa_edit_reset(&m);
+            sa_play(&m, true);
+            int nm[4];
+            for (int b = 0; b < 4; ++b) { clear_log(); run_bars(&m, 1); nm[b] = LG.per_part[2]; }
+            CHECK(nm[0] == 16 && nm[3] == nm[0], "MANUAL: in from bar 1 through INTRO, bar 4 as bar 1 (%d %d)", nm[0], nm[3]);
+            sa_part(&m, true);
+            for (int b = 0; b < 4 && !m.part_b; ++b) run_bars(&m, 1);
+            clear_log();
+            run_bars(&m, 1);
+            CHECK(m.part_b && LG.per_part[2] == 16, "MANUAL in PART B: its own line, not B's (%d notes)", LG.per_part[2]);
+            uint8_t pat = m.s.code[BS].pat, pb = m.s.patb[BS];
+            int n = sa_part_new(&m);
+            CHECK(n == 0 && m.s.code[BS].pat == pat && m.s.patb[BS] == pb, "MANUAL: NEW leaves it (%d new)", n);
+            m.s.live[BS].hand = 0;
+            CHECK(sa_part_new(&m) == 1, "MANUAL OFF: NEW renews it again");
+        }
         sa_settings z;
         sa_random(&z, 7, &(sa_pool){0});
         CHECK(z.progb != 0 && z.patb[BS] != 0 && z.patb[BS] != z.code[BS].pat + 1, "a fresh groove has a B");

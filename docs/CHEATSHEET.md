@@ -1,13 +1,13 @@
 # Sardine: quick cheat sheet
 
-Every way to change Sardine's sound, and how to get there. 46 in all: 19 ways to play music, 3 instruments, 23
+Every way to change Sardine's sound, and how to get there. 47 in all: 20 ways to play music, 3 instruments, 23
 effects and 1 volume. The [manual](MANUAL.md) has the details.
 
 **Getting around:** PRESETS steps through HOME, LEAD, CHORD, BASS and DRUMS. FX steps through a layer's pages. HOME
 takes you back from anywhere. Changes to a pattern wait, shown in the second colour, until **SEQ** drops them in on
 the next bar.
 
-## Play music (19)
+## Play music (20)
 
 | | What | How |
 | --- | --- | --- |
@@ -30,47 +30,48 @@ the next bar.
 | 17 | LIVE | **GLO** to LIVE: STYLE, START, BUILD; **SEQ** brings in one layer at a time |
 | 18 | STYLE MIX | Hold **GLO**: TO, KEEP, OUT, IN; **SEQ** blends into the next style |
 | 19 | SONG | **GLO** to SONG: steps of saved sets and their bars; SONG ON |
+| 20 | MANUAL | On a layer, FX to **MANUAL**, KNOB 1 ON: played by hand, Sardine changes nothing on it by itself (no PHRASE, B line, EVOLVE, NEW, INTRO, ARC or LIVE) |
 
 ## Instruments (3)
 
 | | What | How |
 | --- | --- | --- |
-| 20 | Synth sound | On a layer, FX to **MIX**: TYPE, then INSTR. 144 sounds: 37 bass, 37 keys, 25 pads, 39 leads, 6 FX |
-| 21 | Drum instrument | DRUMS: KNOB 1 the row, KNOB 2 the instrument. 17 drum instruments with 8 variations each |
-| 22 | Kit | DRUMS, FX to **KIT**, KNOB 1. 24 kits |
+| 21 | Synth sound | On a layer, FX to **MIX**: TYPE, then INSTR. 144 sounds: 37 bass, 37 keys, 25 pads, 39 leads, 6 FX |
+| 22 | Drum instrument | DRUMS: KNOB 1 the row, KNOB 2 the instrument. 17 drum instruments with 8 variations each |
+| 23 | Kit | DRUMS, FX to **KIT**, KNOB 1. 24 kits |
 
 ## Effects (23)
 
 | | What | How |
 | --- | --- | --- |
-| 23 | CUTOFF | A synth layer's home page, KNOB 1 |
-| 24 | RESO | A synth layer's home page, KNOB 2 |
-| 25 | DRIVE | A synth layer's home page, KNOB 3 |
-| 26 | ENV | A synth layer's home page, KNOB 4 |
-| 27 | GATE | FX to **GATE**: a pattern (12 ready-made), DEPTH, WIDTH, SMOOTH |
-| 28 | PAN | FX to **PAN**: FIXED, SWEEP, PING-PONG or RANDOM |
-| 29 | PAN 3D | FX to **PAN 3D**: FIXED, ORBIT, RANDOM or FLY, HEIGHT, DIST (headphones; one or the other with PAN) |
-| 30 | PUMP (layer) | FX to **PUMP**: DEPTH, RELEASE, SOURCE, ON |
-| 31 | TUNE | DRUMS, KIT page, KNOB 2 |
-| 32 | TONE | DRUMS, KIT page, KNOB 3 |
-| 33 | DECAY | DRUMS, KIT page, KNOB 4 |
-| 34 | ACCENT | DRUMS, home page, KNOB 4 |
-| 35 | FILTER | HOME, KNOB 1 |
-| 36 | PUMP (all) | HOME, KNOB 3 |
-| 37 | SPACE (reverb) | HOME, KNOB 4 |
-| 38 | RESO (all) | HOME, FX once (SPACE), KNOB 1 |
-| 39 | WIDTH | HOME SPACE, KNOB 2 |
-| 40 | SWEEP | Hold **LFO** |
-| 41 | WASH | Hold **OCT-** |
-| 42 | THROW | Hold **OCT+** |
-| 43 | TAPE STOP | Hold **EDIT** |
-| 44 | WOBBLE | Hold **REC** |
-| 45 | FADE | Hold **PLAY**: the mix fades out over a bar and stops |
+| 24 | CUTOFF | A synth layer's home page, KNOB 1 |
+| 25 | RESO | A synth layer's home page, KNOB 2 |
+| 26 | DRIVE | A synth layer's home page, KNOB 3 |
+| 27 | ENV | A synth layer's home page, KNOB 4 |
+| 28 | GATE | FX to **GATE**: a pattern (12 ready-made), DEPTH, WIDTH, SMOOTH |
+| 29 | PAN | FX to **PAN**: FIXED, SWEEP, PING-PONG or RANDOM |
+| 30 | PAN 3D | FX to **PAN 3D**: FIXED, ORBIT, RANDOM or FLY, HEIGHT, DIST (headphones; one or the other with PAN) |
+| 31 | PUMP (layer) | FX to **PUMP**: DEPTH, RELEASE, SOURCE, ON |
+| 32 | TUNE | DRUMS, KIT page, KNOB 2 |
+| 33 | TONE | DRUMS, KIT page, KNOB 3 |
+| 34 | DECAY | DRUMS, KIT page, KNOB 4 |
+| 35 | ACCENT | DRUMS, home page, KNOB 4 |
+| 36 | FILTER | HOME, KNOB 1 |
+| 37 | PUMP (all) | HOME, KNOB 3 |
+| 38 | SPACE (reverb) | HOME, KNOB 4 |
+| 39 | RESO (all) | HOME, FX once (SPACE), KNOB 1 |
+| 40 | WIDTH | HOME SPACE, KNOB 2 |
+| 41 | SWEEP | Hold **LFO** |
+| 42 | WASH | Hold **OCT-** |
+| 43 | THROW | Hold **OCT+** |
+| 44 | TAPE STOP | Hold **EDIT** |
+| 45 | WOBBLE | Hold **REC** |
+| 46 | FADE | Hold **PLAY**: the mix fades out over a bar and stops |
 
 ## Volume (1)
 
 | | What | How |
 | --- | --- | --- |
-| 46 | VOLUME | **GLO**: the MIXER, every layer's level and the drums'; or a layer's MIX page, KNOB 1 |
+| 47 | VOLUME | **GLO**: the MIXER, every layer's level and the drums'; or a layer's MIX page, KNOB 1 |
 
 Held buttons act on any page; a tap still does the button's own job.

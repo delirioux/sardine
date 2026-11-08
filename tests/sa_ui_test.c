@@ -277,6 +277,16 @@ int main(int argc, char **argv)
     sv_knob(&ui, SV_K4, -1);
     sv_knob(&ui, SV_K1, -10);
     CHECK(g.s.live[SA_L_BASS].level == 50, "VOLUME (70 less 20) (%d)", g.s.live[SA_L_BASS].level);
+    press(SV_B_FX);                                /* (0.8.42) MANUAL: after MIX, on and off at once */
+    CHECK(sv_page_now(&ui) == SVP_HAND && !g.s.live[SA_L_BASS].hand, "FX: MANUAL, OFF");
+    sv_knob(&ui, SV_K1, 1);
+    CHECK(g.s.live[SA_L_BASS].hand && !sa_pending(&g), "MANUAL ON: at once");
+    shot("06b_bass_manual");
+    sv_knob(&ui, SV_K2, 1);
+    CHECK(g.s.live[SA_L_BASS].hand, "MANUAL: the knobs over its off cards do nothing");
+    sv_knob(&ui, SV_K1, -1);
+    CHECK(!g.s.live[SA_L_BASS].hand, "MANUAL OFF");
+    shot("06c_bass_manual_off");
     press(SV_B_FX);
     CHECK(sv_page_now(&ui) == SVP_ARP && g.ed[SA_L_BASS].amode == SA_AR_OFF, "FX: ARP on BASS too, OFF");
     press(SV_B_FX);
