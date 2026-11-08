@@ -164,16 +164,21 @@ int main(void)
     CHECK(g.ed[BS].sn[0] == 48 - 9, "the note is kept above the key (%d)", g.ed[BS].sn[0]);
     sa_step_note(&g, BS, 2, 45);                     /* step 3: A2, ROLLER's own A2 there: it goes */
     CHECK(g.ed[BS].sn[2] == SA_NO_NOTE, "the same note again: off (%d)", g.ed[BS].sn[2]);
-    sa_step_note(&g, BS, 4, 49);                     /* C#3: not in A minor, snapped to C3 or D3 */
-    CHECK(g.ed[BS].sn[4] == 48 - 9 || g.ed[BS].sn[4] == 50 - 9, "snapped to the scale (%d)", g.ed[BS].sn[4]);
+    sa_step_note(&g, BS, 4, 49);                     /* (0.8.37) C#3, SNAP OFF (the default): as pressed */
+    CHECK(g.ed[BS].sn[4] == 49 - 9, "SNAP OFF: the note as pressed (%d)", g.ed[BS].sn[4]);
+    g.snap = true;                                   /* SNAP ON: C#3 not in A minor, snapped to C3 or D3 */
+    sa_step_note(&g, BS, 5, 49);
+    CHECK(g.ed[BS].sn[5] == 48 - 9 || g.ed[BS].sn[5] == 50 - 9, "SNAP ON: snapped to the scale (%d)", g.ed[BS].sn[5]);
+    g.snap = false;
     sa_step_len(&g, BS, 0, 3);
     CHECK(g.ed[BS].sl[0] == 4, "the length: 4 sixteenths (%d)", g.ed[BS].sl[0]);
     sa_drop(&g);
     sa_play(&g, true);
     clear_log();
     run_bars(&g, 1);
-    CHECK(LG.on[2][48] == 1 + (g.s.code[BS].sn[4] == 48 - 9), "the own C3 plays (%d)", LG.on[2][48]);
-    CHECK(LG.per_part[2] == 9, "ROLLER's 8 notes, one off, two on: 9, got %d", LG.per_part[2]);
+    CHECK(LG.on[2][48] == 1 + (g.s.code[BS].sn[5] == 48 - 9), "the own C3 plays (%d)", LG.on[2][48]);
+    CHECK(LG.on[2][49] == 1, "the C#3 as pressed plays (%d)", LG.on[2][49]);
+    CHECK(LG.per_part[2] == 10, "ROLLER's 8 notes, one off, three on: 10, got %d", LG.per_part[2]);
     /* a chord layer: a key toggles the chord */
     sa_play(&g, false);
     sa_init(&g, SR);

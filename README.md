@@ -19,7 +19,7 @@ All sounds are synthesised; no samples.
 
 ## Try it, install it
 
-Version 0.8.36:
+Version 0.8.37:
 
 - **[Try it in the browser](https://delirioux.github.io/sardine/try/)**: the whole firmware, the FM-1's screen and
   controls, sound and all, before you install anything.
@@ -83,7 +83,8 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
 - The synth layers pump under the kick (PUMP), with REVERB, DELAY and WIDTH for the space they sit in
 - GATE cuts a held pad to a rhythm; PAN sweeps; PAN 3D puts a layer in front, behind, above or flying around you (on
   headphones)
-- The keys play the layer you are on, lit with what it plays; on DRUMS they play the drum you picked
+- The keys play the layer you are on, lit with what it plays, the notes as you press them (MENU's SNAP snaps them to
+  the scale); on DRUMS they play the drum you picked
 - EDIT: a step editor with ready fills; there the keys write the steps
 
 **Every start a fresh groove** (other sounds, patterns, kit, key), and one any time with SEQ held; eight sets keep the

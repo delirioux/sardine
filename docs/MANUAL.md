@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.36. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.37. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -175,7 +175,7 @@ on it moves it up or down the scale (on CHORD: right the chord on, left off).
 Setting a note, step by step: **EDIT**, KNOB 1 to the step, then a key (heard as you press it; the step moves on) or
 KNOB 4 to the note, KNOB 3 for how long.
 
-In EDIT, LEAD, BASS and CHORD: a key writes at the framed step (the note snapped to the scale, the same note
+In EDIT, LEAD, BASS and CHORD: a key writes at the framed step (the note as pressed, or snapped to the scale with SNAP ON; the same note
 again takes it off; on CHORD the chord) and the frame moves on. DRUMS: the 16 lowest keys are the steps, glowing dim,
 the hits set full; a key turns its step on or off, the keys above play the drum. Like a pattern, the steps wait for SEQ. EDIT again goes back.
 
@@ -372,7 +372,8 @@ drums do not. The progressions are named as in the minor key; where a scale make
 
 ## The keys
 
-The keys play the layer open, live, snapped to the scale (on HOME: LEAD); the header says what, briefly (KEYS: LEAD,
+The keys play the layer open, live, the notes as you press them, off the harmony too if you want (on HOME: LEAD;
+MENU's SNAP ON snaps them to the scale); the header says what, briefly (KEYS: LEAD,
 SAW LEAD). On LEAD, CHORD and BASS the keys light up with the notes the layer plays (a bass line folded up into
 the keys' reach). On DRUMS every key plays the drum picked, and its own note (its General MIDI note, moved into
 the keys' reach) is lit. With REC they write its steps. They never
@@ -442,7 +443,9 @@ end. HAPPY plays STORM, BREAKS HYPERSAW, both now and then with RATTLE.
 <img src="screens/menu.png" alt="MENU" width="200">
 </p>
 
-HOME held: the colour (SHOAL by default, and [Felucca](https://github.com/hugelton/Felucca)'s) and the look (FLAT, LINE). Below them the **CPU**: the audio's load
+HOME held: the colour (SHOAL by default, and [Felucca](https://github.com/hugelton/Felucca)'s), the look (FLAT, LINE) and **SNAP** (KNOB 3, OFF by
+default: the keys play the notes as pressed; ON: each key snapped to the nearest note of the scale, so nothing
+clashes). Kept over power-off. Below them the **CPU**: the audio's load
 now (its average over a tenth of a second; above 85 % it turns the second colour), its PEAK since the start, and how
 many voices the load guard had to let go (SHED), if any. HOME: MIDI OUT.
 

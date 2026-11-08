@@ -831,7 +831,7 @@ void sa_step_note(sa_groove *g, int l, int st, int note)
         c->chord ^= (uint16_t)(1u << st);
         c->sn[st] = SA_NO_NOTE;
     } else {
-        int rel = clampi(sa_snap(&g->ed_harm, note) - g->ed_harm.key, -127, 127);
+        int rel = clampi((g->snap ? sa_snap(&g->ed_harm, note) : note) - g->ed_harm.key, -127, 127);
         if (c->sn[st] == rel && !((c->chord >> st) & 1u)) {
             c->sn[st] = SA_NO_NOTE;
         } else {
@@ -2380,7 +2380,7 @@ void sa_key(sa_groove *g, int k, int note_in, bool down, int layer)
                 for (int l = 0; l < SA_LAYERS && part < 0; ++l)
                     if (g->s.code[l].type == SA_T_SYNTH) part = g->s.code[l].part;
             if (part < 0) return;
-            n = sa_snap(&g->s.harm, note_in);
+            n = g->snap ? sa_snap(&g->s.harm, note_in) : note_in;   /* (SNAP OFF: the key as pressed) */
         }
         g->keys |= 1u << k;
         g->key_note[k] = n;

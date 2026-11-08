@@ -923,16 +923,22 @@ int main(int argc, char **argv)
     ui.cpu_peak = 67;
     ui.shed = 0;
     shot("20_menu");
-    {   /* (0.8.34) KNOB 3 and 4 over MENU's empty cards: nothing, not even a redraw */
+    {   /* (0.8.34) KNOB 4 over MENU's empty card: nothing, not even a redraw */
         sv_draw(&ui);
         ui.hot_ms = 0;
         int d0 = (int)sv_draws_total();
-        sv_knob(&ui, SV_K3, 1);
         sv_knob(&ui, SV_K4, -1);
         sv_draw(&ui);
-        CHECK(ui.hot_ms == 0 && (int)sv_draws_total() == d0, "MENU, KNOB 3 and 4 (empty cards): nothing drawn again (%d)",
+        CHECK(ui.hot_ms == 0 && (int)sv_draws_total() == d0, "MENU, KNOB 4 (an empty card): nothing drawn again (%d)",
               (int)sv_draws_total() - d0);
     }
+    /* (0.8.37) SNAP, MENU's KNOB 3: the keys to the scale, OFF by default (an off note is the player's to play) */
+    CHECK(!g.snap, "SNAP: OFF by default");
+    sv_knob(&ui, SV_K3, 1);
+    CHECK(g.snap && strstr(ui.msg, "SNAP"), "KNOB 3 right: SNAP ON (%s)", ui.msg);
+    shot("20s_menu_snap");
+    sv_knob(&ui, SV_K3, -1);
+    CHECK(!g.snap, "KNOB 3 left: SNAP OFF, the keys as pressed");
     press(SV_B_HOME);
     CHECK(ui.page == SV_PG_MENU && ui.menu2 && ui.midi_ch[0] == 1 && ui.midi_ch[3] == 10, "MENU, HOME: MIDI OUT, LEAD on 1, DRUMS on 10");
     sv_knob(&ui, SV_K2, -2);

@@ -417,7 +417,7 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         }
         sv_card_txt(&c[0], "COLOR", UI_PALETTES[s->palette % NPALETTES].name, -1, false);
         sv_card_txt(&c[1], "LOOK", s->look ? "LINE" : "FLAT", -1, false);
-        sv_card_off(&c[2]);
+        sv_card_txt(&c[2], "SNAP", u->g->snap ? "ON" : "OFF", u->g->snap ? 1000 : 0, false);   /* (0.8.37) */
         sv_card_off(&c[3]);
         return;
     default: break;
@@ -1997,6 +1997,12 @@ void sv_knob(sa_ui *u, int k, int d)
         }
         if (i == 0) s->palette = (uint8_t)sv_wrap(s->palette + d, (int)NPALETTES);
         else if (i == 1) s->look = (uint8_t)!s->look;
+        else if (i == 2) {                         /* SNAP: the keys to the scale, or as pressed */
+            u->g->snap = d > 0;
+            sv_msg(u, u->g->snap ? "KEYS SNAP TO THE SCALE" : "KEYS AS PRESSED");
+            u->changed = true;
+            return;
+        }
         u->changed = true;
         sv_apply_style(u);
         return;

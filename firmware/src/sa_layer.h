@@ -207,6 +207,7 @@ typedef struct {
     struct { uint32_t at; uint8_t part, note, vel, layer; uint32_t len; } pend[SA_PEND];
     int npend;
     uint32_t keys;                                  /* the FM-1's keys held */
+    bool snap;                                      /* (0.8.37, MENU's SNAP) the keys snapped to the scale; OFF: as pressed */
     int key_note[27], key_part[27];
     uint8_t sound_sig;                              /* bumped when the code changed (the glue loads the sounds) */
     uint32_t kick_clock;                            /* the last kick a layer played (the pump) */
