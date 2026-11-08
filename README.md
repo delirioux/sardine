@@ -21,7 +21,7 @@ All sounds are synthesised; no samples.
 
 ## Try it, install it
 
-Version 0.8.46:
+Version 0.8.47:
 
 - **[Try it in the browser](https://delirioux.github.io/sardine/try/)**: the whole firmware, the FM-1's screen and
   controls, sound and all, before you install anything.
@@ -110,7 +110,7 @@ ones you want, LAST the last one.
 
 | Control | What it does |
 | --- | --- |
-| HOME | HOME, from anywhere; held: MENU (HOME again: MIDI OUT) |
+| HOME | HOME, from anywhere; on HOME: VIEW (a scope per layer, what comes); held: MENU (HOME again: MIDI OUT) |
 | PRESETS | HOME, LEAD, CHORD, BASS, DRUMS |
 | FX | the layer's next page (MIX, MANUAL, …); on HOME: SPACE, then PARTS |
 | SELECT | the tempo |

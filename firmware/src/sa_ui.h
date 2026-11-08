@@ -105,7 +105,7 @@ typedef struct {
     int back;                             /* the page KEY goes back to */
     int mback;                            /* the page the MIXER goes back to */
     int home2;                            /* HOME's page (FX turns them): 0 FILTER FEEL PUMP SPACE, 1 SPACE (RESO, WIDTH),
-                                           * 2 PARTS (PHRASE, A/B, EVOLVE) */
+                                           * 2 PARTS (PHRASE, A/B, EVOLVE), 3 VIEW (HOME again: the scopes, what comes) */
     bool menu2;                           /* MENU's second page (FX): MIDI */
     uint8_t midi_ch[4];                   /* MIDI: the channel each layer sends on (LEAD CHORD BASS DRUMS): 0 OFF, 1..16
                                            * (the glue keeps them with the preferences) */
@@ -146,6 +146,8 @@ typedef struct {
     int batt;
     int8_t wave[96];                      /* the open synth layer's sound now, a cycle or two (the glue fills it) */
     int wave_n;                           /* how many (0: silent, a flat line) */
+    int8_t scopes[4][54];                 /* (0.8.47) HOME's VIEW: LEAD CHORD BASS DRUMS now (the glue fills them) */
+    uint8_t scope_on[4];                  /* (each: sounding) */
     int cpu, cpu_peak, shed;              /* MENU: the audio's load now (its average) and its worst, in %; voices shed */
     bool changed;                         /* a setting changed: the glue applies it (and keeps the look) */
     sv_set_info sets[SV_SLOTS];           /* what each set holds, and LAST (the glue fills it) */

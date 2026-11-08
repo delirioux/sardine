@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.46. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.47. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -63,6 +63,13 @@ reverb and delay together; at 70 each sound has its own). **FX** on HOME turns t
 filter, over each synth layer's own: ride FILTER down with it up for the filter-house sweep) and **WIDTH** (the stereo
 spread, 70: each sound's own) on **HOME SPACE**; FX again **HOME PARTS**: **PHRASE**, **A/B** and **EVOLVE** (below);
 FX again back.
+
+**HOME** again on HOME: **HOME VIEW**. A scope for each layer, LEAD, CHORD, BASS and the DRUMS together, the sound as it
+plays (quiet ones small, a muted one dimmed). Under them what comes by itself: with ARC on, ARC drawn small (where the
+groove is, the part, the bars to the drop); without, the next 16 bars (this one lit, the phrases' starts taller, the
+bar PART turns on in the second colour) and a line on what is under way: STYLE MIX, INTRO (the bars till all are in),
+a LIVE build (the layer next), PART A or B coming (and EVOLVE), the phrase's bar. The knobs stay FILTER, FEEL, PUMP
+and SPACE. HOME or FX goes back.
 
 ### Phrases, PART A and B
 

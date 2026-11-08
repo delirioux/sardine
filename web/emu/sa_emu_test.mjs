@@ -61,6 +61,11 @@ peak = 0;
 run(8);
 check(`PLAY plays (peak ${peak.toFixed(3)}, bar ${w.web_da_bar()})`, w.web_playing() && peak > 0.02 && peak <= 1 && w.web_da_bar() >= 3);
 check("PLAY's green LED lit", (w.web_lit_buttons() >> 14) & 1);
+press(B.HOME);                                       // (0.8.47) HOME on HOME: VIEW, a scope for each layer and the drums
+let sc = 0;
+for (let i = 0; i < 20; i++) { run(0.05); sc |= w.web_scopes_on(); }
+check(`HOME on HOME: VIEW's scopes, the drums' among them (${sc.toString(2)})`, (sc & 8) && sc > 8);
+press(B.HOME);
 
 // PRESETS to a layer, FX through its pages, SCL the KEY page, HOME back; SELECT is the tempo
 const pages = [];

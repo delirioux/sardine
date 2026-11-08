@@ -4,7 +4,7 @@ Every way to change Sardine's sound, and how to get there. 47 in all: 20 ways to
 effects and 1 volume. The [manual](MANUAL.md) has the details.
 
 **Getting around:** PRESETS steps through HOME, LEAD, CHORD, BASS and DRUMS. FX steps through a layer's pages. HOME
-takes you back from anywhere. Changes to a pattern wait, shown in the second colour, until **SEQ** drops them in on
+takes you back from anywhere; HOME again on HOME shows VIEW: a scope per layer and what comes by itself (ARC small). Changes to a pattern wait, shown in the second colour, until **SEQ** drops them in on
 the next bar.
 
 ## Play music (20)

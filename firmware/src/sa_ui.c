@@ -633,7 +633,7 @@ static void sv_head_title(const sa_ui *u, char *t, unsigned n)
     if (u->msg_ms > 0) { sv_cpy(t, u->msg, n); return; }
     switch (u->page) {
     case SV_PG_MAIN:
-        sv_cpy(t, u->home2 == 1 ? "HOME  SPACE" : u->home2 == 2 ? "HOME  PARTS" : u->g->playing ? u->g->chord_name : "HOME", n);
+        sv_cpy(t, u->home2 == 1 ? "HOME  SPACE" : u->home2 == 2 ? "HOME  PARTS" : u->home2 == 3 ? "HOME  VIEW" : u->g->playing ? u->g->chord_name : "HOME", n);
         sv_cat(t, u->g->part_b ? "  B" : u->g->part_cue ? "  >B" : "  A", n);
         if (u->g->part_b && !u->g->part_cue) sv_cat(t, ">A", n);
         break;
@@ -737,7 +737,7 @@ static void sv_draw_foot(sa_ui *u)
         sv_cpy(r, "FX: ", sizeof r);
         sv_cat(r, sv_page_name(pg[(sv_clampi(u->fx, 0, np - 1) + 1) % np]), sizeof r);
     } else if (u->page == SV_PG_MAIN) {
-        sv_cpy(r, u->home2 == 2 ? "FX: FILTER" : u->home2 == 1 ? "FX: PARTS" : "FX: RESO", sizeof r);
+        sv_cpy(r, u->home2 == 3 ? "HOME: BACK" : u->home2 == 2 ? "FX: FILTER" : u->home2 == 1 ? "FX: PARTS" : "FX: RESO", sizeof r);
     } else if (u->page == SV_PG_EDIT) {
         sv_cpy(r, "KEYS: WRITE", sizeof r);
     } else if (u->page == SV_PG_MIXER) {
@@ -1097,8 +1097,10 @@ static uint16_t sv_play_bits(sa_ui *u, int l)
 }
 
 /* HOME: every layer playing. LEAD CHORD BASS a row each (its sound, its bar), DRUMS a thin bar per drum */
+static void sv_panel_view(sa_ui *u);
 static void sv_panel_home(sa_ui *u)
 {
+    if (u->home2 == 3) { sv_panel_view(u); return; }
     sa_groove *g = u->g;
     int now = sv_now(g);
     if (u->main_ms <= 0) {                         /* (stopped: the code's bars, worked out a few times a second) */
@@ -1393,11 +1395,10 @@ static float sv_arc_energy(int n, int len, float b)   /* 0..1 at bar b (from PLA
     p -= (float)len * (float)(int)(p / (float)len);
     return p < 2.0f * q ? 1.0f : p < 3.0f * q ? 0.3f : 0.3f + 0.7f * (p - 3.0f * q) / q;
 }
-static void sv_arc_graph(sa_ui *u)
+static void sv_arc_draw(sa_ui *u, int32_t x0, int32_t y0, int32_t w, int32_t h, int32_t ty)
 {
     const sa_groove *g = u->g;
     int n = sa_intro_bars(g->s.intro), len = sa_arc_bars(g->s.arc), total = n + len;
-    int32_t x0 = 10, w = 220, y0 = 58, h = 34;
     float now = -1.0f;
     if (g->playing && g->bar >= 0) {
         now = (float)g->bar + (float)g->tick / (float)SA_TPB;
@@ -1434,7 +1435,71 @@ static void sv_arc_graph(sa_ui *u)
         sv_fmt_int(a, len - p);
         sv_cat(t, a, sizeof t);
     }
-    sv_label(10, 100, t, T_MID);
+    sv_label(10, ty, t, T_MID);
+}
+static void sv_arc_graph(sa_ui *u) { sv_arc_draw(u, 10, 58, 220, 34, 100); }
+
+/* (0.8.47) HOME's VIEW (HOME again on HOME): a scope for each layer (LEAD CHORD BASS, the drums together), and under
+ * them what comes by itself: ARC drawn small; else the next 16 bars (the phrases, where PART turns) and a line on
+ * what is under way (STYLE MIX, INTRO, a LIVE build, A/B and EVOLVE, the phrase) */
+static void sv_panel_view(sa_ui *u)
+{
+    const sa_groove *g = u->g;
+    static const char *const NM[4] = {"LEAD", "CHORD", "BASS", "DRUMS"};
+    static const uint8_t SL[4] = {SA_L_LEAD, SA_L_CHORD, SA_L_BASS, SA_L_DRUM0};
+    for (int p = 0; p < 4; ++p) {
+        int32_t x = 8 + p * 57, y = 16, w = 53, h = 40, my = y + h / 2;
+        bool mute = p < 3 ? g->s.live[SL[p]].mute != 0 : g->s.dmute != 0;
+        uint16_t col = mute ? T_DIM : p == 3 ? T_ACCENT : T_THEME;
+        sv_label(x, 4, NM[p], u->scope_on[p] && !mute ? T_TEXT : T_DIM);
+        cv_rect(x, y, w, h, sv_well());
+        cv_rect(x, my, w, 1, T_LINE);
+        if (!u->scope_on[p]) continue;
+        int32_t py = my - u->scopes[p][0];
+        for (int32_t i = 1; i < 54 && i < w; ++i) {
+            int32_t yy = my - u->scopes[p][i];
+            cv_line_t(x + i - 1, py, x + i, yy, col, 1);
+            py = yy;
+        }
+    }
+    if (g->s.arc) { sv_arc_draw(u, 10, 70, 220, 24, 102); return; }
+    int left = 0;
+    bool to_b = false;
+    if (g->playing) left = sa_part_next(g, &to_b);
+    int b0 = g->bar < 0 ? 0 : g->bar;
+    for (int i = 0; i < 16; ++i) {                 /* the next 16 bars: this one lit, the phrases' starts taller, PART's
+                                                    * turn in the second colour */
+        int bar = b0 + i;
+        bool ph = bar % 4 == 0, turn = left > 0 && i == left;
+        uint16_t c = i == 0 && g->playing ? T_THEME : turn ? T_ACCENT : T_LINE;
+        cv_rect(10 + i * 14, ph ? 70 : 74, 11, ph ? 18 : 14, turn ? T_ACCENT : c);
+    }
+    char t[40], a[8];
+    int intro = sa_intro_bars(g->s.intro), nb = sa_build_peek(g);
+    if (!g->playing) sv_cpy(t, "STOPPED: PLAY", sizeof t);
+    else if (g->mx_state) sv_cpy(t, g->mx_state == 1 ? "STYLE MIX: FADING OUT" : "STYLE MIX: FADING IN", sizeof t);
+    else if (g->bar < intro) {
+        sv_cpy(t, "INTRO: ALL IN IN ", sizeof t);
+        sv_fmt_int(a, intro - g->bar);
+        sv_cat(t, a, sizeof t);
+    } else if (nb >= 0) {
+        sv_cpy(t, "LIVE: ", sizeof t);
+        sv_cat(t, sa_build_name(g, nb), sizeof t);
+        sv_cat(t, " NEXT", sizeof t);
+    } else if (left > 0) {
+        sv_cpy(t, to_b ? "PART B IN " : "PART A IN ", sizeof t);
+        sv_fmt_int(a, left);
+        sv_cat(t, a, sizeof t);
+        if (g->s.evolve) sv_cat(t, g->s.evolve == 2 ? ", EVOLVE MORE" : ", EVOLVE", sizeof t);
+    } else if (g->s.phrase == 0) {
+        sv_cpy(t, "PHRASE: BAR ", sizeof t);
+        sv_fmt_int(a, b0 % 4 + 1);
+        sv_cat(t, a, sizeof t);
+        sv_cat(t, " OF 4", sizeof t);
+    } else {
+        sv_cpy(t, "NOTHING CHANGES BY ITSELF", sizeof t);
+    }
+    sv_label(10, 102, t, T_MID);
 }
 
 /* the STYLE page: the style KNOB 1 picks, its tempo; INTRO and ARC */
@@ -2265,7 +2330,10 @@ void sv_button(sa_ui *u, int b, bool down)
                 u->menu2 = true;
                 u->force = true;
             } else if (u->home_ms < SV_MENU_HOLD_MS && u->page != SV_PG_MAIN) {
-                sv_view(u, SV_V_HOME);             /* (on HOME: nothing) */
+                sv_view(u, SV_V_HOME);
+            } else if (u->home_ms < SV_MENU_HOLD_MS) {   /* (0.8.47) on HOME: its VIEW, and back */
+                u->home2 = u->home2 == 3 ? 0 : 3;
+                u->force = true;
             }
         }
         return;
@@ -2382,7 +2450,7 @@ void sv_button(sa_ui *u, int b, bool down)
         break;
     case SV_B_FX:
         if (u->page == SV_PG_MAIN) {               /* HOME: its pages, SPACE and PARTS */
-            u->home2 = (u->home2 + 1) % 3;
+            u->home2 = u->home2 == 3 ? 0 : (u->home2 + 1) % 3;   /* (VIEW: back to FILTER FEEL PUMP SPACE) */
             u->force = true;
             break;
         }

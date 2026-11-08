@@ -527,4 +527,5 @@ EXPORT void web_test_row(uint32_t row, uint32_t dv, uint32_t var, uint32_t pat)
     sa_g.s.patb[slot] = 0;
     sa_g.s.live[slot].cut = 100;
 }
+EXPORT uint32_t web_scopes_on(void) { uint32_t m = 0; for (int p = 0; p < 4; ++p) m |= (uint32_t)(sa_u.scope_on[p] != 0) << p; return m; }   /* (0.8.47) HOME's VIEW */
 EXPORT uint32_t web_chord_root(void) { return sa_g.chord_pc[0]; }

@@ -226,8 +226,22 @@ int main(int argc, char **argv)
     sv_draw(&ui);
     sv_knob(&ui, SV_K_PRESETS, -1);
     CHECK(ui.page == SV_PG_MAIN && !ui.force, "PRESETS down on HOME: no redraw");
+    press(SV_B_HOME);                              /* (0.8.47) HOME on HOME: VIEW, the scopes and what comes */
+    CHECK(ui.page == SV_PG_MAIN && ui.home2 == 3, "HOME on HOME: VIEW");
+    for (int p = 0; p < 4; ++p) {                  /* (the glue fills them: a stand-in here) */
+        ui.scope_on[p] = p != 1;
+        for (int i = 0; i < 54; ++i)
+            ui.scopes[p][i] = (int8_t)(sinf((float)i * (0.25f + 0.1f * (float)p)) * (p == 3 ? 16.0f * expf(-(float)i / 12.0f) : 14.0f));
+    }
+    shot("02c_home_view");
+    g.s.arc = 2;
+    shot("02d_home_view_arc");
+    g.s.arc = 0;
+    press(SV_B_FX);
+    CHECK(ui.home2 == 0, "VIEW, FX: HOME's own page");
     press(SV_B_HOME);
-    CHECK(ui.page == SV_PG_MAIN && !ui.force, "HOME on HOME: no redraw");
+    press(SV_B_HOME);
+    CHECK(ui.page == SV_PG_MAIN && ui.home2 == 0, "VIEW, HOME: back to HOME");
     /* PRESETS: HOME LEAD CHORD BASS DRUMS, each on its home page */
     sv_knob(&ui, SV_K_PRESETS, 1);
     CHECK(ui.page == SV_PG_LAYER && ui.view == SV_V_LEAD && ui.layer == SA_L_LEAD && ui.fx == 0, "PRESETS: LEAD");

@@ -32,11 +32,18 @@ static uint8_t sa_drums_ready;
 /* each synth part's sound as it renders (fx.c mix_part): every 4th sample, the last 256 (23 ms); and when it last
  * sounded */
 #define SA_SCOPE 256u
-static int16_t sa_scope[SA_SYNTHS + 1][SA_SCOPE];            /* (+1: the whole mix, SA_SCOPE_MIX) */
+static int16_t sa_scope[SA_SYNTHS + 1][SA_SCOPE];            /* (+1: the whole mix, SA_SCOPE_MIX, or (0.8.47) on HOME's
+                                                              * VIEW the drums' part: never both on one screen) */
 static uint16_t sa_scope_w[SA_SYNTHS + 1];
 static uint32_t sa_scope_ms[SA_SYNTHS + 1];
+static volatile uint8_t sa_scope_drums;                      /* (VIEW open: the last ring the drums') */
 static void sa_scope_take(uint32_t part, const int32_t *b, uint32_t n)
 {
+    if (part == SA_SYNTHS && !sa_scope_drums) return;        /* (the drums' part: only for VIEW) */
+    if (part == SA_SYNTHS + 1u) {                            /* (the mix: only when not) */
+        if (sa_scope_drums) return;
+        part = SA_SYNTHS;
+    }
     if (part > SA_SYNTHS) return;
     uint32_t w = sa_scope_w[part];
     for (uint32_t i = 0; i < n; i += 4u)
@@ -45,9 +52,30 @@ static void sa_scope_take(uint32_t part, const int32_t *b, uint32_t n)
     sa_scope_ms[part] = fm1_ms;
 }
 /* the open synth layer's wave for its screen: from a rising zero crossing, scaled to its own peak */
+/* (0.8.47) HOME's VIEW: each part's scope (LEAD CHORD BASS, the drums together), from a rising zero crossing, the
+ * longer the lower (BASS, DRUMS); quiet small (scaled against a floor, not its own peak) */
+static void sa_scopes(void)
+{
+    static const uint8_t ST[4] = {2, 2, 3, 4};
+    for (uint32_t p = 0; p < 4u; ++p) {
+        sa_u.scope_on[p] = 0;
+        if (fm1_ms - sa_scope_ms[p] > 120u) continue;
+        int16_t s[SA_SCOPE];
+        uint32_t w = sa_scope_w[p], st = ST[p], at = 0;
+        for (uint32_t i = 0; i < SA_SCOPE; ++i) s[i] = sa_scope[p][(w + i) & (SA_SCOPE - 1u)];
+        for (uint32_t i = 1; i + 54u * st < SA_SCOPE; ++i)
+            if (s[i - 1] < 0 && s[i] >= 0) { at = i; break; }
+        int pk = 3000;
+        for (uint32_t i = 0; i < 54u; ++i) { int a = s[at + i * st] < 0 ? -s[at + i * st] : s[at + i * st]; if (a > pk) pk = a; }
+        for (uint32_t i = 0; i < 54u; ++i) sa_u.scopes[p][i] = (int8_t)(s[at + i * st] * 18 / pk);
+        sa_u.scope_on[p] = 1;
+    }
+}
 static void sa_wave(void)
 {
     sa_u.wave_n = 0;
+    sa_scope_drums = sa_u.page == SV_PG_MAIN && sa_u.home2 == 3;
+    if (sa_scope_drums) { sa_scopes(); return; }
     bool mix = sa_u.page == SV_PG_MIXER && sa_u.mixmute < 3;    /* (the MIXER: the whole mix, longer) */
     if (!mix && ((sa_u.page != SV_PG_LAYER && sa_u.page != SV_PG_EDIT) || sa_u.view < SV_V_LEAD ||
                  sa_u.view > SV_V_BASS))
