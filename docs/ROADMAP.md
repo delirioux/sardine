@@ -1,6 +1,6 @@
 # After 1.0
 
-Sardine 1.0 has everything planned. What is left is listening on the FM-1 and tuning what it shows; tweaks come as
+Sardine 1.0.1 has everything planned. What is left is listening on the FM-1 and tuning what it shows; tweaks come as
 1.0.x.
 
 ## To check on the FM-1
@@ -18,6 +18,7 @@ Sardine 1.0 has everything planned. What is left is listening on the FM-1 and tu
 - The style leads (SOFT LEAD, FILTER LEAD, BLIP, DARK SAW, ACID LEAD, RUBBER, PLUCK LEAD, RAVE LEAD, SCREECH, DUB
   LEAD, STRING LEAD, PAN FLUTE, VOX CHOP): levelled by numbers only (tools/sa_lead_levels.mjs), not by ear; the
   vibrato's depth and speed
+- The PUMP in dB (1.0.1): deep enough, too deep on old sets, the release's breath at 120 to 140 BPM
 - ARC's WOBBLE and WASH into the drop: too much, too little?
 - HOME VIEW: the scopes moving smoothly on the FM-1, the drums' scope, the CPU with it open
 - The LED test round at power-on: every LED in turn, none missed, PLAY's green

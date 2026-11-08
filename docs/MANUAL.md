@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 1.0. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 1.0.1. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -153,6 +153,11 @@ do nothing, and its page says why and what to do: PAN 3D OFF first to use PAN; P
 type sets its DEPTH when you pick it: PADS 100 %, KEYS 80 %, BASS 50 %, LEADS 10 %, FX 0. RELEASE is how fast it comes
 back (50: over most of a beat), SOURCE whether it follows the kick layer's hits (KICK: mute the kick and it stops) or
 every beat (BEAT). The drums never duck.
+
+The dip is in dB (1.0.1): HOME's PUMP and DEPTH both at 100 % take a layer 18 dB down, 50 % and 100 % 9 dB, a pad at
+HOME's usual 45 % some 8 dB. On the kick it goes down in 6 ms, stays down 30 ms, then comes back like a sidechain's
+release: slowly at first, full again just before the next kick (RELEASE 50). Sets saved before 1.0.1 pump harder
+than they did; turn HOME's PUMP down if one is too much.
 
 **MANUAL** (every layer, the drum rows too, after MIX) is the layer played by hand. ON, Sardine changes nothing on it
 by itself: no PHRASE (bar 3's lift, bar 4's answer), no B line in PART B (it plays its one pattern in both parts), no

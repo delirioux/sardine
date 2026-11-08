@@ -2415,10 +2415,22 @@ static void do_tick(sa_groove *g)
     }
 }
 
-/* the pump: down fast on the kick (6 ms), back over 70 % of a beat, as deep as PUMP says */
+/* the gain x dB down (0..40), without libm: e^(-x ln10/20), by its eighth (a short series) cubed in squares */
+static float db_down(float x)
+{
+    float y = -x * 0.11512925f / 8.0f, r = 1.0f + y * (1.0f + y * (0.5f + y * (1.0f / 6.0f + y / 24.0f)));
+    r *= r;
+    r *= r;
+    return r * r;
+}
+
+/* the pump (1.0.1, made audible): down on the kick in 6 ms, held there 30 ms, then back like a sidechain's release,
+ * slowly at first and full again by RELEASE (70 % of a beat at 50); its depth in dB: HOME's PUMP 100 % and the layer's
+ * DEPTH 100 %: -18 dB (50 %: -9 dB). It was a cut of the level itself (85 % at most) that came straight back: some
+ * 3 dB on a pad at the usual settings, hardly heard */
 static void pump_block(sa_groove *g)
 {
-    float beat = 60.0f / (float)clampi(g->s.bpm, 60, 200), master = (float)g->s.pump / 100.0f * 0.85f;
+    float beat = 60.0f / (float)clampi(g->s.bpm, 60, 200), master = (float)g->s.pump / 100.0f;
     for (int p = 0; p < SA_SYNTHS; ++p) {
         const sa_pumpl *pl = &g->s.pl[p];
         float d = 0.0f, t = -1.0f;
@@ -2431,13 +2443,14 @@ static void pump_block(sa_groove *g)
             }
         }
         if (t >= 0.0f) {
-            float depth = master * (float)pl->depth / 100.0f, back = (0.25f + (float)pl->rel * 0.009f) * beat;
-            if (t < 0.006f) {
-                d = depth * t / 0.006f;
-            } else {
-                float k = (t - 0.006f) / back;
-                if (k < 1.0f) d = depth * (1.0f - k) * (1.0f - k);
+            float db = 18.0f * master * (float)pl->depth / 100.0f, back = (0.25f + (float)pl->rel * 0.009f) * beat, e = 0.0f;
+            if (t < 0.006f) e = t / 0.006f;                       /* down */
+            else if (t < 0.036f) e = 1.0f;                        /* held */
+            else {
+                float k = (t - 0.036f) / (back - 0.036f > 0.01f ? back - 0.036f : 0.01f);
+                if (k < 1.0f) e = 1.0f - k * k;                   /* back: slow at first */
             }
+            if (e > 0.0f) d = 1.0f - db_down(db * e);
         }
         g->duck[p] = (uint8_t)(d * 127.0f + 0.5f);
     }

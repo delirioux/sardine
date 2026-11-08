@@ -364,14 +364,17 @@ int main(int argc, char **argv)
     bars(1);
     shot("07c_bass_pump");
     {
-        int mb = 0, mc = 0;
+        int mb = 0, mc = 0, sum = 0;
         g.s.pl[SA_L_CHORD].on = 0;
         for (int k = 0; k < 120; ++k) {
             run_ms(16);
             if (g.duck[SA_L_BASS] > mb) mb = g.duck[SA_L_BASS];
             if (g.duck[SA_L_CHORD] > mc) mc = g.duck[SA_L_CHORD];
+            sum += g.duck[SA_L_BASS];
         }
         CHECK(mb > 5 && mc == 0, "BASS pumps on the beat, CHORD with its pump off stays up (%d %d)", mb, mc);
+        /* (1.0.1) in dB: PUMP 45 %, DEPTH 50 %: some -4 dB at the bottom (duck ~47), and down a good part of the beat */
+        CHECK(mb >= 44 && mb <= 50 && sum / 120 > mb / 3, "the pump: -4 dB deep (%d), held down (mean %d)", mb, sum / 120);
         g.s.pl[SA_L_CHORD].on = 1;
     }
     press(SV_B_FX);
