@@ -1,6 +1,6 @@
 # Felucca on a desktop (SDL2, beta)
 
-Felucca's sources on Linux (and macOS, for development) with SDL2: the same 240 x 240 UI and the FM-1's panel beside
+[Felucca](https://github.com/hugelton/Felucca)'s sources on Linux (and macOS, for development) with SDL2: the same 240 x 240 UI and the FM-1's panel beside
 it, the sound, the keyboard, the mouse, a gamepad, MIDI in, and the flash kept in a file. It builds the browser
 emulator's file (`web/emu/felucca_web.c`: the firmware against a simulated FM-1) natively, as
 `web/emu/native_check.c` does; nothing of the firmware changes for it. The panel (`platforms/common/panel.c`) is

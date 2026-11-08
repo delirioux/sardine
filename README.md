@@ -168,7 +168,7 @@ The [manual](docs/MANUAL.md) has every screen; [BUILDING.md](BUILDING.md) builds
 
 ## Credits
 
-Sardine runs on [Felucca](https://github.com/hugelton/Felucca), Leo Kuroshita's firmware for the FM-1, by way of Sill
+Sardine runs on [Felucca](https://github.com/hugelton/Felucca), Leo Kuroshita's firmware for the FM-1, by way of [Sill](https://github.com/delirioux/sill)
 and [Tuna](https://github.com/delirioux/tuna). See [CREDITS.md](CREDITS.md) and [LICENSING.md](LICENSING.md).
 
 ## License

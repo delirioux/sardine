@@ -1,6 +1,6 @@
 # Sardine licensing
 
-Sardine is a fork of Sill, Daurade, Flyfish and [Tuna](https://github.com/delirioux/tuna), themselves forks of
+Sardine is a fork of [Sill](https://github.com/delirioux/sill), [Daurade](https://github.com/delirioux/daurade), [Flyfish](https://github.com/delirioux/flyfish) and [Tuna](https://github.com/delirioux/tuna), themselves forks of
 [Felucca](https://github.com/hugelton/Felucca): GPL-3.0-only, as they are. Its own files (`firmware/src/sa_*`,
 `tests/sa_*`, `tools/sa_*`, `tools/draw_logo.py`, `web/sa_*`, `web/sardine_installer.html`, `web/emu/sa_*`, `docs/`,
 `assets/logo.*`) are Copyright (C) 2026 delirioux, GPL-3.0-only; the maths (`tuna_libm.c`, `tuna_sys.h`) are Tuna's.

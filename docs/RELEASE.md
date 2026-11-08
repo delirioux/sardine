@@ -33,7 +33,7 @@ Sardine 0.8.36: live club mixing for the FM-1.
   leads and two lead lines of its own, the singing ones with a vibrato) and ten wild RAVE leads that stab, gate,
   sweep and scream in time; 24 synthesised drum kits (HYPNO, RUMBLE, PUNCH, SOFT: the kick on each chord's root, taken by the
   styles that suit it); 24 drum and 38 synth patterns
-- On Felucca 1.8.2-beta: newer FM-1 units' flash is recognised
+- On [Felucca](https://github.com/hugelton/Felucca) 1.8.2-beta: newer FM-1 units' flash is recognised
 
 Install it from the site with a Chromium browser (Chrome, Edge) and a USB cable. The package also holds three files of
 JieLi's AC79 SDK under Apache-2.0: see LICENSING.md.

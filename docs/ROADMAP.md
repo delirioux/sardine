@@ -44,7 +44,7 @@ Sardine 0.8.36 has everything planned for 1.0. What is left is listening on the 
 
 ## Later
 
-- MIDI clock in and out (USB and the TRS jack), Felucca's midi_clock.c: in time with other gear
+- MIDI clock in and out (USB and the TRS jack), [Felucca](https://github.com/hugelton/Felucca)'s midi_clock.c: in time with other gear
 - More moves from Felucca's PERFORM: REPEAT 1/8 1/16 1/32, REVERSE, FREEZE, OCT UP / DN, FLANGER, PHASER, CRUSH; a
   MOVES page on GLO picks what each held button plays
 

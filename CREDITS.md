@@ -8,10 +8,10 @@
   [DUB-1](https://github.com/sbegueria/fm1-dub), FM-1 firmwares (GPL-3.0): the ideas (a kick on the key's root, a
   rumble, a punchy and a soft kick), no code
 - **The piano**: six notes of the Kawai grand of the [Versilian Community Sample Library](https://github.com/sgossner/VCSL)
-  (Sam Gossner and contributors, CC0 1.0), made bright by `tools/si_piano.py` (Sill's)
-- **Sill** and **Daurade** (delirioux, GPL-3.0-only): the machine Sardine runs on: the glue, the cards and the frame, the
+  (Sam Gossner and contributors, CC0 1.0), made bright by `tools/si_piano.py` ([Sill](https://github.com/delirioux/sill)'s)
+- **Sill** and **[Daurade](https://github.com/delirioux/daurade)** (delirioux, GPL-3.0-only): the machine Sardine runs on: the glue, the cards and the frame, the
   build, the site and the installer, the own sounds SUPER, TRANCE, REESE, OCTAVE, HOOVER, WHISTLE and ROBOT, the piano
-- **[Tuna](https://github.com/delirioux/tuna)** and Flyfish (delirioux, GPL-3.0-only): the frame Sardine's screen is
+- **[Tuna](https://github.com/delirioux/tuna)** and [Flyfish](https://github.com/delirioux/flyfish) (delirioux, GPL-3.0-only): the frame Sardine's screen is
   drawn in, the single-precision maths (`tuna_libm`), the FM6 patches SLAP and FRETLESS
 - **Felucca** (below): the hardware layer, the engines, the effects, the drawing, the installer's package format
 

@@ -216,7 +216,7 @@ FX: **MIX** (VOLUME, KIT, INSTR, MUTE), **KIT** (KIT, TUNE, TONE, DECAY: the who
 **MOD** (three modifiers, and **CHANCE**: how likely each hit plays, 100 % always; lower and hits drop out at random,
 so the pattern changes as it plays). The kits, all synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY,
 CLASSIC, ROOM, VINTAGE, MINIMAL, VOLT (electro), GARAGE, DISCO, BREAKS, DUB, LOFI, IRON (industrial), ACID, and four
-loosely after the kits of two other FM-1 firmwares, HYP-1 and DUB-1, whose kick follows the chords: each kick tuned to
+loosely after the kits of two other FM-1 firmwares, [HYP-1](https://github.com/rustypawz/fm1-HYP1) and [DUB-1](https://github.com/sbegueria/fm1-dub), whose kick follows the chords: each kick tuned to
 the root of the chord playing (between about E1 and D#2), so the kick and the bass move together through the
 progression: HYPNO (deep and long), RUMBLE (hard and driven, a long dark tail), PUNCH (short and hard) and SOFT (a
 muffled thump). The styles where a tuned kick sounds best take them: NIGHT, DEEP, TECH, MINIMAL, TECHNO, HARD,
@@ -442,7 +442,7 @@ end. HAPPY plays STORM, BREAKS HYPERSAW, both now and then with RATTLE.
 <img src="screens/menu.png" alt="MENU" width="200">
 </p>
 
-HOME held: the colour (SHOAL by default, and Felucca's) and the look (FLAT, LINE). Below them the **CPU**: the audio's load
+HOME held: the colour (SHOAL by default, and [Felucca](https://github.com/hugelton/Felucca)'s) and the look (FLAT, LINE). Below them the **CPU**: the audio's load
 now (its average over a tenth of a second; above 85 % it turns the second colour), its PEAK since the start, and how
 many voices the load guard had to let go (SHED), if any. HOME: MIDI OUT.
 
