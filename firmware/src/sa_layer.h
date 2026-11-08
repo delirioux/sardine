@@ -232,6 +232,7 @@ typedef struct {
     float arr_sw0, arr_sw1;                         /* INTRO, ARC: the sweep over this bar, from .. to */
     uint16_t arr_out;                               /* INTRO: the layers not in yet (a bit per slot) */
     bool arr_brk, arr_fill;                         /* ARC: its break (drums and bass out), its fill (the last half bar) */
+    bool arr_wob, arr_wash;                         /* (0.8.49) ARC: WOBBLE in the build's second half, WASH on its last bar */
     uint8_t az_now[SA_SYNTHS];                      /* 3D: each synth part's angle and height now (moving: ORBIT RANDOM FLY) */
     int8_t el_now[SA_SYNTHS];
     uint8_t pan_side[SA_LAYERS];                    /* PING-PONG: the side the next note goes to */

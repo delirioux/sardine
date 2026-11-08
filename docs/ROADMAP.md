@@ -1,6 +1,6 @@
 # The road to 1.0
 
-Sardine 0.8.48 has everything planned for 1.0. What is left is listening on the FM-1 and tuning what it shows.
+Sardine 0.8.49 has everything planned for 1.0. What is left is listening on the FM-1 and tuning what it shows.
 
 ## To check on the FM-1
 
@@ -17,6 +17,7 @@ Sardine 0.8.48 has everything planned for 1.0. What is left is listening on the 
 - The style leads (SOFT LEAD, FILTER LEAD, BLIP, DARK SAW, ACID LEAD, RUBBER, PLUCK LEAD, RAVE LEAD, SCREECH, DUB
   LEAD, STRING LEAD, PAN FLUTE, VOX CHOP): levelled by numbers only (tools/sa_lead_levels.mjs), not by ear; the
   vibrato's depth and speed
+- ARC's WOBBLE and WASH into the drop: too much, too little?
 - HOME VIEW: the scopes moving smoothly on the FM-1, the drums' scope, the CPU with it open
 - The LED test round at power-on: every LED in turn, none missed, PLAY's green
 - The hats on CLASSIC, DISCO, TECH, HOUSE (0.8.45: noise under the metal): no bell left, not too hissy? DUB WOB's

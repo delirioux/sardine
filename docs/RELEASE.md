@@ -1,4 +1,4 @@
-Sardine 0.8.48: live club mixing for the FM-1.
+Sardine 0.8.49: live club mixing for the FM-1.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
   through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, MANUAL, ARP, PAN, PAN 3D, PUMP, GATE, MOD; DRUMS: MIX, MANUAL, KIT, MOD), HOME back to them all
@@ -24,7 +24,7 @@ Sardine 0.8.48: live club mixing for the FM-1.
 - ENV held: a drum fill from the next beat, eight bar-long fills by turns (held on: the next one every bar), peaking on the bar's end, the filter dipping into the 1; ARP held: BREAK, the drums and bass out,
   back in on the 1; LFO held: SWEEP, the filter closing over two bars
 - STYLE: twenty styles (NIGHT, FILTER, DEEP, TECH, MINIMAL, TECHNO, HARD, GABBER, ACID, TRANCE, PROG, DISCO, AFRO,
-  GARAGE, BREAKS, DUB, AMBIENT, ELECTRO, HAPPY, LOFI), a fresh groove in one on SEQ; INTRO and ARC (drawn on the STYLE page, the bars to the drop)
+  GARAGE, BREAKS, DUB, AMBIENT, ELECTRO, HAPPY, LOFI), a fresh groove in one on SEQ; INTRO and ARC (its build ending in WOBBLE, WASH on its last bar; drawn on the STYLE page, the bars to the drop)
 - GLO: a MIXER, the four layers' volumes, mutes and solos; STYLE; SONG, eight steps of sets played in turn
 - Phrases: the synth layers over four bars, A A A' B (a lift in bar 3, an answer on the root in bar 4); PART A and B,
   each layer's second line and a progression of its own, on HOME's ALGORITHM or by themselves every 8 or 16 bars; a

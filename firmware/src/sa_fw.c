@@ -908,6 +908,14 @@ static void sa_moves(void)
         }
         sa_moves_on = (uint8_t)(w ? sa_moves_on | bit : sa_moves_on & ~bit);
     }
+    {   /* (0.8.49) ARC's WASH on its last bar, dry on the drop; under a WASH held by hand it leaves it be */
+        static uint8_t arc_wash;
+        uint8_t aw = sa_g.arr_wash && sa_g.playing;
+        if (aw != arc_wash) {
+            if (!(sa_moves_on & (1u << SV_MV_WASH))) sa_perf(PF_RTHR, aw);
+            arc_wash = aw;
+        }
+    }
 }
 
 /* ---- the main loop ----------------------------------------------------------------------------------------------- */

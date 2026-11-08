@@ -2136,7 +2136,7 @@ void sa_play(sa_groove *g, bool on)
     g->tick = SA_TPB - 1;                          /* the first tick wraps into bar 0 (its bar line) */
     g->bar = -1;
     g->arr_out = 0;
-    g->arr_brk = g->arr_fill = false;
+    g->arr_brk = g->arr_fill = g->arr_wob = g->arr_wash = false;
     g->arr_sw0 = g->arr_sw1 = 0.0f;
     g->back_on = 0;
     if (!on) {
@@ -2279,7 +2279,7 @@ static void arrange(sa_groove *g)
 {
     int n = sa_intro_bars(g->s.intro), len = sa_arc_bars(g->s.arc), b = g->bar < 0 ? 0 : g->bar;
     g->arr_out = 0;
-    g->arr_brk = g->arr_fill = false;
+    g->arr_brk = g->arr_fill = g->arr_wob = g->arr_wash = false;
     g->arr_sw0 = g->arr_sw1 = 0.0f;
     if (n == 0) {                                  /* no INTRO: the LEAD in after one pattern (the progression once
                                                     * round, 4..8 bars) */
@@ -2306,6 +2306,8 @@ static void arrange(sa_groove *g)
             g->arr_sw1 = 0.7f * (float)(p - 3 * q + 1) / (float)q;
         }
         if (p == len - 1) g->arr_fill = true;
+        if (p >= 3 * q + q / 2 && p < len - 1) g->arr_wob = true;   /* (0.8.49) the build's second half: WOBBLE */
+        if (p == len - 1) g->arr_wash = true;      /* its last bar: WASH, dry again on the drop (sa_fw.c) */
     }
 }
 /* a drum note of a fill: the snare's and the clap's as their rows play them (their INSTR), the others as written */
@@ -2452,7 +2454,7 @@ void sa_process(sa_groove *g, int frames)
     {   /* INTRO, ARC: their sweep over the bar; the deeper of the two */
         float a = g->playing ? g->arr_sw0 + (g->arr_sw1 - g->arr_sw0) * (float)(g->tick < 0 ? 0 : g->tick) / (float)SA_TPB
                              : 0.0f;
-        if (g->playing && g->wobble) {             /* WOBBLE: a triangle on the eighths, in time */
+        if (g->playing && (g->wobble || g->arr_wob)) {   /* WOBBLE (REC held, or ARC's build): a triangle on the eighths */
             float x = (float)((g->tick < 0 ? 0 : g->tick) % 12) / 12.0f, w = 0.65f * (x < 0.5f ? 2.0f * x : 2.0f - 2.0f * x);
             if (w > a) a = w;
         }

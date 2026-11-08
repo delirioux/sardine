@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.48. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.49. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -326,7 +326,9 @@ BASS at half, CHORD at three quarters, LEAD at the end, the filter opening over 
 waits one pattern (the chord progression once round, 4 to 8 bars) after PLAY, then comes in. Every new groove and
 style has a lead. LEAD is polyphonic: its patterns are single lines, a chord on the keys sounds whole. **ARC** (OFF, 16, 32, 64 bars):
 after the intro a cycle, the groove for half, a break (drums and bass out) for a quarter, a build (the filter closing)
-for the last quarter with a roll on its last half bar, and the drop on the next 1. Both are kept with the groove.
+for the last quarter with a roll on its last half bar, and the drop on the next 1. In the build's second half ARC also
+plays WOBBLE (as REC held: the filter on the eighths), and on its last bar WASH (as OCT- held: everything into the
+reverb), dry again on the drop (0.8.49). Both are kept with the groove.
 
 With ARC on, the STYLE page draws it: the INTRO rising (if on), then one cycle, the groove full, the break low, the
 build climbing to the drop (the line at the right end). Playing, a line shows where the groove is and the part done

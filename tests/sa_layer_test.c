@@ -327,7 +327,11 @@ int main(void)
     clear_log();
     run_bars(&g, 2);
     CHECK(LG.on[3][36] == 0 && LG.per_part[2] == 0 && LG.per_part[1] > 0, "ARC: the break, the chord alone");
-    run_bars(&g, 6);
+    run_bars(&g, 4);                                /* (0.8.49) the build's second half: WOBBLE; its last bar: WASH */
+    CHECK(g.arr_wob && !g.arr_wash, "ARC: WOBBLE in the build's second half (bar %d)", g.bar);
+    run_bars(&g, 1);
+    CHECK(!g.arr_wob && g.arr_wash, "ARC: WASH on its last bar");
+    run_bars(&g, 1);
     clear_log();
     run_bars(&g, 1);
     CHECK(LG.on[3][36] == 4, "ARC: the drop, the kick back");
