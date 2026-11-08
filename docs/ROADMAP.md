@@ -1,6 +1,6 @@
 # The road to 1.0
 
-Sardine 0.8.44 has everything planned for 1.0. What is left is listening on the FM-1 and tuning what it shows.
+Sardine 0.8.45 has everything planned for 1.0. What is left is listening on the FM-1 and tuning what it shows.
 
 ## To check on the FM-1
 
@@ -17,6 +17,8 @@ Sardine 0.8.44 has everything planned for 1.0. What is left is listening on the 
 - The style leads (SOFT LEAD, FILTER LEAD, BLIP, DARK SAW, ACID LEAD, RUBBER, PLUCK LEAD, RAVE LEAD, SCREECH, DUB
   LEAD, STRING LEAD, PAN FLUTE, VOX CHOP): levelled by numbers only (tools/sa_lead_levels.mjs), not by ear; the
   vibrato's depth and speed
+- The hats on CLASSIC, DISCO, TECH, HOUSE (0.8.45: noise under the metal): no bell left, not too hissy? DUB WOB's
+  wobble, DUB SKANK
 - The MELODIES on each style's leads: do they sing, do the 4-bar ones land with the chords? A long ENV hold: a new fill
   each bar
 - MANUAL on a layer through A/B, EVOLVE MORE, ARC and a LIVE build: does it really stay put?

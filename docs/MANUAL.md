@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.44. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.45. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -218,6 +218,11 @@ whatever the kit: CLAP, CLAP TIGHT, CLAP ROOM .. CLAP DEEP, then (on HATS) OPEN 
 header says the whole name as it turns. The PERC row's are the engine's own percussion on a channel of their own, never a kit's (TIGHT ROOM HIGH LOW DARK BRIGHT DEEP). No cymbals: a synthesised ride or crash never sounds right, so there are none. The claps are their own: all eight short hand claps (from the 80, 55, 77 and
 66 machines and DEEP; CLAP 77 the 80 and 10 swapped for the 77), whatever the kit.
 
+The hats (0.8.45) hiss rather than ring: the 10's and the 77's (TECH, HOUSE, HARD, GARAGE, IRON, RUMBLE, PUNCH;
+CLASSIC, DISCO) and the 80's open hat were a cluster of square waves that rang like a bell; they now have noise under
+the cluster, the cluster lower, a touch more sizzle, at the level they had. Checked by numbers on every kit and
+variation (tools/sa_hat_audit.mjs: how far the spectrum's sharpest lines stand above its body).
+
 Each row shows its drum and its bar (the second colour: waiting for SEQ); a row OFF is dimmed. The home page: **DRUM**
 (KNOB 1, the row), **INSTR** (its drum, at once), **VOLUME** and **ACCENT** (how hard the accented steps hit against
 the rest; 50: as written). ALGORITHM turns the row's pattern, OFF first (its name in the header): a pattern turns
@@ -225,7 +230,7 @@ the row on, OFF turns it off; SEQ drops it in. A row that is muted, or not in ye
 pattern lit all the same, and SEQ brings it in with it, unmuted (a synth layer too). Without REC every key plays the row's drum; with REC the 16 lowest keys are its steps, the keys above
 play it.
 
-FX: **MIX** (VOLUME, KIT, INSTR, MUTE), **KIT** (KIT, TUNE, TONE, DECAY: the whole kit, every drum plays on it) and
+FX: **MIX** (VOLUME, KIT, INSTR, MUTE), **MANUAL**, **KIT** (KIT, TUNE, TONE, DECAY: the whole kit, every drum plays on it) and
 **MOD** (three modifiers, and **CHANCE**: how likely each hit plays, 100 % always; lower and hits drop out at random,
 so the pattern changes as it plays). The kits, all synthesised: TECH, HOUSE, DEEP, HARD, BOOM, TIGHT, AFRO, DUSTY,
 CLASSIC, ROOM, VINTAGE, MINIMAL, VOLT (electro), GARAGE, DISCO, BREAKS, DUB, LOFI, IRON (industrial), ACID, and four
@@ -435,7 +440,8 @@ Every STYLE has two lead sounds and two lead lines of its own, picked for its mu
 each; of the sounds mostly the one that holds its notes, see below): SOFT LEAD (a warm triangle, DEEP, PROG, GARAGE, DUB, LOFI), FILTER LEAD (a resonant saw that talks with ENV,
 FILTER), SYNC LEAD (TECH), PULSE (MINIMAL), BLIP (a short square into the echo, MINIMAL), DARK SAW (a saw on a sub, low and driven, TECHNO),
 ACID LEAD and RUBBER (squelching, gliding, ACID and TECHNO), PLUCK LEAD (a plucked saw into a long delay, TRANCE,
-PROG), RAVE LEAD (a wide pulse, BREAKS, HAPPY), SCREECH (a driven saw, HARD, GABBER), DUB LEAD (a soft
+PROG), RAVE LEAD (a wide pulse, BREAKS, HAPPY), SCREECH (a driven saw, HARD, GABBER), DUB WOB (0.8.45: raw, a driven saw on a sub, its resonant filter wobbling on
+the beat into the echo, DUB), DUB LEAD (a soft
 triangle drowned in echoes, NIGHT, DUB), STRING LEAD (a chorused string line, DISCO), PAN FLUTE (breathy, DEEP, AFRO,
 AMBIENT, LOFI) and VOX CHOP (a short sung vowel, FILTER, TECH, GARAGE).
 
@@ -490,7 +496,7 @@ two):
 | DEEP | WARM BASS | DEEP CHORD | AFRO | LOG DRUM (falls as it hits) | SOFT KEYS (tremolo) |
 | TECH | TECH PLUCK | HOUSE STAB | GARAGE | WARP BASS (filter on the 1/8) | STAB ORGAN |
 | MINIMAL | CLICK BASS | BLIP CHORD | BREAKS | NEURO (filter on the 1/4) | BREAK STAB |
-| TECHNO | DARK ROLL | HYPNO STAB (drifting) | DUB | DUB SUB | DUB SKANK (into the echo) |
+| TECHNO | DARK ROLL | HYPNO STAB (drifting) | DUB | DUB SUB | DUB SKANK (a short chord into the echo; 0.8.45 made over, it was a click) |
 | HARD | HARD BASS | HARD STAB | AMBIENT | BOWED BASS | AURORA (drifting) |
 | GABBER | BUZZ BASS | ALARM | ELECTRO | ZAP BASS | ROBOT CHOIR |
 | ACID | ACID SQUARE | ACID CHORD | HAPPY | DONK | HAPPY STAB |

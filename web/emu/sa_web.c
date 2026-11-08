@@ -500,5 +500,28 @@ EXPORT void web_usb_host(uint32_t on) { usb.config = (uint8_t)(on ? 1u : 0u); if
 EXPORT uint32_t web_midi_out_next(void) { return mo_r == mo_w ? 0u : midi_out_q[mo_r++ % MQ]; }
 EXPORT uint32_t web_da_partb(void) { return sv_hashb(sv_hashb(2166136261u, sa_g.s.patb, sizeof sa_g.s.patb), &sa_g.s.progb, 1); }
 EXPORT int32_t web_kick_semi(void) { return drum_lane_ov[SA_PART_DRUMS][0].semi; }   /* (the test: the kick's tuning) */
+EXPORT const char *web_kit_name(uint32_t k) { return sa_kit_name((int)(k % SA_KITS)); }
+EXPORT const char *web_dvar_name(uint32_t row, uint32_t v) { return sa_dvar_name((int)row, (int)v); }
 EXPORT void web_test_kit(uint32_t k) { sa_g.s.kit = (uint8_t)(k % SA_KITS); }
+/* (the hat audit, tools/sa_hat_audit.mjs) the HATS row alone: its drum, its variation, a pattern */
+EXPORT void web_test_row(uint32_t row, uint32_t dv, uint32_t var, uint32_t pat)
+{
+    int slot = SA_L_DRUM0 + (int)row;
+    if (pat >= (uint32_t)sa_drum_pats())           /* (none given: OFFBEAT, a hit on each off eighth, room to ring) */
+        for (int i = 0; i < sa_drum_pats(); ++i)
+            if (!strcmp(sa_pat_name(SA_T_DRUM, i), "OFFBEAT")) pat = (uint32_t)i;
+    for (int l = 0; l < SA_LAYERS; ++l) sa_mute(&sa_g, l, l != slot);
+    sa_code *cs[2] = {&sa_g.s.code[slot], &sa_g.ed[slot]};
+    for (int k = 0; k < 2; ++k) {
+        cs[k]->type = SA_T_DRUM;
+        cs[k]->sound = (uint8_t)dv;
+        cs[k]->amode = (uint8_t)(var % SA_DVARS);
+        cs[k]->pat = (uint8_t)pat;
+        cs[k]->own = 0;
+        for (int i = 0; i < SA_MODS; ++i) cs[k]->mod[i].type = SA_M_OFF;
+    }
+    sa_g.build_out = 0;
+    sa_g.s.patb[slot] = 0;
+    sa_g.s.live[slot].cut = 100;
+}
 EXPORT uint32_t web_chord_root(void) { return sa_g.chord_pc[0]; }

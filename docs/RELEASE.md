@@ -1,9 +1,11 @@
-Sardine 0.8.44: live club mixing for the FM-1.
+Sardine 0.8.45: live club mixing for the FM-1.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
   through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, MANUAL, ARP, PAN, PAN 3D, PUMP, GATE, MOD; DRUMS: MIX, MANUAL, KIT, MOD), HOME back to them all
 - MANUAL (0.8.42, a page on every layer): the layer played by hand, nothing automatic on it (no PHRASE, no B line, no
   EVOLVE or NEW, not held out by INTRO, ARC or LIVE); nothing cleared, it plays on as it is
+- Hats that hiss, not ring (0.8.45): the 10's, the 77's and the 80's open hat with noise under their metal; DUB
+  WOB, a raw wobbling lead for DUB; DUB SKANK made over
 - MELODIES (0.8.43): sixteen lead lines over 2 or 4 bars, a call and its answer, in scale steps from each chord,
   two for every style; a fresh groove's LEAD mostly a sound that holds its notes
 - EDIT: a pattern editor, KNOB 1 the step, KNOB 2 ready fills (drum fills, lines in the key, chord rhythms), REC:
@@ -34,7 +36,7 @@ Sardine 0.8.44: live club mixing for the FM-1.
 - An arpeggiator on every synth layer, off until you turn it on; GATE, PAN and four modifiers on every layer
 - Every start a fresh groove; SETS keeps eight grooves (LOAD on the one, STORE, NEW, CLEAR) and LAST, the last groove,
   by itself
-- 144 synth sounds, among them an AMBIENT set in a big hall, a bass and a chord sound made for each style, thirteen
+- 145 synth sounds, among them an AMBIENT set in a big hall, a bass and a chord sound made for each style, thirteen
   leads made for the styles (every style two
   leads and two lead lines of its own, the singing ones with a vibrato) and ten wild RAVE leads that stab, gate,
   sweep and scream in time; 24 synthesised drum kits (HYPNO, RUMBLE, PUNCH, SOFT: the kick on each chord's root, taken by the

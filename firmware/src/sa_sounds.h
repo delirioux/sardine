@@ -115,6 +115,7 @@ static const sas_motion SAM_BUZZSAW = {0, 0, 6, 1, 0, 40, 0};       /* the pulse
 static const sas_motion SAM_SIREN = {0, 50, 2, 1, 0, 40, 0};        /* the sync swept by the note and over 2 bars */
 static const sas_motion SAM_ZAPPER = {63, 0, 0, 0, 0, 0, 0};        /* down an octave as it hits */
 static const sas_motion SAM_WOBBLER = {0, 0, 6, 1, 45, 0, 0};       /* the filter by the 1/8 */
+static const sas_motion SAM_DUBWOB = {0, 0, 5, 1, 60, 0, 0};        /* (0.8.45) the filter by the beat: wob, wob, wob */
 static const sas_motion SAM_TORNADO = {0, 0, 1, 1, 28, 0, 0};       /* the filter over 4 bars */
 static const sas_motion SAM_STROBE = {0, 0, 10, 3, 0, 0, 127};      /* a 1/32 gate */
 /* (0.8.41) the STYLES' own: a bass and a chord sound made for each style. ANALOG's E: WAVE DTN MIX NOIS CUT RES DRV
@@ -154,7 +155,11 @@ static const preset_t SAS_DISCOSTR = {"DISCO STRINGS", {0, 12, 64, 0, 85, 8, 0, 
 static const preset_t SAS_SOFTKEYS = {"SOFT KEYS", {2, 4, 40, 0, 80, 5, 5, 64}, {0, 70, 40, 45}, 10, 0, FX(0, 30, 30, 50)};
 static const preset_t SAS_STABORGAN = {"STAB ORGAN", {1, 6, 64, 0, 90, 5, 15, 64}, {0, 40, 60, 20}, 0, 0, FX(0, 40, 20, 35)};
 static const preset_t SAS_BREAKSTAB = {"BREAK STAB", {0, 20, 64, 0, 85, 25, 40, 64}, {0, 50, 15, 25}, 25, 0, FX(15, 40, 40, 50)};
-static const preset_t SAS_DUBSKANK = {"DUB SKANK", {1, 6, 64, 0, 58, 30, 10, 48}, {0, 35, 0, 30}, 30, 0, FX(0, 20, 120, 70)};
+/* (0.8.45) DUB SKANK made over: it was a click under its echo (quiet, all decay); now detuned saws, a body that holds a
+ * moment, the filter's envelope, into the long echo */
+static const preset_t SAS_DUBSKANK = {"DUB SKANK", {0, 14, 64, 0, 66, 40, 8, 64}, {0, 52, 30, 30}, 36, 0, FX(0, 40, 110, 70)};
+/* (0.8.45) DUB's raw wobble lead: a driven saw on a sub, the resonant filter swung by the beat, into the echo */
+static const preset_t SAS_DUBWOB = {"DUB WOB", {0, 6, 64, 0, 50, 85, 45, 64}, {0, 64, 115, 25}, 10, 1, FX(10, 10, 90, 50)};
 static const preset_t SAS_AURORA = {"AURORA", {4, 12, 64, 10, 55, 20, 0, 32}, {120, 100, 120, 120}, 8, 0, FX(0, 100, 40, 120)};
 static const preset_t SAS_ROBOTCHOIR = {"ROBOT CHOIR", {40, 90, 60, 0, 100, 10, 90, 10}, {10, 70, 100, 40}, 0, 0, FX(0, 40, 30, 40)};
 static const preset_t SAS_HAPPYSTAB = {"HAPPY STAB", {4, 14, 64, 0, 95, 15, 25, 64}, {0, 55, 40, 25}, 15, 0, FX(10, 40, 30, 40)};
@@ -351,11 +356,13 @@ static const sas_sound SAS_SOUND[] = {
     SX("SOFT KEYS", K, SAS_ANALOG, SAS_SOFTKEYS, SAS_KEEP, SAS_POLY, 4, 5, 0, 50, 60, 30, 0, &SAM_SOFTKEYS),
     SX("STAB ORGAN", K, SAS_ANALOG, SAS_STABORGAN, SAS_KEEP, SAS_POLY, 4, 5, 2, 40, 0, 0, 0, 0),
     SX("BREAK STAB", K, SAS_ANALOG, SAS_BREAKSTAB, SAS_KEEP, SAS_POLY, 4, 5, 11, 70, 0, 40, 0, 0),
-    SX("DUB SKANK", K, SAS_ANALOG, SAS_DUBSKANK, SAS_KEEP, SAS_POLY, 4, 5, 9, 60, 80, 120, 0, 0),
+    SX("DUB SKANK", K, SAS_ANALOG, SAS_DUBSKANK, SAS_KEEP, SAS_POLY, 4, 5, 6, 60, 80, 120, 0, 0),
     SX("AURORA", P, SAS_ANALOG, SAS_AURORA, SAS_KEEP, SAS_POLY, 4, 5, 8, 120, 120, 40, 0, &SAM_AURORA),
     SX("ROBOT CHOIR", K, SAS_VOICE, SAS_ROBOTCHOIR, SAS_KEEP, SAS_POLY, -1, -1, -12, 60, 0, 30, 0, 0),
     SX("HAPPY STAB", K, SAS_ANALOG, SAS_HAPPYSTAB, SAS_KEEP, SAS_POLY, 4, 5, 9, 70, 0, 30, 0, 0),
     SX("DUSTY KEYS", K, SAS_ANALOG, SAS_DUSTYKEYS, SAS_KEEP, SAS_POLY, 4, 5, 7, 50, 70, 0, 1, 0),
+    /* (0.8.45) */
+    SR("DUB WOB", SAS_ANALOG, SAS_DUBWOB, 6, 4, 5, 0, 30, 60, 90, &SAM_DUBWOB),
 };
 #undef S
 #undef SG
@@ -532,7 +539,7 @@ static const sas_style SAS_STYLE[] = {
      {"NEURO", "REESE"}, {"SYNCO", "GROWL"}, {"BREAK STAB", "RAVE"}, {"STAB 1", "PUSH"}, {"RAVE LEAD", "HYPERSAW"},
      {"ANSWER", "RATTLE"}, 50, "BROKEN", "8THS", "HAT", "S", "RIM", "SYNCO"},
     {"DUB", "DUB TECHNO, ECHOES", 118, 122, {SA_KIT_SOFT, SA_KIT_RUMBLE}, SA_SC_MINOR, 12, 30, 100, 80, 20,
-     {"DUB SUB", "RUMBLE"}, {"HALF", "SUB HOLD"}, {"DUB SKANK", "DUB STAB"}, {"STAB 2", "OFFBEATS"}, {"DUB LEAD", "SOFT LEAD"},
+     {"DUB SUB", "RUMBLE"}, {"HALF", "SUB HOLD"}, {"DUB SKANK", "DUB STAB"}, {"STAB 2", "OFFBEATS"}, {"DUB WOB", "DUB LEAD"},
      {"FLOAT", "SIGH"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
     {"AMBIENT", "SPACE, BARELY A BEAT", 88, 96, {SA_KIT_SOFT, SA_KIT_ROOM}, SA_SC_MAJOR, 10, 10, 100, 80, 10,
      {"BOWED BASS", "DEEP SUB"}, {"SUB HOLD", "HALF"}, {"AURORA", "GLASS"}, {"WASH", "TWO HALVES"}, {"AIR LEAD", "PAN FLUTE"},
