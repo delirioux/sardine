@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.37. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.38. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -26,7 +26,7 @@ into one of eight sets (SAVE, below).
 | ARP | held: BREAK (below) |
 | LFO | held: SWEEP (below) |
 | GLO | GLOBAL: the MIXER, each press its next page (MUTE, SOLO, STYLE, LIVE, SONG), past the last back; held: **STYLE MIX** (below) |
-| PLAY | start, stop |
+| PLAY | start; playing, a tap stops; held half a second: **FADE**, PLAY blinking, the whole mix fades out over one bar and stops |
 | OCT- OCT+ | the keys' octave (the one it moved to lit); held: WASH, THROW (below) |
 
 The footer shows the layer, a dot for each of its pages (the one open lit) and what the next press does.

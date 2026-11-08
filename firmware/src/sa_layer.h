@@ -253,6 +253,10 @@ typedef struct {
     sa_settings *mx_next;                           /* (swapped with: holds the new kept layers in IN) */
     float mx_gain[SA_LAYERS];                       /* each layer's level in the mix now, 0..1 */
     uint8_t mx_off[SA_SYNTHS];                      /* 0..127: the synth parts' (the glue's block, with the pump) */
+    /* 0.8.38, FADE (PLAY held): the whole mix down over a bar, then stopped. fade_gain: the master's gain now (the glue,
+     * sa_audio_post), 0..1; after the stop it stays down a moment (the tails) and comes back for the keys */
+    uint8_t fade_on;
+    float fade_x, fade_gain, fade_rest;
     char msg[24];
     uint8_t msg_new;
     void (*sound)(void *ctx, const sa_event *e);
@@ -321,6 +325,7 @@ void sa_random(sa_settings *s, uint32_t seed, const sa_pool *p);
 void sa_make_b(sa_settings *s, uint32_t seed);      /* PART B from A: another line of the same kind on each synth layer,
                                                      * busier hats, another progression */
 void sa_play(sa_groove *g, bool on);
+void sa_fade_out(sa_groove *g);                    /* (0.8.38) PLAY held: the mix out over a bar, then stopped */
 void sa_process(sa_groove *g, int frames);
 void sa_all_off(sa_groove *g);
 void sa_mute(sa_groove *g, int l, bool m);

@@ -1477,6 +1477,7 @@ void sa_init(sa_groove *g, float sample_rate)
 {
     memset(g, 0, sizeof *g);
     sa_mix_end(g);
+    g->fade_gain = 1.0f;
     g->sr = sample_rate;
     sa_defaults(&g->s);
     g->tick = -1;
@@ -1980,9 +1981,40 @@ static void bar_line(sa_groove *g)
     bar_build(g);
 }
 
+void sa_fade_out(sa_groove *g)
+{
+    if (!g->playing || g->fade_on) return;
+    g->fade_on = 1;
+    g->fade_x = 0.0f;
+    msg(g, "FADING OUT");
+}
+/* FADE: each block; over a bar the gain down ((1 - x) squared: the ear hears it go evenly), then stopped; stopped, a
+ * second and a half for the tails, then back up in half a second */
+static void fade_block(sa_groove *g, int frames)
+{
+    if (g->fade_on) {
+        g->fade_x += (float)frames / (4.0f * 60.0f / (float)clampi(g->s.bpm, 60, 200) * g->sr);
+        if (g->fade_x >= 1.0f) {
+            g->fade_gain = 0.0f;
+            sa_play(g, false);
+            g->fade_rest = 0.0f;
+            msg(g, "FADED OUT");
+        } else {
+            g->fade_gain = (1.0f - g->fade_x) * (1.0f - g->fade_x);
+        }
+    } else if (g->fade_gain < 1.0f && !g->playing) {
+        g->fade_rest += (float)frames / g->sr;
+        if (g->fade_rest > 1.5f) {
+            g->fade_gain += (float)frames / (0.5f * g->sr);
+            if (g->fade_gain > 1.0f) g->fade_gain = 1.0f;
+        }
+    }
+}
 void sa_play(sa_groove *g, bool on)
 {
     if (on == g->playing) return;
+    g->fade_on = 0;                                /* (FADE: over; playing again at the full level) */
+    if (on) g->fade_gain = 1.0f;
     sa_all_off(g);
     if (g->mx_state == 1 && g->mx_next && g->bar >= g->mx_bar0) {   /* (a mix stopped on its way out: the next
                                                                     * groove in, all of it; on its way in: done) */
@@ -2301,6 +2333,7 @@ static void pump_block(sa_groove *g)
 
 void sa_process(sa_groove *g, int frames)
 {
+    fade_block(g, frames);
     if (g->sweep_held && g->sweep_man < 1.0f) {    /* SWEEP: closing over two bars */
         float bars2 = 2.0f * 4.0f * 60.0f / (float)clampi(g->s.bpm, 60, 200) * g->sr;
         g->sweep_man += (float)frames / bars2;

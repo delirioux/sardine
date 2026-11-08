@@ -888,6 +888,29 @@ int main(int argc, char **argv)
     }
     press(SV_B_GLO);
     CHECK(ui.page == SV_PG_MAIN, "STYLE MIX, GLO: back");
+    {   /* (0.8.38) PLAY: a tap stops; held, FADE: the mix down over a bar, then stopped, the level back for the keys */
+        if (!g.playing) press(SV_B_PLAY);
+        CHECK(g.playing, "PLAY: playing");
+        sv_button(&ui, SV_B_PLAY, true);
+        run_ms(100);
+        sv_button(&ui, SV_B_PLAY, false);
+        CHECK(!g.playing && !g.fade_on && g.fade_gain == 1.0f, "PLAY tapped: stopped at once, no fade");
+        press(SV_B_PLAY);
+        sv_button(&ui, SV_B_PLAY, true);
+        run_ms(600);
+        CHECK(g.fade_on && g.playing && strstr(ui.msg, "FADING"), "PLAY held half a second: FADING OUT (%s)", ui.msg);
+        sv_button(&ui, SV_B_PLAY, false);
+        CHECK(g.playing, "let go: the fade goes on");
+        run_ms(500);
+        CHECK(g.fade_gain < 0.9f && g.fade_gain > 0.0f, "the level on its way down (%d %%)", (int)(g.fade_gain * 100.0f));
+        shot("21_fade");
+        run_ms(2500);
+        CHECK(!g.playing && !g.fade_on, "a bar on: stopped");
+        run_ms(2500);
+        CHECK(g.fade_gain == 1.0f, "stopped a while: the level back (for the keys)");
+        press(SV_B_PLAY);
+        CHECK(g.playing && g.fade_gain == 1.0f, "PLAY again: playing at the full level");
+    }
     g.s.dvol = 80;
     /* SETS */
     ui.sets[0] = (sv_set_info){1, 126, 9, SA_SC_MINOR, SA_KIT_TECH, 3, {0, 1, (uint8_t)(SAS_NSOUNDS - 1)}, 0};

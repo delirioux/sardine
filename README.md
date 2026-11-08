@@ -19,7 +19,7 @@ All sounds are synthesised; no samples.
 
 ## Try it, install it
 
-Version 0.8.37:
+Version 0.8.38:
 
 - **[Try it in the browser](https://delirioux.github.io/sardine/try/)**: the whole firmware, the FM-1's screen and
   controls, sound and all, before you install anything.
@@ -76,7 +76,8 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
 
 - Held: a drum fill (ENV, a different one each time), a BREAK that brings the drums back in on the 1 or, after four bars,
   one by one (ARP), a filter SWEEP (LFO)
-- Held from any page: WASH (OCT-), THROW (OCT+), TAPE STOP (EDIT), WOBBLE (REC); a tap still does the button's job
+- Held from any page: WASH (OCT-), THROW (OCT+), TAPE STOP (EDIT), WOBBLE (REC), FADE (PLAY: out over a bar, then
+  stop); a tap still does the button's job
 - A MIXER on GLO: every layer's volume, mute and solo on the knobs
 - MIDI OUT over USB, a channel for each layer (or OFF): the notes as they play, with each layer's volume, cutoff and pan
   as CCs (7, 74, 10), and a page that shows what goes out
@@ -116,6 +117,7 @@ ones you want, LAST the last one.
 | ENV / ARP / LFO | held: fill / BREAK / SWEEP |
 | OCT- / OCT+ / EDIT / REC | held: WASH / THROW / TAPE STOP / WOBBLE |
 | GLO | MIXER, MUTE, SOLO, STYLE, LIVE, SONG; held: STYLE MIX |
+| PLAY | start / stop; held: fade out over a bar, then stop |
 
 ## Two minutes in
 
@@ -154,6 +156,8 @@ and bass out. Hold it four bars or more, then let go on the 1: the drums come ba
 **INSTR**: a new sound on the same line, straight away. Turn **ARP** on for a CHORD or LEAD, **GATE** a pad to a rhythm,
 or put the LEAD on **PAN 3D** ORBIT and listen on headphones. Hold **REC** for WOBBLE on the eighths, **OCT+** to throw
 the last notes into the delay.
+
+**End it.** Hold **PLAY**: it blinks, and the whole mix fades out over one bar and stops. A tap still stops at once.
 
 **A set of your own.** SAVE the grooves you like into sets 1 to 8. GLO to **SONG**: each step a set and how many bars
 it plays; SONG ON plays them in turn, each one in on its bar line. Turn knobs, drop lines and do the moves on top.

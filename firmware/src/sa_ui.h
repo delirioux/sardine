@@ -117,6 +117,8 @@ typedef struct {
                                            * 6 STYLE MIX (GLO held) */
     int mix_pick, mix_keep, mix_out, mix_in;   /* STYLE MIX (0.8.25): TO (a style), KEEP (SV_MIX_KEEPS), OUT, IN (an index
                                                 * of SV_MIX_OUT / SV_MIX_IN) */
+    bool play_down;                       /* (0.8.38) PLAY down while playing: a tap stops, held FADE */
+    int play_ms;
     bool glo_down;                        /* GLO down: a tap turns GLO's pages (on letting go), held STYLE MIX */
     int glo_ms;
     int live_start;                       /* LIVE: the START (SA_START_KICK PAD EMPTY), the BUILD (0 BY HAND, 1 8 BARS,

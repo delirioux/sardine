@@ -2148,6 +2148,24 @@ void sv_button(sa_ui *u, int b, bool down)
         u->seq_ms = 0;
         if (down) u->seq_fired = false;
     }
+    if (b == SV_B_PLAY) {                          /* (0.8.38) stopped: PLAY at once; playing: a tap stops (on letting
+                                                    * go), held half a second FADE (sv_tick): out over a bar */
+        if (down) {
+            if (!g->playing) {
+                sa_play(g, true);
+                u->play_down = false;
+            } else {
+                u->play_down = true;
+                u->play_ms = 0;
+            }
+            return;
+        }
+        if (u->play_down) {
+            u->play_down = false;
+            sa_play(g, false);
+        }
+        return;
+    }
     if (b == SV_B_GLO) {                           /* (0.8.25) held: STYLE MIX (sv_tick); a tap on letting go */
         if (down) {
             u->glo_down = true;
@@ -2208,7 +2226,6 @@ void sv_button(sa_ui *u, int b, bool down)
     if (!down)
         return;
     switch (b) {
-    case SV_B_PLAY: sa_play(g, !g->playing); break;
     case SV_B_SEQ:                                 /* drop what waits; on STYLE: a fresh groove in it */
         if (u->page == SV_PG_MIXER && u->mixmute == 6) {   /* STYLE MIX: a fresh groove in TO, mixed into */
             if (g->mx_state) { sv_msg(u, "MIXING"); break; }
@@ -2493,6 +2510,11 @@ void sv_tick(sa_ui *u, int ms)
             u->moves |= (uint8_t)(1u << mv);
             sv_msg(u, N[mv]);
         }
+    if (u->play_down && (u->play_ms += ms) >= 500) {   /* PLAY held: FADE */
+        u->play_down = false;
+        sa_fade_out(u->g);
+        sv_msg(u, "FADING OUT");
+    }
     if (u->glo_down && (u->glo_ms += ms) >= SV_MENU_HOLD_MS) {   /* GLO held: STYLE MIX */
         u->glo_down = false;
         if (u->page != SV_PG_MIXER) u->mback = u->page == SV_PG_LAYER ? SV_PG_LAYER : SV_PG_MAIN;

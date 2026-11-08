@@ -172,10 +172,23 @@ static void sa_audio_pre(uint32_t n)
     sas_block(&sa_g);                                        /* the pump */
 }
 
+/* (0.8.38) FADE: the whole mix by the fade's gain, eased across the block */
 static void sa_audio_post(int32_t *out, uint32_t n)
 {
-    (void)out;
-    (void)n;
+    static float gain = 1.0f;
+    float to = sa_g.fade_gain;
+    if (gain >= 0.9999f && to >= 0.9999f) {
+        gain = 1.0f;
+        return;
+    }
+    float step = n ? (to - gain) / (float)n : 0.0f;
+    for (uint32_t i = 0; i < n; i++) {
+        gain += step;
+        int32_t q = (int32_t)(gain * 32768.0f);
+        out[2u * i] = (int32_t)(((int64_t)out[2u * i] * q) >> 15);
+        out[2u * i + 1u] = (int32_t)(((int64_t)out[2u * i + 1u] * q) >> 15);
+    }
+    gain = to;
 }
 
 /* ---- the flash: the preferences (the look, a count of the starts: each start's fresh groove) in Felucca's first
@@ -926,7 +939,7 @@ static void sa_leds(void)
             led_put(nl, 14u + k, f);
             if (((edim >> k) & 1u) && !f) led_put(nd, 14u + k, 1);
         }
-    if (sa_g.playing)
+    if (sa_g.playing && (!sa_g.fade_on || (fm1_ms / 100u) % 2u))   /* (FADE: blinking) */
         nl[LED_PLAY_GREEN >> 3] |= (uint8_t)(1u << (LED_PLAY_GREEN & 7u));
     fm1_led_dim_level(settings_leds == LEDS_DIM_LO);
     for (c = 0; c < FM1_NCOL; c++) {
