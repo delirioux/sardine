@@ -696,6 +696,30 @@ static void sa_splash(void)
     lcd_sync();
 }
 
+/* (0.8.46) the LED test round under the logo: every LED in turn (the buttons, then the keys left to right, PLAY's green
+ * last), a short tail behind it, then all of them at once to the end; a dead one shows as a gap. ms: since the logo */
+static void sa_led_test(uint32_t ms)
+{
+    static uint8_t ready;
+    uint8_t nl[FM1_NCOL] = {0};
+    uint32_t c, n = 42u, step = (SA_SPLASH_MS - 150u) / n, at = ms / step;
+    if (!ready) {
+        led_pos_init();
+        ready = 1;
+    }
+    for (uint32_t id = 0; id < n; id++) {
+        bool on = at >= n || (id <= at && at - id < 3u);   /* (the round: this one and two behind; then all) */
+        if (!on) continue;
+        if (id < 41u) led_put(nl, id, 1);
+        else nl[LED_PLAY_GREEN >> 3] |= (uint8_t)(1u << (LED_PLAY_GREEN & 7u));
+    }
+    for (c = 0; c < FM1_NCOL; c++) {
+        fm1_led_dim[c] = 0;
+        fm1_led_breath[c] = 0;
+        fm1_led[c] = nl[c];
+    }
+}
+
 /* ---- start ------------------------------------------------------------------------------------------------------ */
 static void sa_fw_init(void)
 {

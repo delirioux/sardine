@@ -1,9 +1,10 @@
-Sardine 0.8.45: live club mixing for the FM-1.
+Sardine 0.8.46: live club mixing for the FM-1.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
   through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, MANUAL, ARP, PAN, PAN 3D, PUMP, GATE, MOD; DRUMS: MIX, MANUAL, KIT, MOD), HOME back to them all
 - MANUAL (0.8.42, a page on every layer): the layer played by hand, nothing automatic on it (no PHRASE, no B line, no
   EVOLVE or NEW, not held out by INTRO, ARC or LIVE); nothing cleared, it plays on as it is
+- An LED test round at power-on (0.8.46): every LED in turn under the logo, then all at once
 - Hats that hiss, not ring (0.8.45): the 10's, the 77's and the 80's open hat with noise under their metal; DUB
   WOB, a raw wobbling lead for DUB; DUB SKANK made over
 - MELODIES (0.8.43): sixteen lead lines over 2 or 4 bars, a call and its answer, in scale steps from each chord,

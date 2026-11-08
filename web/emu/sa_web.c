@@ -323,9 +323,12 @@ static void web_ms(void)
         }
         web_half ^= 1u;
     }
+    if (web_booted && (int32_t)(fm1_ms - web_boot_ms) < 0)
+        sa_led_test(SA_SPLASH_MS - (web_boot_ms - fm1_ms));   /* main.c: the LED test round under the logo */
     if (!web_booted || (int32_t)(fm1_ms - web_boot_ms) < 0)
         return;
     if (web_boot_ms) {                                    /* main.c: the splash goes, the loop starts */
+        for (uint32_t c = 0; c < FM1_NCOL; c++) fm1_led[c] = 0;
         web_boot_ms = 0;                                  /* (main.c: Sardine keeps Felucca's keyboard silent) */
         lcd_fill(0, 0, 240, 240, T_BG);
         web_last_frame = fm1_ms - 15u;

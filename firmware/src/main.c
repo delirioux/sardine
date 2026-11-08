@@ -94,8 +94,10 @@ static void boot_leds(void)
     crash_seen = fm1_crash.count;
     boot_clean = !crashed && !bootguard.failed && !(fm1_boot.p3_rst & 4u);
     fm1_led_dim_level(settings_leds == LEDS_DIM_LO);
+#if !FELUCCA_SARDINE                          /* (Sardine 0.8.46: its LED test round instead, sa_fw.c sa_led_test) */
     if (boot_clean && !(ui_prefs & PREF_ANIM_OFF))
         fm1_led_anim_start(settings_leds == LEDS_DIM || settings_leds == LEDS_DIM_LO);
+#endif
 }
 
 static void fm1_main(void)
@@ -174,7 +176,14 @@ static void fm1_main(void)
 #endif
         fm1_delay_ms(10);
         master_poll();
+#if FELUCCA_SARDINE
+        sa_led_test(ms);                      /* (0.8.46) every LED in turn, then all */
+#endif
     }
+#if FELUCCA_SARDINE
+    for (ms = 0; ms < FM1_NCOL; ms++)
+        fm1_led[ms] = 0;                      /* (dark till Sardine's first frame lights its own) */
+#endif
 #if !FELUCCA_SARDINE
     kb_boot_hold = 0;
 #endif

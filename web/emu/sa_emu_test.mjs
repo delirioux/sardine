@@ -40,6 +40,16 @@ const run = (sec) => {
 };
 const press = (b) => { w.web_buttons(1 << b); run(0.05); w.web_buttons(0); run(0.05); };
 
+{ // (0.8.46) the LED test round under the logo: every key and button lit in turn, all at the end, dark after
+  let keys = 0, btns = 0, allAt = false;
+  for (let i = 0; i < (0.9 * 44100) / 128; i++) {
+    w.web_render(128);
+    keys |= w.web_lit_keys(); btns |= w.web_lit_buttons();
+    if (w.web_lit_keys() === 0x7FFFFFF && (w.web_lit_buttons() >> 14) & 1) allAt = true;
+  }
+  check(`LED test round: all 27 keys (${(keys >>> 0).toString(16)}), the buttons and PLAY's green, then all at once`,
+        keys === 0x7FFFFFF && ((btns >> 14) & 1) && allAt);
+}
 run(2);
 check(`boots Sardine ${str(w.web_da_version())} on MAIN, stopped`, w.web_da_page() === 0 && !w.web_playing());
 check(`a fresh groove is in (${w.web_da_style()} layers)`, w.web_da_style() === 10);   // LEAD CHORD BASS and the seven drum rows
