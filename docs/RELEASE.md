@@ -1,17 +1,17 @@
-Sardine 0.8.49: live club mixing for the FM-1.
+Sardine 1.0: live club mixing for the FM-1. Everything planned is in; from here on it is listening and tuning.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
   through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, MANUAL, ARP, PAN, PAN 3D, PUMP, GATE, MOD; DRUMS: MIX, MANUAL, KIT, MOD), HOME back to them all
-- MANUAL (0.8.42, a page on every layer): the layer played by hand, nothing automatic on it (no PHRASE, no B line, no
+- MANUAL (a page on every layer): the layer played by hand, nothing automatic on it (no PHRASE, no B line, no
   EVOLVE or NEW, not held out by INTRO, ARC or LIVE); nothing cleared, it plays on as it is
-- HOME VIEW (0.8.47, HOME again on HOME): a scope for LEAD, CHORD, BASS and the drums, and what comes by itself (ARC
+- HOME VIEW (HOME again on HOME): a scope for LEAD, CHORD, BASS and the drums, and what comes by itself (ARC
   small, or the next 16 bars: phrases, PART's turn, INTRO, LIVE, STYLE MIX)
-- An LED test round at power-on (0.8.46): every LED in turn under the logo, then all at once
-- Hats that hiss, not ring (0.8.45): the 10's, the 77's and the 80's open hat with noise under their metal; DUB
+- An LED test round at power-on: every LED in turn under the logo, then all at once
+- Hats that hiss, not ring: the 10's, the 77's and the 80's open hat with noise under their metal; DUB
   WOB, a raw wobbling lead for DUB; DUB SKANK made over
-- MELODIES (0.8.43): sixteen lead lines over 2 or 4 bars, a call and its answer, in scale steps from each chord,
+- MELODIES: sixteen lead lines over 2 or 4 bars, a call and its answer, in scale steps from each chord,
   two for every style; a fresh groove's LEAD mostly a sound that holds its notes
-- EDIT: a pattern editor, KNOB 1 the step, KNOB 2 its length, KNOB 3 its note, KNOB 4 ready fills (0.8.48; a drum: KNOB 2 fills, drum fills; lines in the key, chord rhythms), REC:
+- EDIT: a pattern editor, KNOB 1 the step, KNOB 2 its length, KNOB 3 its note, KNOB 4 ready fills (a drum: KNOB 2, drum fills; lines in the key, chord rhythms), REC:
   the keys write the steps
 - STYLE MIX (GLO held): from one style into another, the layers you don't keep fading out over 1 to 4 bars, the new
   style fading in around the kept bass or kick over 2 to 16 bars in a key next door (circle of fifths), the tempo
