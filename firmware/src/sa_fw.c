@@ -792,19 +792,21 @@ static void sa_splash(void)
     lcd_sync();
 }
 
-/* (0.8.46) the LED test round under the logo: every LED in turn (the buttons, then the keys left to right, PLAY's green
- * last), a short tail behind it, then all of them at once to the end; a dead one shows as a gap. ms: since the logo */
+/* (0.8.46) the LED test round under the logo: the buttons in turn, then (1.0.5) the keys from both ends to the middle
+ * (a key from the left and its mirror from the right together, meeting on the middle one), PLAY's green last; a short
+ * tail behind; then all of them at once to the end. A dead one shows as a gap. ms: since the logo */
 static void sa_led_test(uint32_t ms)
 {
     static uint8_t ready;
     uint8_t nl[FM1_NCOL] = {0};
-    uint32_t c, n = 42u, step = (SA_SPLASH_MS - 150u) / n, at = ms / step;
+    uint32_t c, steps = 14u + 14u + 1u, step = (SA_SPLASH_MS - 150u) / steps, at = ms / step;
     if (!ready) {
         led_pos_init();
         ready = 1;
     }
-    for (uint32_t id = 0; id < n; id++) {
-        bool on = at >= n || (id <= at && at - id < 3u);   /* (the round: this one and two behind; then all) */
+    for (uint32_t id = 0; id < 42u; id++) {
+        uint32_t k = id - 14u, when = id < 14u ? id : id < 41u ? 14u + (k < 26u - k ? k : 26u - k) : 28u;
+        bool on = at >= steps || (when <= at && at - when < 3u);   /* (its step: this one and two behind; then all) */
         if (!on) continue;
         if (id < 41u) led_put(nl, id, 1);
         else nl[LED_PLAY_GREEN >> 3] |= (uint8_t)(1u << (LED_PLAY_GREEN & 7u));

@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 1.0.4. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 1.0.5. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -8,8 +8,8 @@ one: the next bar line.
 Every start is a fresh groove: other sounds, patterns, kit, key and tempo, ready to play. What you want to keep goes
 into one of eight sets (SAVE, below).
 
-At power-on, under the logo, the LEDs do a test round: every button, then every key from left to right, PLAY's green
-last, each in turn, then all of them at once. One that stays dark in the round is a dead LED.
+At power-on, under the logo, the LEDs do a test round: every button in turn, then the keys from both ends to the
+middle, PLAY's green last, then all of them at once. One that stays dark in the round is a dead LED.
 
 ## Finding your way
 

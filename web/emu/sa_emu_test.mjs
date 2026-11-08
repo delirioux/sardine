@@ -41,12 +41,17 @@ const run = (sec) => {
 const press = (b) => { w.web_buttons(1 << b); run(0.05); w.web_buttons(0); run(0.05); };
 
 { // (0.8.46) the LED test round under the logo: every key and button lit in turn, all at the end, dark after
-  let keys = 0, btns = 0, allAt = false;
+  let keys = 0, btns = 0, allAt = false, mirror = true, firstKeys = 0;
   for (let i = 0; i < (0.9 * 44100) / 128; i++) {
     w.web_render(128);
-    keys |= w.web_lit_keys(); btns |= w.web_lit_buttons();
-    if (w.web_lit_keys() === 0x7FFFFFF && (w.web_lit_buttons() >> 14) & 1) allAt = true;
+    const kl = w.web_lit_keys();
+    keys |= kl; btns |= w.web_lit_buttons();
+    if (kl !== 0x7FFFFFF) for (let k = 0; k < 27; k++) if (((kl >> k) & 1) !== ((kl >> (26 - k)) & 1)) mirror = false;
+    if (!firstKeys && kl) firstKeys = kl;
+    if (kl === 0x7FFFFFF && (w.web_lit_buttons() >> 14) & 1) allAt = true;
   }
+  check(`LED test round: the keys from both ends to the middle (first ${firstKeys.toString(16)})`,
+        mirror && firstKeys === ((1 << 0) | (1 << 26) >>> 0));
   check(`LED test round: all 27 keys (${(keys >>> 0).toString(16)}), the buttons and PLAY's green, then all at once`,
         keys === 0x7FFFFFF && ((btns >> 14) & 1) && allAt);
 }
