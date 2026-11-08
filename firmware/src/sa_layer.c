@@ -2281,6 +2281,7 @@ static void do_tick(sa_groove *g)
         if (g->back_on && c->type == SA_T_DRUM && b->layer >= SA_L_DRUM0 &&
             g->back_bar * 4 + t / 24 < BACK_BEAT[(b->layer - SA_L_DRUM0) % SA_DROWS]) continue;   /* back one by one */
         if (g->solo && !((g->solo >> (c->type == SA_T_DRUM ? 3 : b->layer)) & 1u)) continue;   /* SOLO: the others out */
+        if (g->ed_solo && b->layer != g->ed_solo - 1) continue;   /* EDIT's SOLO: the drum edited alone */
         int part = c->type == SA_T_DRUM ? SA_PART_DRUMS : c->part;
         uint32_t len = c->type == SA_T_DRUM ? (uint32_t)(g->sr * (c->sound == SA_DV_CRASH ? 0.2f :
                                                                   c->sound == SA_DV_OPEN ? 0.4f : 0.3f))

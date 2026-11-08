@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.38. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.39. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -170,7 +170,9 @@ GALLOP, FLAM and DOUBLE, over the drum's own hits or in place of them. On LEAD a
 8THS, ARP UP, ARP DOWN, OCTAVES, WALK, RIFF, CALL, PULSE 16. On CHORD the chord's rhythm: STABS, OFFBEATS, PUSH,
 PULSE, 8THS, 16THS, DOTTED, HOLD. **KNOB 3** is the step's LENGTH (on DRUMS its HIT, on or off); turned below 1, the
 note goes. **KNOB 4** is its **NOTE**: on an empty step it puts a note there (the note before it, else the root), turned
-on it moves it up or down the scale (on CHORD: right the chord on, left off).
+on it moves it up or down the scale (on CHORD: right the chord on, left off). On DRUMS **KNOB 4** is **SOLO**: right,
+the drum you edit plays alone (the rest of the mix out, so you hear what you set); left, all back. It is for editing
+only: leaving EDIT turns it off, and picking another drum takes the solo along.
 
 Setting a note, step by step: **EDIT**, KNOB 1 to the step, then a key (heard as you press it; the step moves on) or
 KNOB 4 to the note, KNOB 3 for how long.

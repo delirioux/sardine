@@ -437,7 +437,8 @@ static void sv_cards_of(sa_ui *u, sv_card *c)
         sv_card_txt(&c[0], "STEP", t, st * 1000 / 15, false);
         sv_card_txt(&c[1], "FILL", sv_fill_name(u, u->fill), u->fill * 1000 / (sv_fills(u) - 1), u->fill > 0);
         sv_card_txt(&c[2], "HIT", on ? "ON" : "OFF", -1, false);
-        sv_card_off(&c[3]);
+        sv_card_txt(&c[3], "SOLO", g->ed_solo == l + 1 ? "ON" : "OFF", g->ed_solo == l + 1 ? 1000 : 0,
+                    g->ed_solo == l + 1);              /* (0.8.39) the drum alone, while editing */
         return;
     }
     if (sv_steps_on(u)) {
@@ -2032,6 +2033,10 @@ void sv_knob(sa_ui *u, int k, int d)
             bool on = (sv_ed_bits(u, l) >> st) & 1u;
             if (on != (d > 0)) sa_step_drum(g, l, st);
         }
+        else if (i == 3) {                         /* SOLO: the drum edited alone (EDIT only: off on leaving it) */
+            g->ed_solo = d > 0 ? (uint8_t)(l + 1) : 0;
+            sv_msg(u, g->ed_solo ? "SOLO: THIS DRUM ALONE" : "SOLO OFF");
+        }
         return;
     }
     if (sv_steps_on(u)) {                          /* REC: KNOB 1 the step, KNOB 2 its length (EDIT: KNOB 3) */
@@ -2510,6 +2515,11 @@ void sv_tick(sa_ui *u, int ms)
             u->moves |= (uint8_t)(1u << mv);
             sv_msg(u, N[mv]);
         }
+    if (u->g->ed_solo) {                           /* EDIT's SOLO: only in a drum's EDIT; another drum picked: it */
+        int l = u->layer;
+        if (u->page != SV_PG_EDIT || u->view != SV_V_DRUMS || l < SA_L_DRUM0 || l >= SA_LAYERS) u->g->ed_solo = 0;
+        else u->g->ed_solo = (uint8_t)(l + 1);
+    }
     if (u->play_down && (u->play_ms += ms) >= 500) {   /* PLAY held: FADE */
         u->play_down = false;
         sa_fade_out(u->g);

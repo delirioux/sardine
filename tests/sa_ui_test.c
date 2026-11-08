@@ -547,8 +547,23 @@ int main(int argc, char **argv)
     sv_key(&ui, SV_KEY_LO + 2, false);
     CHECK(((sv_ed_bits(&ui, ui.layer) >> 2) & 1u) == 0, "EDIT, REC: the third key, step 3 off");
     shot("18e_edit_drum");
+    {   /* (0.8.39) EDIT, a drum: KNOB 4 SOLO, the drum edited alone; off on leaving EDIT */
+        if (!g.playing) sa_play(&g, true);
+        sv_knob(&ui, SV_K4, 1);
+        CHECK(g.ed_solo == ui.layer + 1 && strstr(ui.msg, "SOLO"), "EDIT, a drum, KNOB 4: SOLO, this drum alone");
+        int s0 = part_on[0] + part_on[1] + part_on[2], d0 = part_on[SA_PART_DRUMS];
+        bars(2);
+        CHECK(part_on[0] + part_on[1] + part_on[2] == s0, "SOLO: no synth note (%d)", part_on[0] + part_on[1] + part_on[2] - s0);
+        CHECK(part_on[SA_PART_DRUMS] > d0, "SOLO: the drum plays (%d hits)", part_on[SA_PART_DRUMS] - d0);
+        shot("18e2_edit_drum_solo");
+        sv_knob(&ui, SV_K4, -1);
+        CHECK(!g.ed_solo, "KNOB 4 left: SOLO off");
+        sv_knob(&ui, SV_K4, 1);
+    }
     press(SV_B_SEQ);
     press(SV_B_EDIT);
+    sv_tick(&ui, 16);
+    CHECK(!g.ed_solo, "EDIT left: its SOLO off, all of it again");
     press(SV_B_HOME);
     bars(1);
     /* ENV held: a drum fill from the next beat, the drums' own notes out; let go: back */

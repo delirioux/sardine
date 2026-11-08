@@ -256,6 +256,7 @@ typedef struct {
     /* 0.8.38, FADE (PLAY held): the whole mix down over a bar, then stopped. fade_gain: the master's gain now (the glue,
      * sa_audio_post), 0..1; after the stop it stays down a moment (the tails) and comes back for the keys */
     uint8_t fade_on;
+    uint8_t ed_solo;                                /* (0.8.39) EDIT's SOLO: the drum row edited alone (its slot + 1; 0 none) */
     float fade_x, fade_gain, fade_rest;
     char msg[24];
     uint8_t msg_new;
