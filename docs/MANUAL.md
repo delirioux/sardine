@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 1.0.5. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 1.0.6. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -276,6 +276,10 @@ move for as long as you hold it (the header names it), its own job not done. The
 | OCT+ | **THROW**: everything into the delay, its feedback up; let go and the echoes ring out |
 | EDIT | **TAPE STOP**: the whole mix slows down to a halt over a beat; let go and it plays on |
 | REC | **WOBBLE**: the synth layers' filter rises and falls on the eighths, in time |
+
+All of them together are fine, WASH and THROW too. OCT- and OCT+ held together for five seconds while **stopped** is
+Felucca's update mode (UBOOT, for a reinstall; the screen counts it down); while playing it never starts (1.0.6: it
+did, and the FM-1 went silent mid-set, as if crashed).
 
 ## MIXER
 

@@ -230,6 +230,12 @@ static void fm1_main(void)
              * go cancels it */
             static uint32_t t0;
             uint32_t both = (1u << panel.btn[B_OCTDN]) | (1u << panel.btn[B_OCTUP]);
+#if FELUCCA_SARDINE
+            /* (Sardine 1.0.6: OCT- and OCT+ are WASH and THROW, held together while playing: no UBOOT then, only
+             * stopped, its countdown on Sardine's screen. It went to UBOOT mid-set, silent, looking like a crash) */
+            if (sa_g.playing) t0 = fm1_ms;
+            if (ui.uboot && (fm1_in.buttons & both) == both && fm1_ms - t0 <= 5000u) sa_uboot_msg(ui.uboot);
+#endif
             if ((fm1_in.buttons & both) != both) {
                 if (ui.uboot) {
                     ui.uboot = 0;

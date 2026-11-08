@@ -818,6 +818,14 @@ static void sa_led_test(uint32_t ms)
     }
 }
 
+/* (1.0.6) OCT- and OCT+ held 5 s, stopped: the update mode (UBOOT, main.c); the seconds left on the screen */
+static void sa_uboot_msg(int left)
+{
+    char m[24] = "UPDATE MODE IN ";
+    sv_fmt_int(m + 15, left);
+    sv_msg(&sa_u, m);
+}
+
 /* ---- start ------------------------------------------------------------------------------------------------------ */
 static void sa_fw_init(void)
 {
