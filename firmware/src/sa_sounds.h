@@ -387,8 +387,8 @@ static const char *const SAS_POOL_KEYS[] = {"DUB CHORD", "TECH STAB", "SUPER", "
                                             "ORGAN", "PIANO", "FM PLUCK", "GOSPEL", "DUB STAB", "SPACE STAB",
                                             "ECHO CHORD"};
 static const char *const SAS_POOL_LEAD[] = {"SAW LEAD", "SUPER LEAD", "HOOVER", "SYNC LEAD", "ARP LEAD", "PULSE",
-                                            "VOX LEAD", "WHISTLE", "RESO", "AIR LEAD", "FM BRASS", "SOFT LEAD",
-                                            "FILTER LEAD", "PLUCK LEAD", "RAVE LEAD", "DUB LEAD", "PAN FLUTE",
+                                            "VOX LEAD", "WHISTLE", "AIR LEAD", "FM BRASS", "SOFT LEAD",
+                                            "FILTER LEAD", "RAVE LEAD", "DUB LEAD", "PAN FLUTE",
                                             "STRING LEAD"};
 static const char *const SAS_POOL_PAD[] = {"SOFT PAD", "STRINGS", "PWM STR", "FM PAD", "CLOUD", "SHIMMER", "FROZEN",
                                            "WIDE PAD", "DARK PAD", "GLASS", "VAPOR", "SWELL", "NIGHT", "SKY",
@@ -488,64 +488,64 @@ typedef struct {
 static const sas_style SAS_STYLE[] = {
     {"NIGHT", "SLOW, DARK, FILTERED", 98, 104, {SA_KIT_HYPNO, SA_KIT_SOFT}, SA_SC_MINOR, 12, 20, 90, 62, 30,
      {"VELVET SUB", "DEEP SUB"}, {"SUB HOLD", "HALF"}, {"MIST PAD", "DARK PAD"}, {"WASH", "TWO HALVES"}, {"AIR LEAD", "DUB LEAD"},
-     {"HOLD NOTE", "ECHOES"}, 35, "HALF", "SPARSE", "HAT", "C", "RIM", "SYNCO"},
+     {"LONG TONES", "FLOAT"}, 35, "HALF", "SPARSE", "HAT", "C", "RIM", "SYNCO"},
     {"FILTER", "FRENCH TOUCH, FILTERED DISCO", 122, 126, {SA_KIT_DISCO, SA_KIT_HOUSE}, SA_SC_DORIAN, 18, 50, 60, 55, 45,
      {"DISCO BASS", "FAT BASS"}, {"OCTAVE", "ROOT 8THS"}, {"FILTER STAB", "E-PIANO"}, {"HOUSE", "CHARLESTON"}, {"FILTER LEAD", "VOX CHOP"},
-     {"HOOK", "UPBEATS"}, 50, "4 FLOOR", "OFFBEAT", "OPEN", "C", "HATS", 0},
+     {"SWING HOOK", "HOOK"}, 50, "4 FLOOR", "OFFBEAT", "OPEN", "C", "HATS", 0},
     {"DEEP", "WARM, SOFT, DEEP HOUSE", 120, 122, {SA_KIT_SOFT, SA_KIT_HYPNO}, SA_SC_MINOR, 22, 30, 80, 85, 0,
      {"WARM BASS", "SINE BASS"}, {"ROLLER", "SYNCO"}, {"DEEP CHORD", "E-PIANO"}, {"STAB 2", "WASH"}, {"SOFT LEAD", "PAN FLUTE"},
-     {"ECHOES", "CALL"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
+     {"SIGH", "DREAM"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
     {"TECH", "TECH HOUSE, ROLLING", 124, 127, {SA_KIT_PUNCH, SA_KIT_TECH}, SA_SC_MINOR, 16, 40, 60, 100, 0,
-     {"TECH PLUCK", "TECH BASS"}, {"ROLLER", "SYNCO"}, {"HOUSE STAB", "DUB CHORD"}, {"STAB 1", "STAB 2"}, {"BLIP", "VOX CHOP"},
-     {"UPBEATS", "BLIPS"}, 50, "4 FLOOR", "OFFBEAT", "HAT", "C", "RIM", "SYNCO"},
+     {"TECH PLUCK", "TECH BASS"}, {"ROLLER", "SYNCO"}, {"HOUSE STAB", "DUB CHORD"}, {"STAB 1", "STAB 2"}, {"SYNC LEAD", "VOX CHOP"},
+     {"QUESTION", "HEARTBEAT"}, 50, "4 FLOOR", "OFFBEAT", "HAT", "C", "RIM", "SYNCO"},
     {"MINIMAL", "SPARSE, CLICKY", 124, 126, {SA_KIT_MINIMAL, SA_KIT_PUNCH}, SA_SC_PHRYGIAN, 10, 30, 50, 90, 20,
-     {"CLICK BASS", "SUB"}, {"SYNCO", "2-STEP"}, {"BLIP CHORD", "PLUCK"}, {"STAB 1", "PUSH"}, {"BLIP", "PLUCK LEAD"},
-     {"BLIPS", "ECHOES"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "CLAVE"},
+     {"CLICK BASS", "SUB"}, {"SYNCO", "2-STEP"}, {"BLIP CHORD", "PLUCK"}, {"STAB 1", "PUSH"}, {"PULSE", "BLIP"},
+     {"HEARTBEAT", "BLIPS"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "CLAVE"},
     {"TECHNO", "DARK, DRIVING", 128, 132, {SA_KIT_RUMBLE, SA_KIT_HYPNO}, SA_SC_MINOR, 0, 45, 70, 100, 30,
      {"DARK ROLL", "REESE"}, {"PUMP 16", "ROLLER"}, {"HYPNO STAB", "DUB STAB"}, {"STAB 2", "OFFBEATS"}, {"DARK SAW", "ACID LEAD"},
-     {"TWO NOTES", "RIFF"}, 50, "4 FLOOR", "16THS", "HAT", "C", "RIM", "SYNCO"},
+     {"PULSE RIFF", "TWO NOTES"}, 50, "4 FLOOR", "16THS", "HAT", "C", "RIM", "SYNCO"},
     {"HARD", "HARD TECHNO, PUNISHING", 140, 148, {SA_KIT_RUMBLE, SA_KIT_HARD}, SA_SC_PHRYGIAN, 0, 55, 50, 100, 40,
      {"HARD BASS", "GROWL"}, {"ROLLER", "PUMP 16"}, {"HARD STAB", "TECH STAB"}, {"OFFBEATS", "STAB 1"}, {"SCREECH", "HOOVER"},
-     {"RIFF", "TONES UP"}, 40, "4 FLOOR", "16THS", "HAT", "C", "RIM", "SYNCO"},
+     {"SAW HYMN", "PULSE RIFF"}, 40, "4 FLOOR", "16THS", "HAT", "C", "RIM", "SYNCO"},
     {"GABBER", "HARDCORE, DISTORTED", 170, 180, {SA_KIT_IRON, SA_KIT_HARD}, SA_SC_MINOR, 0, 30, 40, 100, 20,
      {"BUZZ BASS", "DEEP SUB"}, {"HALF", "OFFBEAT"}, {"ALARM", "RAVE"}, {"STAB 1", "OFFBEATS"}, {"HOOVER", "SCREECH"},
-     {"RIFF", "ANTHEM"}, 70, "4 FLOOR", "OFFBEAT", "HAT", "S", 0, 0},
+     {"SAW HYMN", "RISE"}, 70, "4 FLOOR", "OFFBEAT", "HAT", "S", 0, 0},
     {"ACID", "A 303 LINE, SQUELCHING", 128, 134, {SA_KIT_ACID, SA_KIT_TECH}, SA_SC_MINOR, 14, 40, 60, 80, 70,
      {"ACID SQUARE", "ACID"}, {"ACID", "ACID"}, {"ACID CHORD", "DUB STAB"}, {"STAB 1", "PUSH"}, {"ACID LEAD", "RUBBER"},
-     {"SQUELCH", "RIFF"}, 50, "4 FLOOR", "16THS", "HAT", "C", "HATS", 0},
+     {"GLIDE", "SQUELCH"}, 50, "4 FLOOR", "16THS", "HAT", "C", "HATS", 0},
     {"TRANCE", "UPLIFTING, WIDE", 136, 140, {SA_KIT_PUNCH, SA_KIT_TIGHT}, SA_SC_MINOR, 0, 55, 90, 100, 0,
      {"ROLLING", "OCTAVE"}, {"OFFBEAT", "PUMP 16"}, {"GATED SUPER", "SUPER"}, {"OFFBEATS", "WASH"}, {"SUPER LEAD", "PLUCK LEAD"},
-     {"ANTHEM", "PLUCKS"}, 75, "4 FLOOR", "OFFBEAT", "OPEN", "C", "RIM", "SYNCO"},
+     {"SKYLINE", "LADDER"}, 75, "4 FLOOR", "OFFBEAT", "OPEN", "C", "RIM", "SYNCO"},
     {"PROG", "PROGRESSIVE, BUILDING", 122, 124, {SA_KIT_HYPNO, SA_KIT_SOFT}, SA_SC_MINOR, 10, 40, 80, 90, 20,
      {"PROG BASS", "TECH BASS"}, {"ROLLER", "OFFBEAT"}, {"PROG PAD", "SWELL"}, {"SWELL", "WASH"}, {"PLUCK LEAD", "SOFT LEAD"},
-     {"PLUCKS", "ECHOES"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
+     {"LADDER", "ANSWER"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
     {"DISCO", "BRIGHT, STRINGS AND BASS", 116, 120, {SA_KIT_DISCO, SA_KIT_CLASSIC}, SA_SC_MAJOR, 20, 25, 60, 100, 0,
      {"FUNK BASS", "FRETLESS"}, {"WALK", "OCTAVE"}, {"DISCO STRINGS", "STRINGS"}, {"CHARLESTON", "PUSH"}, {"STRING LEAD", "BRASS"},
-     {"DISCO RUN", "HOOK"}, 50, "4 FLOOR", "OFFBEAT", "OPEN", "C", "TOMS", "TRESILLO"},
+     {"SWING HOOK", "DISCO RUN"}, 50, "4 FLOOR", "OFFBEAT", "OPEN", "C", "TOMS", "TRESILLO"},
     {"AFRO", "AFRO HOUSE, PERCUSSIVE", 120, 124, {SA_KIT_AFRO, SA_KIT_DEEP}, SA_SC_DORIAN, 24, 30, 70, 95, 0,
      {"LOG DRUM", "SUB"}, {"SYNCO", "ROLLER"}, {"SOFT KEYS", "MARIMBA"}, {"DOTTED", "HOUSE"}, {"PAN FLUTE", "WHISTLE"},
-     {"CALL", "HOOK"}, 25, "4 FLOOR", "SHAKE", "SHAKER", "C", "TOMS", "TRESILLO"},
+     {"NIGHT BIRD", "ANSWER"}, 25, "4 FLOOR", "SHAKE", "SHAKER", "C", "TOMS", "TRESILLO"},
     {"GARAGE", "2-STEP, SWUNG", 130, 134, {SA_KIT_GARAGE, SA_KIT_TIGHT}, SA_SC_MINOR, 36, 35, 60, 100, 0,
      {"WARP BASS", "WOW BASS"}, {"2-STEP", "SYNCO"}, {"STAB ORGAN", "ORGAN"}, {"STAB 2", "PUSH"}, {"VOX CHOP", "SOFT LEAD"},
-     {"UPBEATS", "HOOK"}, 50, "2-STEP", "SHUFFLE", "HAT", "C", "RIM", "SYNCO"},
+     {"QUESTION", "SIGH"}, 50, "2-STEP", "SHUFFLE", "HAT", "C", "RIM", "SYNCO"},
     {"BREAKS", "BROKEN BEATS, RAVE", 128, 132, {SA_KIT_BREAKS, SA_KIT_DUSTY}, SA_SC_MINOR, 14, 30, 60, 100, 20,
      {"NEURO", "REESE"}, {"SYNCO", "GROWL"}, {"BREAK STAB", "RAVE"}, {"STAB 1", "PUSH"}, {"RAVE LEAD", "HYPERSAW"},
-     {"RIFF", "RATTLE"}, 50, "BROKEN", "8THS", "HAT", "S", "RIM", "SYNCO"},
+     {"ANSWER", "RATTLE"}, 50, "BROKEN", "8THS", "HAT", "S", "RIM", "SYNCO"},
     {"DUB", "DUB TECHNO, ECHOES", 118, 122, {SA_KIT_SOFT, SA_KIT_RUMBLE}, SA_SC_MINOR, 12, 30, 100, 80, 20,
      {"DUB SUB", "RUMBLE"}, {"HALF", "SUB HOLD"}, {"DUB SKANK", "DUB STAB"}, {"STAB 2", "OFFBEATS"}, {"DUB LEAD", "SOFT LEAD"},
-     {"ECHOES", "TWO NOTES"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
+     {"FLOAT", "SIGH"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
     {"AMBIENT", "SPACE, BARELY A BEAT", 88, 96, {SA_KIT_SOFT, SA_KIT_ROOM}, SA_SC_MAJOR, 10, 10, 100, 80, 10,
      {"BOWED BASS", "DEEP SUB"}, {"SUB HOLD", "HALF"}, {"AURORA", "GLASS"}, {"WASH", "TWO HALVES"}, {"AIR LEAD", "PAN FLUTE"},
-     {"HOLD NOTE", "TWO NOTES"}, 50, "ONE", "SPARSE", "SHAKER", 0, 0, 0},
+     {"LONG TONES", "DREAM"}, 50, "ONE", "SPARSE", "SHAKER", 0, 0, 0},
     {"ELECTRO", "ROBOTIC, BROKEN", 126, 130, {SA_KIT_VOLT, SA_KIT_BOOM}, SA_SC_MINOR, 10, 30, 50, 100, 30,
      {"ZAP BASS", "FM BASS"}, {"SYNCO", "OCTAVE"}, {"ROBOT CHOIR", "FM PLUCK"}, {"STAB 1", "PUSH"}, {"VOX LEAD", "ROBOT"},
-     {"RIFF", "UPBEATS"}, 50, "BROKEN", "16THS", "HAT", "S", "TOMS", "SYNCO"},
+     {"ELECTRIC", "QUESTION"}, 50, "BROKEN", "16THS", "HAT", "S", "TOMS", "SYNCO"},
     {"HAPPY", "BRIGHT, EURO, HANDS UP", 138, 142, {SA_KIT_VINTAGE, SA_KIT_CLASSIC}, SA_SC_MAJOR, 0, 50, 70, 100, 0,
      {"DONK", "OCTAVE"}, {"OCTAVE", "OFFBEAT"}, {"HAPPY STAB", "PIANO"}, {"HOUSE", "OFFBEATS"}, {"RAVE LEAD", "STORM"},
-     {"HOOK", "RATTLE"}, 70, "4 FLOOR", "OFFBEAT", "OPEN", "C", "RIM", "SYNCO"},
+     {"RISE", "SKYLINE"}, 70, "4 FLOOR", "OFFBEAT", "OPEN", "C", "RIM", "SYNCO"},
     {"LOFI", "LO-FI HOUSE, DUSTY", 116, 120, {SA_KIT_LOFI, SA_KIT_DUSTY}, SA_SC_DORIAN, 30, 25, 70, 70, 20,
      {"LOFI BASS", "FAT BASS"}, {"ROOT 8THS", "SYNCO"}, {"TAPE PAD", "DUSTY KEYS"}, {"WASH", "STAB 2"}, {"SOFT LEAD", "PAN FLUTE"},
-     {"CALL", "TWO NOTES"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
+     {"DREAM", "SIGH"}, 50, "4 FLOOR", "SKIP", "HAT", "C", "RIM", "SYNCO"},
 };
 #define SAS_NSTYLES ((int)(sizeof SAS_STYLE / sizeof SAS_STYLE[0]))
 static inline int sas_pat(int type, const char *name)        /* a pattern by name; -1 none */
@@ -557,6 +557,18 @@ static inline int sas_pat(int type, const char *name)        /* a pattern by nam
         if (*a == *b) return i;
     }
     return -1;
+}
+/* (0.8.43) the leads that don't hold a note (a pluck, a blip, a chop; measured: a held note's level falls away) */
+static inline bool sas_short(const char *name)
+{
+    static const char *const SHORT[] = {"BLIP", "PLUCK LEAD", "ACID LEAD", "STORM", "ZAPPER", "RESO", "STROBE",
+                                        "TWISTER", "VOX CHOP"};
+    for (int i = 0; name && i < (int)(sizeof SHORT / sizeof SHORT[0]); ++i) {
+        const char *a = SHORT[i], *b = name;
+        while (*a && *a == *b) { a++; b++; }
+        if (*a == *b) return true;
+    }
+    return false;
 }
 static inline void sas_style_apply(sa_settings *s, int st, uint32_t seed, const sa_pool *pool)
 {
@@ -578,7 +590,10 @@ static inline void sas_style_apply(sa_settings *s, int st, uint32_t seed, const 
     int b_alt[3];
     for (int k = 0; k < 3; ++k) {
         sa_code *c = &s->code[L3[k].slot];
-        int a = SAS_R(2), pi = SAS_R(2), snd = sas_find(L3[k].snd[a] ? L3[k].snd[a] : ""),
+        int a = SAS_R(2), pi = SAS_R(2);
+        if (L3[k].slot == SA_L_LEAD && sas_short(L3[k].snd[a]) && !sas_short(L3[k].snd[1 - a]) && SAS_R(10) < 8)
+            a = 1 - a;                                /* (0.8.43) LEAD: mostly the sound that holds its notes */
+        int snd = sas_find(L3[k].snd[a] ? L3[k].snd[a] : ""),
             pat = sas_pat(SA_T_SYNTH, L3[k].pat[pi]), alt = sas_pat(SA_T_SYNTH, L3[k].pat[1 - pi]);
         if (snd >= 0) c->sound = (uint8_t)snd;
         c->own = 0;

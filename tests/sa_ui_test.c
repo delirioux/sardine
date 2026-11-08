@@ -586,6 +586,12 @@ int main(int argc, char **argv)
         float sw = 0.0f;
         for (int i = 0; i < 40; ++i) { run_ms(10); if (g.sweep > sw) sw = g.sweep; }
         CHECK(sw > 0.1f, "a fill dips the filter towards the 1 (%.2f)", sw);
+        int k1 = g.fill_kind;                      /* (0.8.43) held on: another fill each bar */
+        bars(1);
+        int k2 = g.fill_kind;
+        bars(1);
+        CHECK(g.fill_on && k2 == (k1 + 1) % 8 && g.fill_kind == (k1 + 2) % 8, "ENV held on: the next fill each bar (%d %d %d)",
+              k1, k2, g.fill_kind);
         int k0 = g.fill_kind;
         sv_button(&ui, SV_B_ENV, false);
         CHECK(!g.fill_on && g.fill_kind == (k0 + 1) % 8, "let go: the groove, the next fill next time");
@@ -751,6 +757,19 @@ int main(int argc, char **argv)
         sas_style_apply(&t, 8, 3, &pool);          /* ACID */
         CHECK(!strcmp(sas_of(t.code[SA_L_BASS].sound)->name, "ACID") && t.bpm >= 128 && t.bpm <= 134 && t.style == 8,
               "ACID: the ACID bass, its tempo (%s %d)", sas_of(t.code[SA_L_BASS].sound)->name, t.bpm);
+        int longs = 0, tries = 0, mel = 0;         /* (0.8.43) a fresh groove's LEAD: mostly one that holds its notes;
+                                                    * its line mostly a melody over bars */
+        for (int k = 0; k < SAS_NSTYLES; ++k)
+            for (uint32_t sd = 1; sd <= 10; ++sd) {
+                sas_style_apply(&t, k, sd * 977u, &pool);
+                longs += !sas_short(sas_of(t.code[SA_L_LEAD].sound)->name);
+                mel += t.code[SA_L_LEAD].pat >= sas_pat(SA_T_SYNTH, "SKYLINE");
+                tries++;
+            }
+        CHECK(longs * 100 >= tries * 85 && mel * 100 >= tries * 50, "fresh grooves: %d of %d leads hold their notes, %d melodies",
+              longs, tries, mel);
+        for (int i = 0; i < pool.nlead; ++i)
+            CHECK(!sas_short(sas_of(pool.lead[i])->name), "the lead pool: %s holds its notes", sas_of(pool.lead[i])->name);
     }
     /* the MIXER on GLO: the four volumes, FX: their mutes */
     press(SV_B_GLO);

@@ -21,7 +21,7 @@ All sounds are synthesised; no samples.
 
 ## Try it, install it
 
-Version 0.8.42:
+Version 0.8.43:
 
 - **[Try it in the browser](https://delirioux.github.io/sardine/try/)**: the whole firmware, the FM-1's screen and
   controls, sound and all, before you install anything.
@@ -59,7 +59,7 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
 - DRUMS: seven rows (KICK, SNARE, CLAP, HATS, TOMS, RIM, PERC) that never cut each other off, eight variations of each
   drum, 24 synthesised kits (four whose kick follows the chord progression); PERC is tambourine, bongo, wood block,
   cowbell, cabasa and zap; no cymbals, no samples
-- 24 drum patterns and 38 synth patterns, straight, broken and triplet; FEEL swings them all together; ten modifiers
+- 24 drum patterns and 54 synth patterns (16 of them lead melodies over 2 or 4 bars), straight, broken and triplet; FEEL swings them all together; ten modifiers
   (FAST, SLOW, REV, EVERY, THIN, EUCLID, SHIFT, LEN, OCT, PLY) bend any of them
 - An arpeggiator on every synth layer, off until you want it: ten modes, triplet rates, up to four octaves
 - Key, scale and ten chord progressions; every synth layer follows the chord
@@ -67,6 +67,7 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
 **Tunes, not loops**
 
 - The synth layers phrase over four bars (A A A' B): bar 3 lifts, bar 4 answers on the root and leaves room for the fill
+- Sixteen lead MELODIES over 2 or 4 bars, a call and its answer, moving with the chords; leads that hold their notes
 - Every groove has a PART B, its own lines and chords: ALGORITHM on HOME, or by itself every 8 or 16 bars; a badge
   blinks before it turns; EVOLVE reworks each part while it rests; SEQ held on HOME renews the resting part at once
 - MANUAL on any layer: Sardine changes nothing on it by itself (no phrases, B line, EVOLVE, INTRO or ARC); you play it
@@ -77,7 +78,7 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
 
 **Live moves**
 
-- Held: a drum fill (ENV, a different one each time), a BREAK that brings the drums back in on the 1 or, after four bars,
+- Held: a drum fill (ENV, a different one each time, and each bar while you hold it), a BREAK that brings the drums back in on the 1 or, after four bars,
   one by one (ARP), a filter SWEEP (LFO)
 - Held from any page: WASH (OCT-), THROW (OCT+), TAPE STOP (EDIT), WOBBLE (REC), FADE (PLAY: out over a bar, then
   stop); a tap still does the button's job

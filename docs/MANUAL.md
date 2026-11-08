@@ -1,6 +1,6 @@
 # Sardine manual
 
-Sardine 0.8.42. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
+Sardine 0.8.43. Live club mixing on the FM-1: four layers, always there, each one on or OFF: **LEAD**, **CHORD**,
 **BASS** and **DRUMS**. A layer is a sound and a pattern, bent by modifiers. Its sound, filter, pan and level act at
 once, as you turn; its pattern, steps and modifiers wait, in the second colour, until **SEQ** drops them in on the
 one: the next bar line.
@@ -262,7 +262,8 @@ to STYLE (below), GLO again to SONG (below), GLO once more back. SOLO is a live 
 
 Hold **ENV**: from the next beat the drums give way to a fill (ENV blinks until the beat, then stays lit), for as
 long as you hold it; let go and the groove is back at once. Towards its end a fill dips the filter of the synth layers, the 1 opens it again. A fill is a bar: started
-on beat 3 it plays from its third beat, so it always peaks on the bar's last sixteenth. Each time another, by turns:
+on beat 3 it plays from its third beat, so it always peaks on the bar's last sixteenth. Held on past the bar, the
+next bar is the next fill, and so on every bar (the screen names each). Each time another, by turns:
 ROLL (the snare in sixteenths, rising, 32nds at the end), TOMS (a run from the high tom down), BUILD (eighths, then
 sixteenths, then 32nds, an open hat on top), STUTTER (kick and hat on every sixteenth, claps), FLAM (flammed
 backbeats over ghost notes), SYNCO (3-3-2 accents, toms to end), CLAPS (claps building to 32nds) and GHOST (ghost
@@ -427,18 +428,41 @@ delay. The room every layer plays in is a big hall; the drums send little into i
 ## LEADS of the styles
 
 Every STYLE has two lead sounds and two lead lines of its own, picked for its music (a fresh groove takes one of
-each): SOFT LEAD (a warm triangle, DEEP, PROG, GARAGE, DUB, LOFI), FILTER LEAD (a resonant saw that talks with ENV,
-FILTER), BLIP (a short square into the echo, TECH, MINIMAL), DARK SAW (a saw on a sub, low and driven, TECHNO),
+each; of the sounds mostly the one that holds its notes, see below): SOFT LEAD (a warm triangle, DEEP, PROG, GARAGE, DUB, LOFI), FILTER LEAD (a resonant saw that talks with ENV,
+FILTER), SYNC LEAD (TECH), PULSE (MINIMAL), BLIP (a short square into the echo, MINIMAL), DARK SAW (a saw on a sub, low and driven, TECHNO),
 ACID LEAD and RUBBER (squelching, gliding, ACID and TECHNO), PLUCK LEAD (a plucked saw into a long delay, TRANCE,
-PROG, MINIMAL), RAVE LEAD (a wide pulse, BREAKS, HAPPY), SCREECH (a driven saw, HARD, GABBER), DUB LEAD (a soft
+PROG), RAVE LEAD (a wide pulse, BREAKS, HAPPY), SCREECH (a driven saw, HARD, GABBER), DUB LEAD (a soft
 triangle drowned in echoes, NIGHT, DUB), STRING LEAD (a chorused string line, DISCO), PAN FLUTE (breathy, DEEP, AFRO,
-AMBIENT, LOFI) and VOX CHOP (a short sung vowel, FILTER, TECH, GARAGE). The singing ones (SOFT LEAD, FILTER LEAD,
+AMBIENT, LOFI) and VOX CHOP (a short sung vowel, FILTER, TECH, GARAGE).
+
+A fresh groove prefers a LEAD that holds its notes: where a style's two lead sounds are one short (BLIP, PLUCK LEAD,
+ACID LEAD, VOX CHOP, STORM, ZAPPER, STROBE, TWISTER, RESO: their held note falls away) and one long, it takes the
+long one eight times in ten. A groove made without a style picks only from the long ones. The singing ones (SOFT LEAD, FILTER LEAD,
 DUB LEAD, STRING LEAD, PAN FLUTE, and FLUTE, WHISTLE, AIR LEAD, VOX LEAD) get a vibrato a third of a second into a
 held note.
 
 The lead lines: TONES UP, RIFF, PLUCKS, CALL, HOLD NOTE, HOLD CHORD, and HOOK (a one-bar tune), ECHOES (three notes
 the delay answers), BLIPS (three short ones), ANTHEM (sixteenths over the chord, trance), SQUELCH (an acid line
 jumping octaves), DISCO RUN (octaves), TWO NOTES (two long ones) and UPBEATS (on the offbeats).
+
+**MELODIES** (0.8.43): sixteen lead lines over 2 or 4 bars, a call and its answer, with passing notes between the
+chord tones and longer held notes, so the lead sings instead of running up and down the chord. They are written in
+steps of the scale from each bar's chord, so they move with the chords and never leave the key. They phrase
+themselves (the PHRASE lift and answer are left out on them).
+
+| Melody | Bars | | Melody | Bars | |
+| --- | --- | --- | --- | --- | --- |
+| SKYLINE | 4 | rising, trance (TRANCE, HAPPY) | QUESTION | 2 | asks, then answers low (TECH, GARAGE, ELECTRO) |
+| SIGH | 2 | falling to the root (DEEP, GARAGE, DUB, LOFI) | GLIDE | 2 | down and up an octave (ACID) |
+| LADDER | 2 | up the scale and down (TRANCE, PROG) | NIGHT BIRD | 2 | a flute's call (AFRO) |
+| ANSWER | 4 | a call twice, two endings (PROG, AFRO, BREAKS) | ELECTRIC | 2 | clipped, robotic (ELECTRO) |
+| SWING HOOK | 2 | offbeat, disco (FILTER, DISCO) | DREAM | 4 | lazy, wide (DEEP, AMBIENT, LOFI) |
+| LONG TONES | 4 | four held notes (NIGHT, AMBIENT) | SAW HYMN | 2 | a hard anthem (HARD, GABBER) |
+| PULSE RIFF | 2 | the root against a moving top (TECHNO, HARD) | HEARTBEAT | 2 | a few notes, room (TECH, MINIMAL) |
+| FLOAT | 2 | three notes into the echo (NIGHT, DUB) | RISE | 4 | hands up, to the top (GABBER, HAPPY) |
+
+On a style they are its first lead line (and often the second); EVOLVE and a groove made without a style pick from
+them too. EDIT on a melody takes its first bar as the layer's own.
 
 ### RAVE
 

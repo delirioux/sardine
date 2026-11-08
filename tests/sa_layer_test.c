@@ -468,6 +468,36 @@ int main(void)
                   "PART B, the hats edited by hand: B plays the edit (%04x, wanted %04x)", h.hits_last[l], want);
             h.part_b = h.part_cue = false;
         }
+        {   /* (0.8.43) a MELODY: its bars differ (a call, its answer), every note in the key, a phrase of its own */
+            static sa_groove m;
+            sa_init(&m, SR);
+            sa_set_sound(&m, snd, 0);
+            only(&m, SA_L_LEAD);
+            for (int i = 0; i < sa_synth_pats(); ++i)
+                if (!strcmp(sa_pat_name(SA_T_SYNTH, i), "SKYLINE")) m.s.code[SA_L_LEAD].pat = (uint8_t)i;
+            m.s.harm.key = 9;                       /* (A minor) */
+            m.s.live[SA_L_LEAD].hand = 1;           /* (in at once: not after a pattern) */
+            m.s.harm.scale = SA_SC_MINOR;
+            sa_edit_reset(&m);
+            sa_play(&m, true);
+            int cnt[8], out = 0;
+            uint16_t bits[8];
+            for (int b = 0; b < 8; ++b) {
+                clear_log();
+                run_bars(&m, 1);
+                int pt = m.s.code[SA_L_LEAD].part & 3;
+                cnt[b] = LG.per_part[pt];
+                bits[b] = m.hits_last[SA_L_LEAD];
+                for (int nt = 0; nt < 128; ++nt) {
+                    int pc = ((nt - 9) % 12 + 12) % 12;
+                    if (LG.on[pt][nt]) out += !(pc == 0 || pc == 2 || pc == 3 || pc == 5 || pc == 7 || pc == 8 || pc == 10);
+                }
+            }
+            CHECK(cnt[1] > 0 && bits[1] != bits[2] && bits[2] != bits[4] && bits[5] == bits[1] && bits[6] == bits[2],
+                  "MELODY: 4 bars, each its own, then again (%04x %04x .. %04x)", bits[1], bits[2], bits[5]);   /* (hits_last:
+                                                    * the bar before) */
+            CHECK(out == 0, "MELODY: every note in A minor (%d out)", out);
+        }
         {   /* (0.8.42) MANUAL: the bass plays as it is: no PHRASE, not B's line, not held out by INTRO, no NEW */
             static sa_groove m;
             sa_init(&m, SR);

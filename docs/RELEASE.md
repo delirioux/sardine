@@ -1,9 +1,11 @@
-Sardine 0.8.42: live club mixing for the FM-1.
+Sardine 0.8.43: live club mixing for the FM-1.
 
 - Four layers, always there, each on or OFF: LEAD, CHORD, BASS and DRUMS. PRESETS goes from one to the next, FX
   through a layer's pages (MIX: VOLUME TYPE INSTR MUTE, MANUAL, ARP, PAN, PAN 3D, PUMP, GATE, MOD; DRUMS: MIX, MANUAL, KIT, MOD), HOME back to them all
 - MANUAL (0.8.42, a page on every layer): the layer played by hand, nothing automatic on it (no PHRASE, no B line, no
   EVOLVE or NEW, not held out by INTRO, ARC or LIVE); nothing cleared, it plays on as it is
+- MELODIES (0.8.43): sixteen lead lines over 2 or 4 bars, a call and its answer, in scale steps from each chord,
+  two for every style; a fresh groove's LEAD mostly a sound that holds its notes
 - EDIT: a pattern editor, KNOB 1 the step, KNOB 2 ready fills (drum fills, lines in the key, chord rhythms), REC:
   the keys write the steps
 - STYLE MIX (GLO held): from one style into another, the layers you don't keep fading out over 1 to 4 bars, the new
@@ -14,7 +16,7 @@ Sardine 0.8.42: live club mixing for the FM-1.
   cutoff (CC74) and pan (CC10) as they move
 - OCT- OCT+ EDIT REC held: WASH, THROW, TAPE STOP, WOBBLE (a tap: the button's own job); PLAY held: FADE, the mix out
   over a bar, then stopped
-- ENV held: a drum fill from the next beat, eight bar-long fills by turns, peaking on the bar's end, the filter dipping into the 1; ARP held: BREAK, the drums and bass out,
+- ENV held: a drum fill from the next beat, eight bar-long fills by turns (held on: the next one every bar), peaking on the bar's end, the filter dipping into the 1; ARP held: BREAK, the drums and bass out,
   back in on the 1; LFO held: SWEEP, the filter closing over two bars
 - STYLE: twenty styles (NIGHT, FILTER, DEEP, TECH, MINIMAL, TECHNO, HARD, GABBER, ACID, TRANCE, PROG, DISCO, AFRO,
   GARAGE, BREAKS, DUB, AMBIENT, ELECTRO, HAPPY, LOFI), a fresh groove in one on SEQ; INTRO and ARC

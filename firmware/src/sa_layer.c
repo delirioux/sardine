@@ -180,9 +180,63 @@ static const dpat DPAT[] = {
 /* a synth step: tick, length (ticks), tone (0 root 1 third 2 fifth 3 seventh 4 the root an octave up, SA_CH the
  * chord), octave offset, velocity */
 typedef struct { uint8_t t, d, tone; int8_t oct; uint8_t v; } sstep;
+/* (0.8.43) a melody's note: its tick from the melody's start (over 2 or 4 bars), length (ticks), tone (a chord tone, or
+ * SA_STEP(k): k steps up the scale from the chord's root), velocity */
+typedef struct { uint16_t t; uint8_t d, tone, v; } mstep;
+#define SA_STEP0 40                                 /* (tones from SA_STEP0 - 20: scale steps, SA_STEP0 the root) */
+#define SA_STEP(k) ((uint8_t)(SA_STEP0 + (k)))
 typedef struct { const char *name; int8_t oct; uint8_t n; sstep s[16]; } spat;
+typedef struct { const mstep *m; uint8_t n, bars; } smel;   /* a melody: its notes over `bars` bars */
 #define N(i, len, tone, o, v) {(uint8_t)((i) * SA_TPS), (uint8_t)((len) * SA_TPS / 2), (tone), (o), (v)}
 /* (len in eighth-sixteenths: 2 = one sixteenth) */
+/* (0.8.43) MELODIES: lead lines over 2 or 4 bars, a call and its answer, in scale steps from the chord's root (0 the
+ * root, 2 the third, 4 the fifth, 7 the octave; the others passing notes), so they move with the chords and stay in
+ * the key. M(sixteenth, sixteenths long, step): on the beat louder */
+#define M(i, len, k) {(uint16_t)((i) * SA_TPS), (uint8_t)((len) * SA_TPS), SA_STEP(k), (uint8_t)((i) % 4 == 0 ? 110 : 95)}
+static const mstep MEL_SKYLINE[] = {M(0, 6, 4), M(6, 2, 5), M(8, 4, 4), M(12, 4, 2), M(16, 6, 7), M(22, 2, 6),
+                                    M(24, 8, 4), M(32, 6, 4), M(38, 2, 5), M(40, 4, 4), M(44, 4, 7), M(48, 4, 9),
+                                    M(52, 4, 7), M(56, 8, 4)};
+static const mstep MEL_SIGH[] = {M(0, 3, 2), M(3, 3, 1), M(6, 10, 0), M(16, 3, 4), M(19, 3, 3), M(22, 6, 2),
+                                 M(28, 4, 1)};
+static const mstep MEL_LADDER[] = {M(0, 2, 0), M(2, 2, 1), M(4, 2, 2), M(6, 2, 3), M(8, 4, 4), M(12, 4, 2),
+                                   M(16, 2, 4), M(18, 2, 3), M(20, 2, 2), M(22, 2, 1), M(24, 8, 0)};
+static const mstep MEL_ANSWER[] = {M(0, 2, 4), M(3, 2, 4), M(6, 4, 5), M(10, 6, 4), M(20, 2, 2), M(22, 2, 3),
+                                   M(24, 8, 2), M(32, 2, 4), M(35, 2, 4), M(38, 4, 5), M(42, 6, 7), M(52, 2, 6),
+                                   M(54, 2, 5), M(56, 8, 4)};
+static const mstep MEL_SWING[] = {M(2, 2, 7), M(6, 2, 7), M(8, 2, 6), M(10, 4, 4), M(14, 2, 2), M(18, 2, 4),
+                                  M(22, 2, 5), M(24, 3, 4), M(27, 3, 2), M(30, 2, 0)};
+static const mstep MEL_LONG[] = {M(0, 24, 4), M(24, 8, 2), M(32, 24, 1), M(56, 8, 0)};
+static const mstep MEL_PULSE[] = {M(0, 2, 0), M(2, 2, 7), M(4, 2, 0), M(6, 2, 6), M(8, 2, 0), M(10, 2, 4), M(12, 2, 0),
+                                  M(14, 2, 3), M(16, 2, 0), M(18, 2, 7), M(20, 2, 0), M(22, 2, 6), M(24, 2, 0),
+                                  M(26, 2, 4), M(28, 2, 5), M(30, 2, 4)};
+static const mstep MEL_FLOAT[] = {M(0, 6, 4), M(10, 6, 2), M(24, 8, 1)};
+static const mstep MEL_RISE[] = {M(0, 2, 0), M(2, 2, 2), M(4, 2, 4), M(6, 2, 7), M(8, 6, 6), M(14, 2, 4), M(16, 2, 5),
+                                 M(18, 2, 4), M(20, 2, 2), M(22, 2, 4), M(24, 8, 4), M(32, 2, 0), M(34, 2, 2),
+                                 M(36, 2, 4), M(38, 2, 7), M(40, 6, 9), M(46, 2, 7), M(48, 4, 8), M(52, 4, 7),
+                                 M(56, 8, 7)};
+static const mstep MEL_QUESTION[] = {M(0, 3, 4), M(3, 3, 2), M(8, 2, 4), M(11, 3, 5), M(16, 3, 4), M(19, 3, 2),
+                                     M(22, 2, 1), M(26, 6, 0)};
+static const mstep MEL_GLIDE[] = {M(0, 4, 0), M(4, 2, 2), M(6, 6, -1), M(12, 4, 0), M(16, 4, 7), M(20, 2, 6),
+                                  M(22, 4, 4), M(26, 6, 2)};
+static const mstep MEL_BIRD[] = {M(0, 2, 7), M(2, 2, 6), M(4, 2, 7), M(6, 4, 4), M(12, 2, 5), M(14, 2, 4),
+                                 M(16, 6, 2), M(22, 2, 3), M(24, 2, 2), M(26, 6, 0)};
+static const mstep MEL_ELECTRIC[] = {M(0, 1, 0), M(2, 1, 0), M(3, 2, 2), M(6, 1, 4), M(8, 2, 7), M(11, 2, 4),
+                                     M(14, 2, 2), M(16, 1, 0), M(18, 1, 0), M(19, 2, 2), M(22, 1, 4), M(24, 4, 6),
+                                     M(28, 4, 4)};
+static const mstep MEL_DREAM[] = {M(0, 4, 2), M(6, 2, 4), M(8, 8, 5), M(20, 2, 4), M(22, 2, 2), M(24, 8, 1),
+                                  M(32, 4, 2), M(38, 2, 4), M(40, 8, 7), M(52, 2, 6), M(54, 2, 5), M(56, 8, 4)};
+static const mstep MEL_HYMN[] = {M(0, 4, 7), M(4, 4, 7), M(8, 4, 6), M(12, 4, 4), M(16, 6, 5), M(22, 2, 4),
+                                 M(24, 8, 2)};
+static const mstep MEL_HEART[] = {M(0, 2, 4), M(7, 2, 2), M(16, 2, 4), M(19, 2, 5), M(22, 4, 4)};
+#undef M
+#define MEL(m, bars) {(m), (uint8_t)(sizeof(m) / sizeof(m)[0]), (bars)}
+static const smel MELS[] = {MEL(MEL_SKYLINE, 4), MEL(MEL_SIGH, 2), MEL(MEL_LADDER, 2), MEL(MEL_ANSWER, 4),
+                            MEL(MEL_SWING, 2), MEL(MEL_LONG, 4), MEL(MEL_PULSE, 2), MEL(MEL_FLOAT, 2),
+                            MEL(MEL_RISE, 4), MEL(MEL_QUESTION, 2), MEL(MEL_GLIDE, 2), MEL(MEL_BIRD, 2),
+                            MEL(MEL_ELECTRIC, 2), MEL(MEL_DREAM, 4), MEL(MEL_HYMN, 2), MEL(MEL_HEART, 2)};
+#undef MEL
+#define NMEL ((int)(sizeof MELS / sizeof MELS[0]))
+#define MEL(name) {(name), 5, 0, {{0, 0, 0, 0, 0}}}   /* (SPAT's last NMEL: the melodies, in MELS's order) */
 static const spat SPAT[] = {
     /* bass lines (octave 2) */
     {"OFFBEAT", 2, 4, {N(2, 3, 0, 0, 110), N(6, 3, 0, 0, 100), N(10, 3, 0, 0, 110), N(14, 3, 0, 0, 100)}},
@@ -250,9 +304,19 @@ static const spat SPAT[] = {
                        N(4, 1, 0, 0, 115), N(5, 1, 0, 0, 90), N(6, 1, 0, 0, 100), N(7, 1, 0, 0, 90),
                        N(8, 1, 0, 0, 115), N(9, 1, 0, 0, 90), N(10, 1, 0, 0, 100), N(11, 1, 0, 0, 90),
                        N(12, 1, 2, 0, 115), N(13, 1, 2, 0, 95), N(14, 1, 4, 0, 115), N(15, 1, 4, 0, 95)}},
+    /* (0.8.43) MELODIES, over 2 or 4 bars */
+    MEL("SKYLINE"), MEL("SIGH"), MEL("LADDER"), MEL("ANSWER"), MEL("SWING HOOK"), MEL("LONG TONES"),
+    MEL("PULSE RIFF"), MEL("FLOAT"), MEL("RISE"), MEL("QUESTION"), MEL("GLIDE"), MEL("NIGHT BIRD"), MEL("ELECTRIC"),
+    MEL("DREAM"), MEL("SAW HYMN"), MEL("HEARTBEAT"),
 };
+#undef MEL
 #undef N
 #define NSPAT ((int)(sizeof SPAT / sizeof SPAT[0]))
+static const smel *mel_of(int pat)                 /* a synth pattern's melody, 0: a bar of steps */
+{
+    int i = pat % NSPAT - (NSPAT - NMEL);
+    return i >= 0 && i < NMEL ? &MELS[i] : 0;
+}
 int sa_drum_pats(void) { return NDPAT; }
 int sa_synth_pats(void) { return NSPAT; }
 const char *sa_pat_name(int type, int i)
@@ -413,6 +477,16 @@ static void query(const sa_code *c, const sa_mod *m, int k, int layer, int32_t a
                 }
             } else {
                 const spat *p = &SPAT[c->pat % NSPAT];
+                const smel *ml = mel_of(c->pat);
+                if (ml) {                          /* a melody: this bar's part of it */
+                    int bi = (int)(((cy % ml->bars) + ml->bars) % ml->bars);
+                    for (int i = 0; i < ml->n; ++i) {
+                        int32_t t = cy * SA_TPB + (int32_t)ml->m[i].t - bi * SA_TPB;
+                        if (ml->m[i].t / SA_TPB == bi && t >= a && t < b)
+                            qadd(0, t, ml->m[i].d, ml->m[i].tone, 0, ml->m[i].v, 0);
+                    }
+                    continue;
+                }
                 for (int i = 0; i < p->n; ++i) {
                     int32_t t = cy * SA_TPB + p->s[i].t;
                     if (t >= a && t < b) qadd(0, t, p->s[i].d, p->s[i].tone, p->s[i].oct, p->s[i].v, 0);
@@ -597,6 +671,10 @@ static void chord_of_bar(sa_groove *g, int bar)
 static int tone_note(const sa_groove *g, int tone, int oct)
 {
     int root = g->chord_pc[0], base = 12 * (oct + 1) + root;
+    if (tone >= SA_STEP0 - 20 && tone != SA_NOTE && tone != SA_CH) {   /* a melody's scale step from the root */
+        int d = g->chord_deg, k = tone - SA_STEP0;
+        return base + sa_degree(&g->s.harm, d + k) - sa_degree(&g->s.harm, d);
+    }
     if (tone == 4) return base + 12;
     int t = clampi(tone, 0, 3);
     return base + (g->chord_pc[t] - root + 12) % 12;
@@ -652,7 +730,9 @@ static const sa_code *code_now(const sa_groove *g, int l)
  * held, nothing after it; BASS and CHORD quiet over the last beat (the fill's room), BASS's last note on the root */
 static int phrase_bar(sa_groove *g, int l, qev *e, int n, int32_t b0, int bar)
 {
-    int ph = g->s.phrase == 0 && bar >= 0 && !g->s.live[l].hand ? bar % 4 : 0;
+    const sa_code *c = code_now(g, l);
+    bool mel = !c->own && c->pat != SA_PAT_OFF && mel_of(c->pat);   /* (a melody: a phrase of its own) */
+    int ph = g->s.phrase == 0 && bar >= 0 && !g->s.live[l].hand && !mel ? bar % 4 : 0;
     if (ph < 2 || l >= SA_L_DRUM0) return n;
     int half = SA_TPB / 2, last = 3 * SA_TPB / 4, m = 0, f = -1;
     for (int i = 0; i < n; ++i) {
@@ -794,6 +874,13 @@ void sa_own_make(sa_groove *g, sa_code *c)
     } else {                                       /* the notes as the chord of the bar playing voices them */
         const spat *p = &SPAT[c->pat % NSPAT];
         c->ooct = (uint8_t)p->oct;
+        const smel *ml = mel_of(c->pat);
+        for (int i = 0; ml && i < ml->n; ++i) {    /* (a melody: its first bar) */
+            if (ml->m[i].t >= SA_TPB) continue;
+            int st = ((ml->m[i].t + SA_TPS / 2) / SA_TPS) % 16;
+            c->sl[st] = (uint8_t)clampi((ml->m[i].d + SA_TPS / 2) / SA_TPS, 1, 16);
+            c->sn[st] = (int8_t)clampi(tone_note(g, ml->m[i].tone, p->oct) - g->s.harm.key, -127, 127);
+        }
         for (int i = 0; i < p->n; ++i) {
             int st = ((p->s[i].t + SA_TPS / 2) / SA_TPS) % 16;
             int len = (p->s[i].d + SA_TPS / 2) / SA_TPS;
@@ -1311,14 +1398,16 @@ static const char *const STABS[] = {"STAB 1", "STAB 2", "OFFBEATS", "HOUSE", "CH
                                     "DOTTED"};
 static const char *const PADS[] = {"WASH", "TWO HALVES", "SWELL"};
 static const char *const LEADS[] = {"TONES UP", "RIFF", "PLUCKS", "CALL", "HOOK", "ECHOES", "ANTHEM", "UPBEATS",
-                                   "TWO NOTES"};
+                                   "TWO NOTES", "SKYLINE", "SIGH", "LADDER", "ANSWER", "SWING HOOK", "LONG TONES",
+                                   "PULSE RIFF", "FLOAT", "RISE", "QUESTION", "GLIDE", "NIGHT BIRD", "ELECTRIC",
+                                   "DREAM", "SAW HYMN", "HEARTBEAT"};
 #define NL(a) ((int)(sizeof a / sizeof a[0]))
 
 /* another pattern of a list than cur (cur not in it: any of it); -1 none */
 static int other_in(uint32_t *r, const char *const *names, int n, int cur)
 {
-    int in = 0, c[16], m = 0;
-    for (int i = 0; i < n && i < 16; ++i) {
+    int in = 0, c[32], m = 0;
+    for (int i = 0; i < n && i < 32; ++i) {
         int p = pat_find(SA_T_SYNTH, names[i]);
         if (p == cur) in = 1;
         else if (p >= 0) c[m++] = p;
@@ -2272,7 +2361,13 @@ static void do_tick(sa_groove *g)
     if (g->fill_on && t % SA_TPS == 0 && !g->brk_on) {
         fill_tick(g, g->fill_step);
         g->fill_step = (uint8_t)(g->fill_step + 1);
-        if (g->fill_step >= 16) g->fill_step = 0;   /* (held past a bar: it goes round) */
+        if (g->fill_step >= 16) {                  /* held past a bar: round again, (0.8.43) with the next fill */
+            g->fill_step = 0;
+            if (g->fill_held && !g->arr_fill) {
+                g->fill_kind = (uint8_t)((g->fill_kind + 1) % FILLS);
+                msg(g, FILL_NAMES[g->fill_kind % FILLS]);
+            }
+        }
     }
     uint32_t delay = 0;
     if (t % 12 == 6 && g->s.feel)                  /* FEEL: the off sixteenths late */

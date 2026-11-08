@@ -12,7 +12,7 @@ the next bar.
 | | What | How |
 | --- | --- | --- |
 | 1 | Keys | On a layer, the keys play it live (on HOME: LEAD; on DRUMS: the drum you picked). They play the notes as you press them; MENU's **SNAP** (HOME held, KNOB 3) snaps them to the scale |
-| 2 | Pattern | **ALGORITHM** on a layer: one of 38 synth or 24 drum patterns; **SEQ** drops it in on the next bar |
+| 2 | Pattern | **ALGORITHM** on a layer: one of 54 synth patterns (16 of them lead melodies over 2 or 4 bars) or 24 drum patterns; **SEQ** drops it in on the next bar |
 | 3 | EDIT | **EDIT** or **REC** on a layer: KNOB 1 the step, a key or KNOB 4 the note, KNOB 3 its length, KNOB 2 a ready fill. On a drum, KNOB 4 solos it while you edit |
 | 4 | ARP | FX to **ARP**: MODE (10), RATE, RANGE, GATE |
 | 5 | MOD | FX to **MOD**: 10 modifiers that bend a pattern (FAST, SLOW, REV, EVERY, THIN, EUCLID, SHIFT, LEN, OCT, PLY) |
@@ -22,7 +22,7 @@ the next bar.
 | 9 | PHRASE | HOME, FX twice (PARTS), KNOB 1: ON or OFF |
 | 10 | PART A/B | **ALGORITHM** on HOME cues a part; HOME PARTS, KNOB 2: **A/B** by itself every 8 or 16 bars |
 | 11 | EVOLVE / NEW | HOME PARTS, KNOB 3: each part reworked while it rests. **SEQ** held on HOME: the resting part all new |
-| 12 | Fill | Hold **ENV** |
+| 12 | Fill | Hold **ENV**; held on, the next fill every bar |
 | 13 | BREAK | Hold **ARP**; let go on the 1 for the drop |
 | 14 | MUTE / SOLO | **GLO** to the MUTE or SOLO page |
 | 15 | New groove / STYLE | **SEQ** held (away from HOME): a whole new groove. **GLO** to STYLE: pick one of 20, **SEQ** |
