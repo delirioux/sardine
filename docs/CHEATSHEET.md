@@ -51,7 +51,7 @@ the next bar.
 | 28 | GATE | FX to **GATE**: a pattern (12 ready-made), DEPTH, WIDTH, SMOOTH |
 | 29 | PAN | FX to **PAN**: FIXED, SWEEP, PING-PONG or RANDOM |
 | 30 | PAN 3D | FX to **PAN 3D**: FIXED, ORBIT, RANDOM or FLY, HEIGHT, DIST (headphones; one or the other with PAN) |
-| 31 | PUMP (layer) | FX to **PUMP**: DEPTH, RELEASE, SOURCE, ON |
+| 31 | PUMP (layer) | FX to **PUMP**: DEPTH, RELEASE, SOURCE, ON (all at 100 %: -18 dB on the kick) |
 | 32 | TUNE | DRUMS, KIT page, KNOB 2 |
 | 33 | TONE | DRUMS, KIT page, KNOB 3 |
 | 34 | DECAY | DRUMS, KIT page, KNOB 4 |
