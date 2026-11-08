@@ -1,5 +1,7 @@
 **Patched for FM-1 units with the new chipset.**
 
+**[Quick cheat sheet](docs/CHEATSHEET.md): every way to change the sound, and how.**
+
 <p align="center"><img src="docs/sardine-logo.png" alt="Sardine" width="320"></p>
 
 # Sardine
