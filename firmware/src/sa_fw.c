@@ -278,7 +278,7 @@ static void sa_audio_post(int32_t *out, uint32_t n)
 #define SA_PREF_MAGIC 0x31504153u                            /* "SAP1" */
 #define SA_SET_MAGIC 0x31534153u                             /* "SAS1" */
 #define SA_REC_MAGIC 0x32524153u                             /* "SAR2": 0.2..0.5's groove, moved into set 1 once */
-typedef struct { uint32_t magic, boots; uint8_t look, pad[3]; sv_song song; uint8_t midi_ch[4], midi_ok, snap, clock, pad2; } sa_prefs;   /* (song, then MIDI: appended) */
+typedef struct { uint32_t magic, boots; uint8_t look, pad[3]; sv_song song; uint8_t midi_ch[4], midi_ok, snap, clock, play; } sa_prefs;   /* (song, then MIDI: appended) */
 #define SA_PREFS_OLD 12u                                     /* (0.7's: no song) */
 typedef struct { uint32_t magic; uint16_t size, ver; sa_settings s; } sa_record;
 #define SA_SET_PER 3u                                        /* sets to an object */
@@ -410,6 +410,11 @@ static void sa_sets_scan(void)
         sa_set_info_of(k, sa_set_read(k, &sa_next) ? &sa_next : 0);
 }
 
+/* (1.0.4) A/B and EVOLVE, kept over power-off: bit 7 kept at all (0: a pad byte before), A/B in 0..1, EVOLVE 2..3 */
+static uint8_t sa_play_bits(void)
+{
+    return (uint8_t)(0x80u | (sa_g.s.abauto & 3u) | (sa_g.s.evolve & 3u) << 2);
+}
 static void sa_prefs_save(void)
 {
 #if FELUCCA_FLASH
@@ -421,6 +426,7 @@ static void sa_prefs_save(void)
         memcpy(sa_pref.midi_ch, sa_u.midi_ch, sizeof sa_pref.midi_ch);
         sa_pref.snap = sa_g.snap;                            /* (0.8.37: was a pad byte, 0: OFF) */
         sa_pref.clock = sa_u.clock_ext;                      /* (1.0.2: was a pad byte, 0: INT) */
+        sa_pref.play = sa_play_bits();                       /* (1.0.4: A/B and EVOLVE over power-off; was a pad) */
         sa_pref.midi_ok = 2;                                 /* (2: 0.8.6 .. 0.8.20 kept 1 with every channel OFF,
                                                               * saved at boot before the screen was up: not read) */
     }
@@ -843,6 +849,10 @@ static void sa_fw_init(void)
     sv_init(&sa_u, &sa_g);
     sa_g.snap = sa_pref.snap == 1;                           /* SNAP as kept, OFF by default */
     sa_u.clock_ext = sa_pref.clock == 1;                     /* CLOCK as kept, INT by default */
+    if (sa_pref.play & 0x80u) {                              /* (1.0.4) A/B and EVOLVE as they were at power-off */
+        sa_g.s.abauto = (uint8_t)((sa_pref.play & 3u) % SA_ABAUTOS);
+        sa_g.s.evolve = (uint8_t)(((sa_pref.play >> 2) & 3u) % SA_EVOLVES);
+    }
     {   /* SONG as kept (none kept, or all END: sets 1..4, sv_init's) */
         bool any = false;
         for (int k = 0; k < SV_STEPS; ++k) any |= sa_pref.song.set[k] != 0;
@@ -1123,7 +1133,7 @@ static void sa_frame(void)
     if (sa_dirty && !sa_g.playing && now - sa_save_ms > SA_LAST_MS) {   /* the look; LAST, when the groove changed */
         if (sa_g.s.look != sa_pref_look || memcmp(&sa_u.song, &sa_pref.song, sizeof sa_u.song) ||
             memcmp(sa_u.midi_ch, sa_pref.midi_ch, sizeof sa_u.midi_ch) || sa_g.snap != (sa_pref.snap == 1) ||
-            sa_u.clock_ext != (sa_pref.clock == 1))
+            sa_u.clock_ext != (sa_pref.clock == 1) || sa_play_bits() != sa_pref.play)
             sa_prefs_save();
         uint32_t sig = sv_hashb(2166136261u, &sa_g.s, sizeof sa_g.s) | 1u;
         if (sig != sa_last_sig && sa_set_write(SV_LAST, &sa_g.s)) {

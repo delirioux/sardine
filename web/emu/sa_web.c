@@ -466,6 +466,8 @@ EXPORT uint16_t *web_screen(void) { return web_fb; }
 EXPORT uint32_t web_screen_draws(void) { return web_draws; }
 EXPORT uint32_t web_now_ms(void) { return fm1_ms; }
 EXPORT uint32_t web_playing(void) { return sa_g.playing; }
+EXPORT void web_set_play(uint32_t ab, uint32_t ev) { sa_g.s.abauto = (uint8_t)ab; sa_g.s.evolve = (uint8_t)ev; sa_u.changed = true; }   /* (1.0.4) */
+EXPORT uint32_t web_play_bits(void) { return sa_g.s.abauto | sa_g.s.evolve << 2; }
 EXPORT void web_clock_ext(uint32_t v) { sa_u.clock_ext = (uint8_t)(v != 0); }   /* (1.0.2) MENU's CLOCK */
 EXPORT uint32_t web_midi_ch(uint32_t k) { return k < 4u ? sa_u.midi_ch[k] : 0u; }   /* MIDI OUT's channel of a layer */
 /* Sardine's own, for the page and the test: the bar playing, the page shown, the layers in use, the version */

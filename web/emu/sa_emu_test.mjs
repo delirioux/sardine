@@ -129,6 +129,8 @@ check("REC: STORE writes set 3", w.web_da_set_used(2) && !w.web_da_set_used(0));
 w.web_enc(EN.K1, -2); run(0.1);  // set 1 (over the old project)
 press(B.REC); run(0.2);
 w.web_enc(EN.K1, 2); run(0.1);
+if (w.web_playing()) press(B.PLAY);
+w.web_set_play(1, 2); run(3.6);                            // (1.0.4) A/B 8 BARS, EVOLVE MORE: kept over power-off
 const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice();
 {
   const again = await WebAssembly.instantiate(bytes, { wasi_snapshot_preview1: stub });
@@ -138,6 +140,7 @@ const nor = new Uint8Array(w.memory.buffer, w.web_nor(), w.web_nor_size()).slice
   w.web_boot();
   run(1);
   check("the next start: another groove", w.web_da_groove() !== groove1 && w.web_da_style() === 10);
+  check(`the next start: A/B and EVOLVE as they were (${w.web_play_bits()})`, w.web_play_bits() === (1 | 2 << 2));
   check("the next start: sets 1 and 3 still there", w.web_da_set_used(2) === 1 && w.web_da_set_used(0) === 1);
   press(B.SAVE);
   w.web_enc(EN.K1, 2); run(0.1);
