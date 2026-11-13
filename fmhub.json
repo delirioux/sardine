@@ -7,5 +7,6 @@
   "play": "https://delirioux.github.io/sardine/try/",
   "cheat": "https://github.com/delirioux/sardine/blob/main/docs/CHEATSHEET.md",
   "image": "docs/card.png",
-  "color": "#CEFF18"
+  "color": "#CEFF18",
+  "sounds": "CC0: Kawai grand from Versilian Studios' VCSL; drums synthesized by Felucca's tools/gen_waves.py (Hügelton Sample Pack, CC0 1.0)"
 }
