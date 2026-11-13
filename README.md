@@ -17,7 +17,7 @@ second colour, until SEQ drops them in on the one.
 
 Every start is a fresh groove in one of twenty club styles, from slow dark NIGHT to GABBER. You play it like a DJ
 plays records: drop new lines in on the one, break it down and bring it back, swap parts, blend into the next style.
-All sounds are synthesised; no samples.
+All sounds are synthesised except the piano: six notes of a CC0 Kawai grand.
 
 ## Try it, install it
 
@@ -46,7 +46,7 @@ puts Felucca itself back. Sardine reports itself as `FM-1_47727346`.
    STOP, WOBBLE.
 7. **Ten RAVE leads** that stab, gate, sweep and scream in time with the tempo.
 8. **PAN 3D** on headphones: a layer in front, behind, above you, or flying round your head.
-9. **Fully synthesised**: 24 drum kits (four whose kick follows the chords), 145 synth sounds, no samples, no cymbals.
+9. **Synthesised**: 24 drum kits (four whose kick follows the chords), 145 synth sounds, no cymbals; the one sample is the piano.
 10. **MIDI OUT** over USB: each layer on its channel, the notes as they play, and its volume, cutoff and pan as CCs,
     straight into a DAW.
 
