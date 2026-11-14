@@ -191,3 +191,5 @@ and [Tuna](https://github.com/delirioux/tuna). See [CREDITS.md](CREDITS.md) and 
 ## License
 
 GPL-3.0, see [LICENSE](LICENSE).
+
+You can also try Sardine in the browser, no flashing needed, in the free community [FM-1 Emulator](https://fm1-emulator.atst.tools/).
